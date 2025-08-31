@@ -1,0 +1,42 @@
+{
+	"title": "Rito",
+	"ogp": {
+		"title": "Rito",
+		"description": "A social bookmarking platform connecting users and developers."
+	},
+	"header": {
+		"home": "Home",
+		"bookmark": "My Bookmarks",
+		"feature": {
+			"title": "Features",
+			"atproto": {
+				"title": "ATProto",
+				"description": "Supports the decentralized SNS protocol ATProto"
+			},
+			"allbookmark": {
+				"title": "Bookmarks",
+				"description": "Manage Bluesky and regular websites all together"
+			},
+			"ownerbenefit": {
+				"title": "Developer Verification",
+				"description": "Verified developers can provide explanations for their products"
+			}
+		},
+		"termofuse": "Terms of Use",
+		"privacypolicy": "Privacy Policy"
+	},
+	"login": {
+		"title": "Login",
+		"titleDescription": "Log in with your Bluesky account",
+		"handle": "Handle",
+		"create": "Create a Bluesky account",
+		"didresolve": "Resolving DID",
+		"redirect": "Redirecting to {1}",
+		"error": {
+			"whitespace": "Handle cannot contain spaces, line breaks, or tabs",
+			"notdomain": "Must include .bsky.social",
+			"multibyte": "Only single-byte characters are allowed",
+			"invalidhandle": "Invalid handle"
+		}
+	}
+}

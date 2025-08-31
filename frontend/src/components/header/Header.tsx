@@ -26,7 +26,7 @@ import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
 import classes from './Header.module.scss';
 import { Modal } from '@mantine/core';
 import { Authentication } from '@/components/authentication/Authentication';
-import  LanguageToggle  from '@/components/LanguageToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 import { SwitchColorMode } from '@/components/SwitchColorMode';
 import { FaBookmark } from "react-icons/fa";
 
@@ -166,11 +166,20 @@ export function Header() {
         zIndex={1000000}
       >
         <ScrollArea h="calc(100vh - 80px" mx="-md">
+
           <Divider my="sm" />
 
-          <a href="#" className={classes.link}>
-            {messages.header.home}
-          </a>
+            <a href="#" className={classes.link}>
+              {messages.header.home}
+            </a>
+
+            <a href="#" className={classes.link}>
+              {messages.header.bookmark}
+            </a>
+
+            <a href="#" className={classes.link}>
+              {messages.header.browse}
+            </a>
           <UnstyledButton className={classes.link} onClick={toggleLinks}>
             <Center inline>
               <Box component="span" mr={5}>
@@ -187,12 +196,24 @@ export function Header() {
             {messages.header.privacypolicy}
           </a>
 
+
           <Divider my="sm" />
 
           <Group justify="center" grow pb="xl" px="md">
-            <Button variant="default">Log in</Button>
-            <Button>Sign up</Button>
+            <Button
+              variant="default"
+              onClick={() => {
+                toggleDrawer();
+                setOpened(true);
+              }}
+            >{messages.login.title}</Button>
           </Group>
+
+          <Group align="center" justify="center" gap={12} style={{ width: '100%' }}>
+            <LanguageToggle />
+            <SwitchColorMode />
+          </Group>
+
         </ScrollArea>
       </Drawer>
     </Box>

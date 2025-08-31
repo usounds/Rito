@@ -190,6 +190,11 @@ export function Authentication(props: PaperProps) {
           onChange={(event) => form.setFieldValue('handle', event.currentTarget.value)}
           error={form.errors.handle}
           radius="md"
+          styles={{
+            input: {
+              fontSize: 16,  // 16pxに設定
+            },
+          }}
         />
 
       </Stack>

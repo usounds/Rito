@@ -1,5 +1,6 @@
 {
 	"title": "リト",
+	"description": "リト(Rito)は、ATProtocolを利用したブックマーク管理サービスです。",
 	"ogp": {
 		"title": "リト | Rito",
 		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
@@ -7,19 +8,23 @@
 	"header": {
 		"home": "ホーム",
 		"bookmark": "マイブックマーク",
+		"browse": "探索",
 		"feature":{
             "title" : "機能",
             "allbookmark":{
                 "title": "ブックマーク",
-                "description": "Bluesky, WebサイトをBlueskyのアカウントでまとめて管理"
+                "description": "Bluesky, WebサイトをBlueskyのアカウントでまとめて管理",
+                "longdescription": "Bluesky, WebサイトをBlueskyのアカウントでまとめて管理できます。ブックマーにはコメントとタグをつけて便利に管理できます。"
             },
             "atproto":{
                 "title": "Build with ATProtocol",
-                "description": "ATProtocolに対応し、全てをPDSに保存"
+                "description": "ATProtocolに対応し、全てをPDSに保存",
+                "longdescription": "ATPrototolに対応し、全てをPDSに保存します。。"
             },
             "ownerbenefit":{
                 "title": "開発者認証コメント",
-                "description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能"
+                "description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
+                "longdescription": "プロダクトのオーナーは、特殊なブックマークができます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
             }
         },
 		"termofuse": "利用規約",

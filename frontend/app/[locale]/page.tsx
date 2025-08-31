@@ -1,4 +1,5 @@
 import { routing } from "@/i18n/routing";
+import { FeaturesGrid } from "@/components/features/Features";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 // SSG対応
@@ -46,8 +47,7 @@ export default async function HomePage({
 
   return (
     <div>
-      <div className="flex justify-end">
-      </div>
+        <FeaturesGrid t={t}/>
     </div>
   );
 }

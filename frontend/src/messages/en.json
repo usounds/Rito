@@ -1,5 +1,6 @@
 {
 	"title": "Rito",
+	"description": "Rito(リト) is a bookmark management service that uses the ATProtocol.",
 	"ogp": {
 		"title": "Rito",
 		"description": "A social bookmarking platform connecting users and developers."
@@ -7,19 +8,23 @@
 	"header": {
 		"home": "Home",
 		"bookmark": "My Bookmarks",
+		"browse": "Browse",
 		"feature": {
 			"title": "Features",
-			"atproto": {
-				"title": "ATProto",
-				"description": "Supports the decentralized SNS protocol ATProto"
-			},
 			"allbookmark": {
 				"title": "Bookmarks",
-				"description": "Manage Bluesky and regular websites all together"
+				"description": "Manage Bluesky and websites together with your Bluesky account",
+				"longdescription": "You can manage Bluesky and websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
+			},
+			"atproto": {
+				"title": "Build with ATProtocol",
+				"description": "Supports ATProtocol and stores everything in your PDS",
+				"longdescription": "Fully compatible with ATProtocol, all data is stored in your PDS."
 			},
 			"ownerbenefit": {
-				"title": "Developer Verification",
-				"description": "Verified developers can provide explanations for their products"
+				"title": "Developer Verified Comments",
+				"description": "Developers of ATProtocol-based products can add descriptions to their products",
+				"longdescription": "Product owners can create special bookmarks that display their service description at the top of the bookmark list."
 			}
 		},
 		"termofuse": "Terms of Use",

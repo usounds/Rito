@@ -26,6 +26,9 @@ import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
 import classes from './Header.module.scss';
 import { Modal } from '@mantine/core';
 import { Authentication } from '@/components/authentication/Authentication';
+import  LanguageToggle  from '@/components/LanguageToggle';
+import { SwitchColorMode } from '@/components/SwitchColorMode';
+import { FaBookmark } from "react-icons/fa";
 
 export function Header() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
@@ -71,15 +74,27 @@ export function Header() {
   ));
 
   return (
-    <Box pb={120}>
+    <Box>
       <header className={classes.header}>
         <Group justify="space-between" h="100%">
-          {messages.title}
+          <Group align="center" gap="sm">
+            <FaBookmark color={theme.colors.blue[6]} />
+            <Text>{messages.title}</Text>
+          </Group>
 
           <Group h="100%" gap={0} visibleFrom="sm">
-            <a href="#" className={classes.link}>
+            <a href="/" className={classes.link}>
               {messages.header.home}
             </a>
+
+            <a href="#" className={classes.link}>
+              {messages.header.bookmark}
+            </a>
+
+            <a href="#" className={classes.link}>
+              {messages.header.browse}
+            </a>
+
             <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
               <HoverCard.Target>
                 <a href="#" className={classes.link}>
@@ -93,8 +108,6 @@ export function Header() {
               </HoverCard.Target>
 
               <HoverCard.Dropdown style={{ overflow: 'hidden' }}>
-
-                <Divider my="sm" />
 
                 <SimpleGrid cols={2} spacing={0}>
                   {links}
@@ -124,7 +137,9 @@ export function Header() {
           </Group>
 
           <Group visibleFrom="sm">
-            <Button onClick={() => setOpened(true)}>{messages.login.title}</Button>
+            <Button onClick={() => setOpened(true)} variant="default">{messages.login.title}</Button>
+            <LanguageToggle />
+            <SwitchColorMode />
           </Group>
 
           <Modal

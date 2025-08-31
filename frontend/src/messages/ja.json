@@ -1,0 +1,43 @@
+{
+	"title": "リト",
+	"ogp": {
+		"title": "リト | Rito",
+		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
+	},
+	"header": {
+		"home": "ホーム",
+		"bookmark": "マイブックマーク",
+		"feature":{
+            "title" : "機能",
+            "allbookmark":{
+                "title": "ブックマーク",
+                "description": "Bluesky, WebサイトをBlueskyのアカウントでまとめて管理"
+            },
+            "atproto":{
+                "title": "Build with ATProtocol",
+                "description": "ATProtocolに対応し、全てをPDSに保存"
+            },
+            "ownerbenefit":{
+                "title": "開発者認証コメント",
+                "description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能"
+            }
+        },
+		"termofuse": "利用規約",
+		"privacypolicy": "プライバシーポリシー"
+	},
+	"login": {
+		"title": "ログイン",
+		"titleDescription": "Blueskyのアカウントでログイン",
+		"handle": "ハンドル",
+		"create": "Blueskyのアカウントを作成する",
+		"didresolve": "DIDを解決しています",
+		"redirect": "{1}に遷移します",
+		"error":
+		{
+			"whitespace": "ハンドルに空白や改行、タブは入力できません",
+			"notdomain": ".bsky.socialを含めてください",
+			"multibyte": "シングルバイト文字のみ使用できます",
+			"invalidhandle": "無効なハンドルです"
+		}
+	}
+}

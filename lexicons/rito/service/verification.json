@@ -1,0 +1,35 @@
+{
+  "lexicon": 1,
+  "id": "blue.rito.service.verification",
+  "defs": {
+    "main": {
+      "type": "record",
+      "description": "Verificated reference for Owner Bookmarks.",
+      "key": "any",
+      "record": {
+        "type": "object",
+        "required": [
+          "uri",
+          "subject",
+          "createdAt"
+        ],
+        "properties": {
+          "uri": {
+            "type": "string",
+            "format": "uri",
+            "description": "Verificated URI."
+          },
+          "subject": {
+            "type": "ref",
+            "ref": "blue.rito.feed.bookmark#main",
+            "description": "Original record reference."
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

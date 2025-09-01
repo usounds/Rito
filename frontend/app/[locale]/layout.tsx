@@ -7,7 +7,7 @@ import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
-import { Header } from "@/components/header/Header";
+import Header from "@/components/header/Header";
 
 export default async function RootLayout({
   children,

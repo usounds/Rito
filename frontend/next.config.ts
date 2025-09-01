@@ -1,14 +1,49 @@
-import type { NextConfig } from "next";
+import { NextConfig } from "next";
 import createNextIntlPlugin from 'next-intl/plugin';
 
-// next-intl のプラグイン初期化
 const withNextIntl = createNextIntlPlugin();
 
 const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },
+
+  async headers() {
+    if (process.env.NODE_ENV === "development") {
+      return [
+        {
+          source: "/_next/static/(.*)",
+          headers: [
+            {
+              key: "Cache-Control",
+              value: "no-store, max-age=0",
+            },
+          ],
+        },
+      ];
+    }
+
+    return [
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public,max-age=31536000,immutable",
+          },
+        ],
+      },
+      {
+        source: "/_next/data/(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public,max-age=0,must-revalidate",
+          },
+        ],
+      },
+    ];
+  },
 };
 
-// next-intl プラグインを適用
 export default withNextIntl(nextConfig);

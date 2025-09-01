@@ -1,0 +1,78 @@
+{
+  "lexicon": 1,
+  "id": "blue.rito.feed.bookmark",
+  "defs": {
+    "nsid": {
+      "type": "object",
+      "required": [
+        "nsid",
+        "urlSchema"
+      ],
+      "properties": {
+        "nsid": {
+          "type": "string",
+          "description": "Namespace ID of the post e.g. uk.skyblur.post"
+        },
+        "urlSchema": {
+          "type": "string",
+          "description": "Resolved URL of the post, with {did} and {rkey} as placeholders, e.g., https://skyblur.uk/post/{did}/{rkey}"
+        }
+      }
+    },
+    "main": {
+      "type": "record",
+      "description": "Records a bookmark.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": [
+          "title",
+          "subject",
+          "createdAt"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "uri"
+          },
+          "title": {
+            "type": "string",
+            "description": "URI's title",
+            "maxGraphemes": 50,
+            "maxLength": 500
+          },
+          "publicComment": {
+            "type": "string",
+            "description": "URI's comment. It can use GitHub Flavored Markdown.",
+            "maxGraphemes": 2000,
+            "maxLength": 20000
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags describing the uri's description (max 10)",
+            "maxLength": 10,
+            "items": {
+              "type": "string",
+              "minGraphemes": 1,
+              "maxGraphemes": 20,
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          },
+          "resolvers": {
+            "type": "array",
+            "description": "Array of nsid and resolved URL. This field is for ATProto based Web Application owner only.",
+            "items": {
+              "type": "ref",
+              "ref": "blue.rito.feed.bookmark#nsid"
+            }
+          }
+        }
+      }
+    }
+  }
+}

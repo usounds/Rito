@@ -1,6 +1,7 @@
 {
   "name": "rito",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
@@ -28,6 +29,7 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@atcute/lex-cli": "^2.2.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

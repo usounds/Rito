@@ -1,4 +1,7 @@
 "use client";
+import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
+import LanguageToggle from '@/components/LanguageToggle';
+import { SwitchColorMode } from '@/components/SwitchColorMode';
 import {
   Box,
   Burger,
@@ -8,9 +11,7 @@ import {
   Divider,
   Drawer,
   Group,
-  HoverCard,
   ScrollArea,
-  SimpleGrid,
   Text,
   ThemeIcon,
   UnstyledButton,
@@ -23,14 +24,10 @@ import {
 import { useMessages } from 'next-intl';
 import { useState } from 'react';
 import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
-import classes from './Header.module.scss';
-import { Modal } from '@mantine/core';
-import { Authentication } from '@/components/authentication/Authentication';
-import LanguageToggle from '@/components/LanguageToggle';
-import { SwitchColorMode } from '@/components/SwitchColorMode';
 import { FaBookmark } from "react-icons/fa";
+import classes from './Header.module.scss';
 
-export function Header() {
+export default function Header() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
   const theme = useMantineTheme();
@@ -73,6 +70,7 @@ export function Header() {
     </UnstyledButton>
   ));
 
+
   return (
     <Box>
       <header className={classes.header}>
@@ -83,9 +81,6 @@ export function Header() {
           </Group>
 
           <Group h="100%" gap={0} visibleFrom="sm">
-            <a href="/" className={classes.link}>
-              {messages.header.home}
-            </a>
 
             <a href="#" className={classes.link}>
               {messages.header.bookmark}
@@ -94,40 +89,6 @@ export function Header() {
             <a href="#" className={classes.link}>
               {messages.header.browse}
             </a>
-
-            <HoverCard width={600} position="bottom" radius="md" shadow="md" withinPortal>
-              <HoverCard.Target>
-                <a href="#" className={classes.link}>
-                  <Center inline>
-                    <Box component="span" mr={5}>
-                      {messages.header.feature.title}
-                    </Box>
-                    <IconChevronDown size={16} color={theme.colors.blue[6]} />
-                  </Center>
-                </a>
-              </HoverCard.Target>
-
-              <HoverCard.Dropdown style={{ overflow: 'hidden' }}>
-
-                <SimpleGrid cols={2} spacing={0}>
-                  {links}
-                </SimpleGrid>
-
-                <div className={classes.dropdownFooter}>
-                  <Group justify="space-between">
-                    <div>
-                      <Text fw={500} fz="sm">
-                        Get started
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Their food sources have decreased, and their numbers
-                      </Text>
-                    </div>
-                    <Button variant="default">Get started</Button>
-                  </Group>
-                </div>
-              </HoverCard.Dropdown>
-            </HoverCard>
             <a href="#" className={classes.link}>
               {messages.header.termofuse}
             </a>
@@ -137,20 +98,10 @@ export function Header() {
           </Group>
 
           <Group visibleFrom="sm">
-            <Button onClick={() => setOpened(true)} variant="default">{messages.login.title}</Button>
+            <LoginButtonOrUser/>
             <LanguageToggle />
             <SwitchColorMode />
           </Group>
-
-          <Modal
-            opened={opened}
-            onClose={() => setOpened(false)}
-            size="md"
-            title={messages.login.titleDescription}
-            centered
-          >
-            <Authentication />
-          </Modal>
 
           <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" />
         </Group>
@@ -169,17 +120,13 @@ export function Header() {
 
           <Divider my="sm" />
 
-            <a href="#" className={classes.link}>
-              {messages.header.home}
-            </a>
+          <a href="#" className={classes.link}>
+            {messages.header.bookmark}
+          </a>
 
-            <a href="#" className={classes.link}>
-              {messages.header.bookmark}
-            </a>
-
-            <a href="#" className={classes.link}>
-              {messages.header.browse}
-            </a>
+          <a href="#" className={classes.link}>
+            {messages.header.browse}
+          </a>
           <UnstyledButton className={classes.link} onClick={toggleLinks}>
             <Center inline>
               <Box component="span" mr={5}>

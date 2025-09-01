@@ -1,0 +1,84 @@
+"use client";
+import { Button } from "@mantine/core";
+import { Authentication } from "@/components/authentication/Authentication";
+import { Modal } from "@mantine/core";
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { useMessages } from "next-intl";
+import { useEffect, useState } from 'react';
+import { getClientMetadata } from '@/logic/HandleOauth';
+import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browser-client';
+import { Client } from '@atcute/client';
+import { Avatar } from '@mantine/core';
+
+export function LoginButtonOrUser() {
+    const [opened, setOpened] = useState(false);
+    const client = useXrpcAgentStore(state => state.client);
+    const activeDid = useXrpcAgentStore(state => state.activeDid);
+    const setOauthUserAgent = useXrpcAgentStore(state => state.setOauthUserAgent);
+    const setAgent = useXrpcAgentStore(state => state.setAgent);
+    const setUserProf = useXrpcAgentStore(state => state.setUserProf);
+    const userProf = useXrpcAgentStore(state => state.userProf);
+    const messages = useMessages();
+    const isLoggedIn = !!client;
+
+    useEffect(() => {
+        if (activeDid === null || client != null) {
+            return
+        }
+
+        (async () => {
+            const serverMetadata = getClientMetadata();
+            configureOAuth({
+                metadata: {
+                    client_id: serverMetadata.client_id || '',
+                    redirect_uri: serverMetadata.redirect_uris[0],
+                },
+            });
+            const session = await getSession(activeDid as `did:${string}:${string}`, { allowStale: true });
+
+            const agent = new OAuthUserAgent(session);
+            setOauthUserAgent(agent);
+            const rpc = new Client({ handler: agent });
+            setAgent(rpc);
+            console.log(`${agent.sub} was successfully resumed session from ${agent.session.info.server.issuer}.`)
+
+            const userProfile = await rpc.get(`app.bsky.actor.getProfile`, {
+                params: {
+                    actor: agent.sub,
+                },
+            })
+            if (!userProfile.ok) {
+                return { success: false, message: 'System Error : Cannot get userProfile:' + agent.sub }
+
+            }
+
+            setUserProf(userProfile.data);
+
+        })();
+    }, [activeDid, client]);
+
+    return (
+        <>
+            {isLoggedIn && userProf? (
+                // ログイン済みの場合に表示する要素
+                <Avatar src={userProf.avatar} alt={userProf.displayName||userProf.handle} />
+            ) : (
+                <>
+                    <Button onClick={() => setOpened(true)} variant="default">
+                        {messages.login.title}
+                    </Button>
+
+                    <Modal
+                        opened={opened}
+                        onClose={() => setOpened(false)}
+                        size="md"
+                        title={messages.login.titleDescription}
+                        centered
+                    >
+                        <Authentication />
+                    </Modal>
+                </>
+            )}
+        </>
+    );
+}

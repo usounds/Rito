@@ -8,6 +8,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@atcute/bluesky": "^3.2.1",
     "@atcute/client": "^4.0.3",
     "@atcute/lexicons": "^1.1.1",
     "@atcute/oauth-browser-client": "^1.0.26",

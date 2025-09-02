@@ -6,9 +6,17 @@ const _localeSchema = /*#__PURE__*/ v.object({
   $type: /*#__PURE__*/ v.optional(
     /*#__PURE__*/ v.literal("blue.rito.feed.bookmark#locale"),
   ),
-  comment: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
+  comment: /*#__PURE__*/ v.optional(
+    /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
+      /*#__PURE__*/ v.stringLength(0, 20000),
+      /*#__PURE__*/ v.stringGraphemes(0, 2000),
+    ]),
+  ),
   lang: /*#__PURE__*/ v.literalEnum(["en", "ja"]),
-  title: /*#__PURE__*/ v.string(),
+  title: /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
+    /*#__PURE__*/ v.stringLength(0, 500),
+    /*#__PURE__*/ v.stringGraphemes(0, 50),
+  ]),
 });
 const _mainSchema = /*#__PURE__*/ v.record(
   /*#__PURE__*/ v.tidString(),

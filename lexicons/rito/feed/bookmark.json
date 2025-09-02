@@ -37,11 +37,15 @@
         },
         "title": {
           "type": "string",
-          "description": "URI's title"
+          "description": "URI's title",
+          "maxGraphemes": 50,
+          "maxLength": 500
         },
         "comment": {
           "type": "string",
-          "description": "URI's comment. It can use GitHub Flavored Markdown."
+          "description": "URI's comment. It can use GitHub Flavored Markdown.",
+          "maxGraphemes": 2000,
+          "maxLength": 20000
         }
       }
     },

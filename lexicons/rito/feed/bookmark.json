@@ -19,6 +19,36 @@
         }
       }
     },
+    "locale": {
+      "type": "object",
+      "required": [
+        "lang",
+        "title"
+      ],
+      "properties": {
+        "lang": {
+          "type": "string",
+          "enum": [
+            "ja",
+            "en"
+          ],
+          "maxLength": 6,
+          "description": "URI's title"
+        },
+        "title": {
+          "type": "string",
+          "description": "URI's title",
+          "maxGraphemes": 50,
+          "maxLength": 500
+        },
+        "comment": {
+          "type": "string",
+          "description": "URI's comment. It can use GitHub Flavored Markdown.",
+          "maxGraphemes": 2000,
+          "maxLength": 20000
+        }
+      }
+    },
     "main": {
       "type": "record",
       "description": "Records a bookmark.",
@@ -26,8 +56,7 @@
       "record": {
         "type": "object",
         "required": [
-          "title",
-          "subject",
+          "titles",
           "createdAt"
         ],
         "properties": {
@@ -35,17 +64,14 @@
             "type": "string",
             "format": "uri"
           },
-          "title": {
-            "type": "string",
-            "description": "URI's title",
-            "maxGraphemes": 50,
-            "maxLength": 500
-          },
-          "publicComment": {
-            "type": "string",
-            "description": "URI's comment. It can use GitHub Flavored Markdown.",
-            "maxGraphemes": 2000,
-            "maxLength": 20000
+          "titles": {
+            "type": "array",
+            "description": "Title and comment in different languages.",
+            "minLength": 1,
+            "items": {
+              "type": "ref",
+              "ref": "blue.rito.feed.bookmark#locale"
+            }
           },
           "tags": {
             "type": "array",

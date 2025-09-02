@@ -1,6 +1,6 @@
 {
 	"title": "リト",
-	"description": "リト(Rito)は、ATProtocolを利用したソーシャルブックマークサービスです。シンプルに、かつ、細やかに、ATProtocolに関わらずWeb上のあらゆるものをブックマークし、共有できる場を提供します。",
+	"description": "ATProtocolを利用したソーシャルブックマークサービスです。シンプルに、かつ、細やかに、Web上のあらゆるものをブックマークし、共有できる場を提供します。",
 	"ogp": {
 		"title": "リト(Rito)",
 		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
@@ -8,7 +8,7 @@
 	"header": {
 		"home": "ホーム",
 		"bookmark": "マイブックマーク",
-		"browse": "探索",
+		"browse": "探す",
 		"feature":{
             "title" : "機能",
             "allbookmark":{
@@ -43,6 +43,40 @@
 			"notdomain": ".bsky.socialを含めてください",
 			"multibyte": "シングルバイト文字のみ使用できます",
 			"invalidhandle": "無効なハンドルです"
+		}
+	},
+	"create":{
+		"title": "ブックマークの登録",
+		"description": "コメントやタグは公開されます。",
+		"field":{
+			"url":{
+				"title": "URL",
+				"placeholder": "https://rito.blue",
+				"description": "ブックマークするURL"
+			},
+			"title":{
+				"title": "タイトル",
+				"placeholder": "Rito",
+				"description": "このブックマークの名前"
+			},
+			"tag":{
+				"title": "タグ",
+				"placeholder": "ATProto",
+				"description": "URLを分類するタグ(10個まで)"
+			},
+			"comment":{
+				"title": "コメント",
+				"placeholder": "エキサイティングなサイトです",
+				"description": "URLのコメント"
+			}
+		},
+		"button":{
+			"regist": "登録",
+			"ogp": "タイトルとコメントを取得",
+			"update": "更新"
+		},
+		"error":{
+			"invalidurl":"URLの形式が不正です"
 		}
 	}
 }

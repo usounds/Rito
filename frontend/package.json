@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
     "build": "next build --turbopack",
-    "start": "next start"
+    "start": "next start",
+    "lex-gen": "npx lex-cli generate -c ./lex.config.js"
   },
   "dependencies": {
     "@atcute/bluesky": "^3.2.1",
@@ -21,6 +22,7 @@
     "@tabler/icons-react": "^3.34.1",
     "next": "15.5.2",
     "next-intl": "^4.3.5",
+    "open-graph-scraper": "^6.10.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-icons": "^5.5.0",

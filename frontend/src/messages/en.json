@@ -43,5 +43,36 @@
 			"multibyte": "Only single-byte characters are allowed",
 			"invalidhandle": "Invalid handle"
 		}
+	},
+	"create":{
+		"title": "ブックマークの登録",
+		"description": "コメントやタグは公開されます。",
+		"field":{
+			"url":{
+				"title": "URL",
+				"placeholder": "https://rito.blue",
+				"description": "ブックマークするURLを入力してください"
+			},
+			"title":{
+				"title": "タイトル",
+				"placeholder": "Rito",
+				"description": "このブックマークの名前"
+			},
+			"tag":{
+				"title": "タグ",
+				"placeholder": "ATProto",
+				"description": "URLを分類するタグ"
+			},
+			"comment":{
+				"title": "コメント",
+				"placeholder": "エキサイティングなサイトです",
+				"description": "URLのコメント"
+			}
+		},
+		"button":{
+			"regist": "登録",
+			"ogp": "タイトルとコメントを取得",
+			"update": "更新"
+		}
 	}
 }

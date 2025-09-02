@@ -1,17 +1,20 @@
 "use client";
-import { Button } from "@mantine/core";
-import { Authentication } from "@/components/authentication/Authentication";
+import { Authentication } from "@/components/Authentication";
 import { Modal } from "@mantine/core";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { useMessages } from "next-intl";
 import { useEffect, useState } from 'react';
 import { getClientMetadata } from '@/logic/HandleOauth';
+import { RegistBookmark } from '@/components/RegistBookmark';
 import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browser-client';
 import { Client } from '@atcute/client';
 import { Avatar } from '@mantine/core';
+import { Affix, Button } from '@mantine/core';
+import { MdOutlineBookmarkAdd } from "react-icons/md";
 
 export function LoginButtonOrUser() {
-    const [opened, setOpened] = useState(false);
+    const [loginOpened, setLoginOpened] = useState(false);
+    const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
     const client = useXrpcAgentStore(state => state.client);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const setOauthUserAgent = useXrpcAgentStore(state => state.setOauthUserAgent);
@@ -59,18 +62,39 @@ export function LoginButtonOrUser() {
 
     return (
         <>
-            {isLoggedIn && userProf? (
+            {isLoggedIn && userProf ? (
                 // ログイン済みの場合に表示する要素
-                <Avatar src={userProf.avatar} alt={userProf.displayName||userProf.handle} />
+                <>
+                    <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} />
+                    <Affix position={{ bottom: 20, right: 20 }}>
+                        <Button
+                            onClick={() => setQuickRegistBookmark(true)}
+                            leftSection={<MdOutlineBookmarkAdd size={16} />}
+                        >
+                            {messages.create.title}
+                        </Button>
+                    </Affix>
+
+                    <Modal
+                        opened={quickRegistBookmark}
+                        onClose={() => setQuickRegistBookmark(false)}
+                        size="70%"
+                        title={messages.create.title}
+                        centered
+                    >
+                        <RegistBookmark />
+                    </Modal>
+                </>
+
             ) : (
                 <>
-                    <Button onClick={() => setOpened(true)} variant="default">
+                    <Button onClick={() => setLoginOpened(true)} variant="default">
                         {messages.login.title}
                     </Button>
 
                     <Modal
-                        opened={opened}
-                        onClose={() => setOpened(false)}
+                        opened={loginOpened}
+                        onClose={() => setLoginOpened(false)}
                         size="md"
                         title={messages.login.titleDescription}
                         centered

@@ -80,7 +80,7 @@ export default function Header() {
             <Text>{messages.title}</Text>
           </Group>
 
-          <Group h="100%" gap={0} visibleFrom="sm">
+          <Group h="100%" gap={0} visibleFrom="sm" className={classes.center}>
 
             <a href="#" className={classes.link}>
               {messages.header.bookmark}
@@ -98,7 +98,7 @@ export default function Header() {
           </Group>
 
           <Group visibleFrom="sm">
-            <LoginButtonOrUser/>
+            <LoginButtonOrUser />
             <LanguageToggle />
             <SwitchColorMode />
           </Group>

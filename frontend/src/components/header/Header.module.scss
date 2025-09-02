@@ -14,7 +14,6 @@ $mantine-breakpoint-xl: 88em;
 .link {
   display: flex;
   align-items: center;
-  height: 100%;
   padding-left: 0.5;
   padding-right:0.5;
   text-decoration: none;
@@ -34,27 +33,9 @@ $mantine-breakpoint-xl: 88em;
 
 .center {
   position: absolute;
+  height: auto !important;
   left: 50%;
-  transform: translateX(-50%); // ⬅️ 中央寄せのキモ！
+  transform: translateX(-50%); 
   display: flex;
   gap: var(--mantine-spacing-md);
-}
-
-.subLink {
-  width: 100%;
-  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
-  border-radius: var(--mantine-radius-md);
-
-  @mixin hover {
-    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7));
-  }
-}
-
-.dropdownFooter {
-  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-7));
-  margin: calc(var(--mantine-spacing-md) * -1);
-  margin-top: var(--mantine-spacing-sm);
-  padding: var(--mantine-spacing-md) calc(var(--mantine-spacing-md) * 2);
-  padding-bottom: var(--mantine-spacing-xl);
-  border-top: 1px solid light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
 }

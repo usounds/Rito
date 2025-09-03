@@ -10,23 +10,20 @@ export class ResolverError extends Error {
 }
 
 export const resolveHandleViaHttp = async (handle: string): Promise<Did> => {
-	const url = new URL('/.well-known/atproto-did', `https://${handle}`);
+	const response = await fetch(`/api/resolveHandle?handle=${encodeURIComponent(handle)}`);
 
-	const response = await fetch(url, { redirect: 'error' });
 	if (!response.ok) {
 		throw new ResolverError(`domain is unreachable`);
 	}
 
-	const text = await response.text();
+	const data = await response.json() as { did?: string };
 
-	const did = text.split('\n')[0]!.trim();
-	if (isDid(did)) {
-		return did;
+	if (data.did && isDid(data.did)) {
+		return data.did;
 	}
 
 	throw new ResolverError(`failed to resolve ${handle}`);
 };
-
 
 const SUBDOMAIN = '_atproto';
 const PREFIX = 'did=';

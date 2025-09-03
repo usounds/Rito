@@ -16,9 +16,11 @@ import { configureOAuth, createAuthorizationUrl, IdentityMetadata, Authorization
 import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
 import { HiX } from "react-icons/hi";
 import { useEffect, useState } from "react";
+import { Switch } from '@mantine/core';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [checked, setChecked] = useState(false);
   const messages = useMessages();
 
   function sleep(ms: number) {
@@ -184,8 +186,8 @@ export function Authentication(props: PaperProps) {
       <Stack>
         <TextInput
           required
-          label={messages.login.handle}
-          placeholder="alice.bsky.social"
+          label={messages.login.field.handle.title}
+          placeholder={messages.login.field.handle.placeholder}
           value={form.values.handle}
           onChange={(event) => form.setFieldValue('handle', event.currentTarget.value)}
           error={form.errors.handle}
@@ -195,6 +197,12 @@ export function Authentication(props: PaperProps) {
               fontSize: 16,  // 16pxに設定
             },
           }}
+        />
+
+        <Switch
+          checked={checked}
+           label={messages.login.field.agree.title}
+          onChange={(event) => setChecked(event.currentTarget.checked)}
         />
 
       </Stack>
@@ -211,8 +219,8 @@ export function Authentication(props: PaperProps) {
         >
           {messages.login.create}
         </Anchor>
-        <Button type="submit" radius="xl" loading={isLoading}>
-          {messages.login.title}
+        <Button type="submit" radius="xl" loading={isLoading} disabled={!checked}>
+          {messages.login.button.login}
         </Button>
       </Group>
     </form>

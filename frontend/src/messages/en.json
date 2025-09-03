@@ -38,6 +38,18 @@
 		"create": "Create a Bluesky account",
 		"didresolve": "Resolving DID",
 		"redirect": "Redirecting to {1}",
+		"field": {
+			"handle": {
+				"title": "Handle",
+				"placeholder": "alice.bsky.social"
+			},
+			"agree": {
+				"title": "利用規約とプライバシーポリシーに同意する"
+			}
+		},
+		"button": {
+			"login": "Login"
+		},
 		"error": {
 			"whitespace": "Handle cannot contain spaces, line breaks, or tabs",
 			"notdomain": "Must include .bsky.social",
@@ -45,46 +57,45 @@
 			"invalidhandle": "Invalid handle"
 		}
 	},
-	"create":{
+	"create": {
 		"title": "ブックマークの登録",
 		"description": "コメントやタグは公開されます。",
-		"field":{
-			"url":{
+		"field": {
+			"url": {
 				"title": "URL",
 				"placeholder": "https://rito.blue",
 				"description": "ブックマークするURL",
 				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
 			},
-			"title":{
+			"title": {
 				"title": "タイトル",
 				"placeholder": "Rito",
 				"description": "このブックマークの名前"
 			},
-			"tag":{
+			"tag": {
 				"title": "タグ",
 				"placeholder": "ATProto",
 				"description": "URLを分類するタグ(10個まで)"
 			},
-			"comment":{
+			"comment": {
 				"title": "コメント",
 				"placeholder": "エキサイティングなサイトです",
 				"description": "URLのコメント"
 			}
 		},
-		"button":{
+		"button": {
 			"regist": "登録",
 			"verify": "認証",
 			"ogp": "タイトルとコメントを取得",
 			"update": "更新"
 		},
-		"inform":{
+		"inform": {
 			"canverify": "あなたはこのURLの認証コメントを登録できます"
-			
 		},
-		"error":{
-			"invalidurl":"URLの形式が不正です",
-			"urlMandatory":"URLは必須です",
-			"titleMandatory":"タイトルは必須です"
+		"error": {
+			"invalidurl": "URLの形式が不正です",
+			"urlMandatory": "URLは必須です",
+			"titleMandatory": "タイトルは必須です"
 		}
 	}
 }

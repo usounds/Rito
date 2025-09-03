@@ -1,8 +1,10 @@
 "use client";
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { nsidSchema } from "@/nsid/mapping";
+import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Input, Stack, TagsInput, Textarea } from '@mantine/core';
+import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
 import { useMessages } from "next-intl";
 import { useState } from 'react';
 import { CgWebsite } from "react-icons/cg";
@@ -21,17 +23,21 @@ export const RegistBookmark: React.FC = () => {
     const [isCanVerify, setIsVerify] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
+    const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
+    const [schema, setSchema] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
-    const [aturi, setAturi] = useState<string>('');
-    const [cid, setCid] = useState<string>('');
-    const [lang, setLang] = useState<'ja' | 'en'>('ja');
+    //const [aturi, setAturi] = useState<string>('');
+    //const [cid, setCid] = useState<string>('');
+    //const [lang, setLang] = useState<'ja' | 'en'>('ja');
 
-    const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleUrlChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const value = e.target.value;
         setUrl(value);
         setIsVerify(false)
+        setUrlError(null);
+        setSchema(null);
 
         try {
             // URLが正しいかチェック
@@ -45,15 +51,35 @@ export const RegistBookmark: React.FC = () => {
                     setIsVerify(true)
                 }
             }
-            setUrlError(null); // 問題なければエラークリア
         } catch {
-            setUrlError(messages.create.error.invalidurl); // エラーを表示
+            if (isResourceUri(value)) {
+                const result = parseCanonicalResourceUri(value);
+
+                if (result.ok) {
+                    setAturiParsed(result.value);
+                    const schemaEntry = nsidSchema.find(entry => entry.nsid === result.value.collection);
+                    const schema = schemaEntry?.schema ?? null;
+                    setSchema(schema);
+                } else {
+                    setAturiParsed(null);
+                    setSchema(null)
+                }
+
+            } else {
+                setUrlError(messages.create.error.invalidurl); // エラーを表示
+
+            }
         }
     };
 
     const handleGetOgp = async () => {
         setUrlError('')
         setTitleError('')
+
+        let ogpUrl = url
+        if (schema && aturiParsed) {
+            ogpUrl = schema.replace('{did}', aturiParsed.repo).replace('{rkey}', aturiParsed.rkey)
+        }
         if (!url) {
             setUrlError(messages.create.error.urlMandatory)
             return
@@ -61,7 +87,7 @@ export const RegistBookmark: React.FC = () => {
         setIsFetchOGP(true);
 
         try {
-            const result = await fetch(`/api/fetchOgp?url=${encodeURIComponent(url)}`, {
+            const result = await fetch(`/api/fetchOgp?url=${encodeURIComponent(ogpUrl)}`, {
                 method: 'GET',
             });
             if (result.status === 200) {
@@ -136,30 +162,49 @@ export const RegistBookmark: React.FC = () => {
     return (
         <>
             <Stack gap="md">
-                <Input.Wrapper label={messages.create.field.url.title} description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description} error={urlError}>
-                    <Input
-                        placeholder={messages.create.field.url.placeholder}
-                        value={url} onChange={handleUrlChange}
-                        leftSection={isCanVerify && <RiVerifiedBadgeLine size={16} />}
-                        styles={{ input: { fontSize: 16, }, }} />
-                </Input.Wrapper>
-                <Input.Wrapper label={messages.create.field.title.title} description={messages.create.field.title.description} >
-                    <Input
-                        placeholder={messages.create.field.title.placeholder}
-                        value={title}
-                        maxLength={50}
-                        onChange={(e) => setTitle(e.target.value)}
-                        error={titleError}
-                        styles={{ input: { fontSize: 16, }, }} />
-                </Input.Wrapper>
-                <Input.Wrapper label={messages.create.field.comment.title} description={messages.create.field.comment.description} >
-                    <Textarea
-                        placeholder={messages.create.field.comment.placeholder}
-                        value={comment}
-                        maxLength={2000}
-                        autosize onChange={(e) => setComment(e.target.value)}
-                        styles={{ input: { fontSize: 16, }, }} />
-                </Input.Wrapper>
+                <TextInput
+                    label={messages.create.field.url.title}
+                    description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
+                    placeholder={messages.create.field.url.placeholder}
+                    value={url} onChange={handleUrlChange}
+                    leftSection={isCanVerify && <RiVerifiedBadgeLine size={16} />}
+                    withAsterisk
+                    error={urlError}
+                    styles={{ input: { fontSize: 16, }, }} />
+                <Group justify="center">
+                    <Button
+                        leftSection={<CgWebsite size={16} />}
+                        variant="default"
+                        onClick={handleGetOgp}
+                        loading={isFetchOGP}
+                        style={{ width: "auto" }}
+                        disabled={
+                            !url.startsWith('https://') &&
+                            !schema == null
+                        }
+                    >
+                        {messages.create.button.ogp}
+                    </Button>
+                </Group>
+                <TextInput
+                    label={messages.create.field.title.title}
+                    placeholder={messages.create.field.title.placeholder}
+                    description={messages.create.field.title.description}
+                    value={title}
+                    maxLength={50}
+                    onChange={(e) => setTitle(e.target.value)}
+                    error={titleError}
+                    withAsterisk
+                    styles={{ input: { fontSize: 16, }, }} />
+                <Textarea
+                    label={messages.create.field.comment.title}
+                    description={messages.create.field.comment.description}
+                    placeholder={messages.create.field.comment.placeholder}
+                    value={comment}
+                    maxLength={2000}
+                    autosize
+                    onChange={(e) => setComment(e.target.value)}
+                    styles={{ input: { fontSize: 16, }, }} />
                 <TagsInput
                     data={[]}
                     value={tags}
@@ -173,11 +218,10 @@ export const RegistBookmark: React.FC = () => {
                     styles={{ input: { fontSize: 16, }, }} />
 
                 <Group justify="right">
-                    <Button leftSection={<CgWebsite size={16} />} variant="default" onClick={handleGetOgp} loading={isFetchOGP} disabled={url.length < 10}>{messages.create.button.ogp}</Button>
                     <Button leftSection={<MdOutlineBookmarkAdd size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
                     {isCanVerify && <Button leftSection={<RiVerifiedBadgeLine size={16} />} onClick={handleSubmit} loading={isSubmit} variant="light">{messages.create.button.verify}</Button>}
                 </Group>
-            </Stack>
+            </Stack >
 
         </>
     );

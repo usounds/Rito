@@ -59,7 +59,7 @@ export default function Home() {
         <Center style={{ width: '100vw', height: '100vh' }}>
             <Flex gap="xl" align="center">
                 <Loader color="blue" />
-                <Text size="xl">Processing...</Text>
+                <Text size="md">Processing...</Text>
             </Flex>
         </Center>
     );

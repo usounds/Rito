@@ -10,82 +10,91 @@
 		"bookmark": "マイブックマーク",
 		"browse": "探す",
 		"navigation": "ナビゲーション",
-		"feature":{
-            "title" : "機能",
-            "allbookmark":{
-                "title": "ブックマーク",
-                "description": "WebサイトをBlueskyのアカウントでまとめて管理",
-                "longdescription": "WebサイトをBlueskyのアカウントでまとめて管理できます。ブックマークにはコメントとタグをつけて管理できます。"
-            },
-            "atproto":{
-                "title": "Build with ATProtocol",
-                "description": "ATProtocolに対応し、全てをPDSに保存",
-                "longdescription": "ATPrototolに対応し、全てをPDSに保存します。"
-            },
-            "ownerbenefit":{
-                "title": "オーナーコメント",
-                "description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
-                "longdescription": "プロダクトのオーナーは、特殊なブックマークを作成できます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
-            }
-        },
+		"feature": {
+			"title": "機能",
+			"allbookmark": {
+				"title": "ブックマーク",
+				"description": "WebサイトをBlueskyのアカウントでまとめて管理",
+				"longdescription": "WebサイトをBlueskyのアカウントでまとめて管理できます。ブックマークにはコメントとタグをつけて管理できます。"
+			},
+			"atproto": {
+				"title": "Build with ATProtocol",
+				"description": "ATProtocolに対応し、全てをPDSに保存",
+				"longdescription": "ATPrototolに対応し、全てをPDSに保存します。"
+			},
+			"ownerbenefit": {
+				"title": "オーナーコメント",
+				"description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
+				"longdescription": "プロダクトのオーナーは、特殊なブックマークを作成できます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
+			}
+		},
 		"termofuse": "利用規約",
 		"privacypolicy": "プライバシーポリシー"
 	},
 	"login": {
 		"title": "ログイン",
 		"titleDescription": "Blueskyのアカウントでログイン",
-		"handle": "ハンドル",
 		"create": "Blueskyのアカウントを作成する",
 		"didresolve": "DIDを解決しています",
 		"redirect": "{1}に遷移します",
-		"error":
-		{
+		"field": {
+			"handle": {
+				"title": "ログイン",
+				"placeholder": "alice.bsky.social"
+			},
+			"agree": {
+				"title": "利用規約とプライバシーポリシーに同意する"
+			}
+		},
+		"button": {
+			"login": "ログイン"
+		},
+		"error": {
 			"whitespace": "ハンドルに空白や改行、タブは入力できません",
 			"notdomain": ".bsky.socialを含めてください",
 			"multibyte": "シングルバイト文字のみ使用できます",
 			"invalidhandle": "無効なハンドルです"
 		}
 	},
-	"create":{
+	"create": {
 		"title": "ブックマークの登録",
 		"description": "コメントやタグは公開されます。",
-		"field":{
-			"url":{
+		"field": {
+			"url": {
 				"title": "URL",
 				"placeholder": "https://rito.blue",
 				"description": "ブックマークするURL",
 				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
 			},
-			"title":{
+			"title": {
 				"title": "タイトル",
-				"placeholder": "Rito",
+				"placeholder": "リト",
 				"description": "ブックマークの名前"
 			},
-			"tag":{
+			"tag": {
 				"title": "タグ",
 				"placeholder": "ATProto",
 				"description": "URLを分類するタグ(10個まで)"
 			},
-			"comment":{
+			"comment": {
 				"title": "コメント",
-				"placeholder": "エキサイティングなサイトです",
+				"placeholder": "ソーシャルブックマーク",
 				"description": "ブックマークのコメント"
 			}
 		},
-		"button":{
+		"button": {
 			"regist": "登録",
 			"verify": "認証",
 			"ogp": "タイトルとコメントを取得",
 			"update": "更新"
 		},
-		"inform":{
+		"inform": {
 			"canverify": "あなたはこのURLの認証コメントを登録できます"
-			
 		},
-		"error":{
-			"invalidurl":"URLの形式が不正です",
-			"urlMandatory":"URLは必須です",
-			"titleMandatory":"タイトルは必須です"
+		"error": {
+			"invalidurl": "URLの形式が不正です",
+			"urlMandatory": "URLは必須です",
+			"titleMandatory": "タイトルは必須です"
 		}
 	}
 }

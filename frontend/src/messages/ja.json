@@ -9,6 +9,7 @@
 		"home": "ホーム",
 		"bookmark": "マイブックマーク",
 		"browse": "探す",
+		"navigation": "ナビゲーション",
 		"feature":{
             "title" : "機能",
             "allbookmark":{
@@ -22,7 +23,7 @@
                 "longdescription": "ATPrototolに対応し、全てをPDSに保存します。"
             },
             "ownerbenefit":{
-                "title": "開発者認証コメント",
+                "title": "オーナーコメント",
                 "description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
                 "longdescription": "プロダクトのオーナーは、特殊なブックマークを作成できます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
             }
@@ -52,12 +53,13 @@
 			"url":{
 				"title": "URL",
 				"placeholder": "https://rito.blue",
-				"description": "ブックマークするURL"
+				"description": "ブックマークするURL",
+				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
 			},
 			"title":{
 				"title": "タイトル",
 				"placeholder": "Rito",
-				"description": "このブックマークの名前"
+				"description": "ブックマークの名前"
 			},
 			"tag":{
 				"title": "タグ",
@@ -67,16 +69,23 @@
 			"comment":{
 				"title": "コメント",
 				"placeholder": "エキサイティングなサイトです",
-				"description": "URLのコメント"
+				"description": "ブックマークのコメント"
 			}
 		},
 		"button":{
 			"regist": "登録",
+			"verify": "認証",
 			"ogp": "タイトルとコメントを取得",
 			"update": "更新"
 		},
+		"inform":{
+			"canverify": "あなたはこのURLの認証コメントを登録できます"
+			
+		},
 		"error":{
-			"invalidurl":"URLの形式が不正です"
+			"invalidurl":"URLの形式が不正です",
+			"urlMandatory":"URLは必須です",
+			"titleMandatory":"タイトルは必須です"
 		}
 	}
 }

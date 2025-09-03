@@ -1,10 +1,14 @@
 "use client";
+import { BlueRitoFeedBookmark } from '@/lexicons';
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import * as TID from '@atcute/tid';
 import { Button, Group, Input, Stack, TagsInput, Textarea } from '@mantine/core';
 import { useMessages } from "next-intl";
 import { useState } from 'react';
-import { BlueRitoFeedBookmark } from '@/lexicons';
-import * as TID from '@atcute/tid';
-import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { CgWebsite } from "react-icons/cg";
+import { IoMdPricetags } from "react-icons/io";
+import { MdOutlineBookmarkAdd } from "react-icons/md";
+import { RiVerifiedBadgeLine } from "react-icons/ri";
 
 export const RegistBookmark: React.FC = () => {
     const messages = useMessages();
@@ -13,17 +17,34 @@ export const RegistBookmark: React.FC = () => {
     const [comment, setComment] = useState<string>('');
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
+    const [isSubmit, setIsSubmit] = useState(false);
+    const [isCanVerify, setIsVerify] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
+    const [titleError, setTitleError] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
+    const identities = useXrpcAgentStore(state => state.identities);
+    const [aturi, setAturi] = useState<string>('');
+    const [cid, setCid] = useState<string>('');
+    const [lang, setLang] = useState<'ja' | 'en'>('ja');
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setUrl(value);
+        setIsVerify(false)
 
         try {
             // URLが正しいかチェック
-            new URL(value);
+            const url = new URL(value)
+            const domain = url.hostname
+            const identify = identities.find(identity => identity.did === oauthUserAgent?.sub)
+
+            if (url.pathname === '/' || url.pathname === '') {
+                if (identify && (domain == identify.handle || domain.endsWith('.' + identify.handle))) {
+                    console.log('認証できる')
+                    setIsVerify(true)
+                }
+            }
             setUrlError(null); // 問題なければエラークリア
         } catch {
             setUrlError(messages.create.error.invalidurl); // エラーを表示
@@ -31,7 +52,12 @@ export const RegistBookmark: React.FC = () => {
     };
 
     const handleGetOgp = async () => {
-        if (!url) return
+        setUrlError('')
+        setTitleError('')
+        if (!url) {
+            setUrlError(messages.create.error.urlMandatory)
+            return
+        }
         setIsFetchOGP(true);
 
         try {
@@ -54,9 +80,20 @@ export const RegistBookmark: React.FC = () => {
     };
 
     const handleSubmit = async () => {
-        const path = window.location.pathname 
-        const parts = path.split('/').filter(Boolean) 
-        const lang = parts[0] as 'ja' | 'en' 
+        setUrlError('')
+        setTitleError('')
+        if (!url) {
+            setUrlError(messages.create.error.urlMandatory)
+            return
+        }
+        if (!title) {
+            setTitleError(messages.create.error.titleMandatory)
+            return
+        }
+        setIsSubmit(true)
+        const path = window.location.pathname
+        const parts = path.split('/').filter(Boolean)
+        const lang = parts[0] as 'ja' | 'en'
 
         const obj: BlueRitoFeedBookmark.Main = {
             $type: "blue.rito.feed.bookmark",
@@ -64,7 +101,7 @@ export const RegistBookmark: React.FC = () => {
             subject: url as `${string}:${string}`,
             titles: [
                 {
-                    lang:lang,
+                    lang: lang,
                     title: title || '',
                     comment: comment || '',
                 }
@@ -86,25 +123,42 @@ export const RegistBookmark: React.FC = () => {
 
         const ret = await client.post('com.atproto.repo.applyWrites', {
             input: {
-                repo: oauthUserAgent?.sub,
+                repo: oauthUserAgent.sub,
                 writes: writes
             },
         });
 
         console.log(ret);
+
+        setIsSubmit(false)
     }
 
     return (
         <>
             <Stack gap="md">
-                <Input.Wrapper label={messages.create.field.url.title} description={messages.create.field.url.description} error={urlError}>
-                    <Input placeholder={messages.create.field.url.placeholder} value={url} onChange={handleUrlChange} />
+                <Input.Wrapper label={messages.create.field.url.title} description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description} error={urlError}>
+                    <Input
+                        placeholder={messages.create.field.url.placeholder}
+                        value={url} onChange={handleUrlChange}
+                        leftSection={isCanVerify && <RiVerifiedBadgeLine size={16} />}
+                        styles={{ input: { fontSize: 16, }, }} />
                 </Input.Wrapper>
                 <Input.Wrapper label={messages.create.field.title.title} description={messages.create.field.title.description} >
-                    <Input placeholder={messages.create.field.title.placeholder} value={title} maxLength={50} onChange={(e) => setTitle(e.target.value)} />
+                    <Input
+                        placeholder={messages.create.field.title.placeholder}
+                        value={title}
+                        maxLength={50}
+                        onChange={(e) => setTitle(e.target.value)}
+                        error={titleError}
+                        styles={{ input: { fontSize: 16, }, }} />
                 </Input.Wrapper>
                 <Input.Wrapper label={messages.create.field.comment.title} description={messages.create.field.comment.description} >
-                    <Textarea placeholder={messages.create.field.comment.placeholder} value={comment} maxLength={2000} autosize onChange={(e) => setComment(e.target.value)} />
+                    <Textarea
+                        placeholder={messages.create.field.comment.placeholder}
+                        value={comment}
+                        maxLength={2000}
+                        autosize onChange={(e) => setComment(e.target.value)}
+                        styles={{ input: { fontSize: 16, }, }} />
                 </Input.Wrapper>
                 <TagsInput
                     data={[]}
@@ -114,11 +168,14 @@ export const RegistBookmark: React.FC = () => {
                     description={messages.create.field.tag.description}
                     placeholder={messages.create.field.tag.placeholder}
                     maxTags={10}
-                    maxLength={20} />
+                    maxLength={20}
+                    leftSection={<IoMdPricetags size={16} />}
+                    styles={{ input: { fontSize: 16, }, }} />
 
                 <Group justify="right">
-                    <Button variant="default" onClick={handleGetOgp} loading={isFetchOGP} >{messages.create.button.ogp}</Button>
-                    <Button onClick={handleSubmit}>{messages.create.button.regist}</Button>
+                    <Button leftSection={<CgWebsite size={16} />} variant="default" onClick={handleGetOgp} loading={isFetchOGP} disabled={url.length < 10}>{messages.create.button.ogp}</Button>
+                    <Button leftSection={<MdOutlineBookmarkAdd size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
+                    {isCanVerify && <Button leftSection={<RiVerifiedBadgeLine size={16} />} onClick={handleSubmit} loading={isSubmit} variant="light">{messages.create.button.verify}</Button>}
                 </Group>
             </Stack>
 

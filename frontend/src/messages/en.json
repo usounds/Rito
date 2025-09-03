@@ -1,6 +1,6 @@
 {
 	"title": "Rito",
-	"description": "Rito(リト) is a bookmark management service that uses the ATProtocol.",
+	"description": "Rito is a bookmark management service that uses the ATProtocol.",
 	"ogp": {
 		"title": "Rito",
 		"description": "A social bookmarking platform connecting users and developers."
@@ -9,6 +9,7 @@
 		"home": "Home",
 		"bookmark": "My Bookmarks",
 		"browse": "Browse",
+		"navigation": "Navigation",
 		"feature": {
 			"title": "Features",
 			"allbookmark": {
@@ -22,8 +23,8 @@
 				"longdescription": "Fully compatible with ATProtocol, all data is stored in your PDS."
 			},
 			"ownerbenefit": {
-				"title": "Developer Verified Comments",
-				"description": "Developers of ATProtocol-based products can add descriptions to their products",
+				"title": "Owner Verified Comments",
+				"description": "Owner of ATProtocol-based products can add descriptions to their products",
 				"longdescription": "Product owners can create special bookmarks that display their service description at the top of the bookmark list."
 			}
 		},
@@ -51,7 +52,8 @@
 			"url":{
 				"title": "URL",
 				"placeholder": "https://rito.blue",
-				"description": "ブックマークするURLを入力してください"
+				"description": "ブックマークするURL",
+				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
 			},
 			"title":{
 				"title": "タイトル",
@@ -61,7 +63,7 @@
 			"tag":{
 				"title": "タグ",
 				"placeholder": "ATProto",
-				"description": "URLを分類するタグ"
+				"description": "URLを分類するタグ(10個まで)"
 			},
 			"comment":{
 				"title": "コメント",
@@ -71,8 +73,18 @@
 		},
 		"button":{
 			"regist": "登録",
+			"verify": "認証",
 			"ogp": "タイトルとコメントを取得",
 			"update": "更新"
+		},
+		"inform":{
+			"canverify": "あなたはこのURLの認証コメントを登録できます"
+			
+		},
+		"error":{
+			"invalidurl":"URLの形式が不正です",
+			"urlMandatory":"URLは必須です",
+			"titleMandatory":"タイトルは必須です"
 		}
 	}
 }

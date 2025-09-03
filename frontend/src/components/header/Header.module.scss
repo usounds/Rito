@@ -11,6 +11,25 @@ $mantine-breakpoint-xl: 88em;
   border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
 }
 
+
+.title {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+  font-size: var(--mantine-font-size-md);
+  font-weight: 500;
+
+  @media (max-width: $mantine-breakpoint-sm) {
+    height: 42px;
+    width: 100%;
+  }
+
+  @mixin hover {
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  }
+}
+
 .link {
   display: flex;
   align-items: center;

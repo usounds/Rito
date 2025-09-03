@@ -7,7 +7,7 @@ import {
   Burger,
   Button,
   Center,
-  Collapse,
+  Stack,
   Divider,
   Drawer,
   Group,
@@ -26,10 +26,12 @@ import { useState } from 'react';
 import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
 import { FaBookmark } from "react-icons/fa";
 import classes from './Header.module.scss';
+import Link from 'next/link'
+import { useLocale } from "next-intl";
 
 export default function Header() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
-  const [linksOpened, { toggle: toggleLinks }] = useDisclosure(false);
+  const locale = useLocale();
   const theme = useMantineTheme();
   const messages = useMessages();
   const [opened, setOpened] = useState(false);
@@ -77,14 +79,14 @@ export default function Header() {
         <Group justify="space-between" h="100%">
           <Group align="center" gap="sm">
             <FaBookmark color={theme.colors.blue[6]} />
-            <Text>{messages.title}</Text>
+            <Text><Link href={`/${locale}/`} className={classes.title}>{messages.title}</Link></Text>
           </Group>
 
           <Group h="100%" gap={0} visibleFrom="sm" className={classes.center}>
 
-            <a href="#" className={classes.link}>
+            <Link href={`/${locale}/mybookmark`} className={classes.link}>
               {messages.header.bookmark}
-            </a>
+            </Link>
 
             <a href="#" className={classes.link}>
               {messages.header.browse}
@@ -112,51 +114,34 @@ export default function Header() {
         onClose={closeDrawer}
         size="100%"
         padding="md"
-        title={messages.title}
+        title={messages.header.navigation}
         hiddenFrom="sm"
-        zIndex={1000000}
+        zIndex={100}
       >
         <ScrollArea h="calc(100vh - 80px" mx="-md">
 
           <Divider my="sm" />
 
-          <a href="#" className={classes.link}>
-            {messages.header.bookmark}
-          </a>
-
-          <a href="#" className={classes.link}>
-            {messages.header.browse}
-          </a>
-          <UnstyledButton className={classes.link} onClick={toggleLinks}>
-            <Center inline>
-              <Box component="span" mr={5}>
-                {messages.header.feature.title}
-              </Box>
-              <IconChevronDown size={16} color={theme.colors.blue[6]} />
-            </Center>
-          </UnstyledButton>
-          <Collapse in={linksOpened}>{links}</Collapse>
-          <a href="#" className={classes.link}>
-            {messages.header.termofuse}
-          </a>
-          <a href="#" className={classes.link}>
-            {messages.header.privacypolicy}
-          </a>
+          <Stack pl="md" gap={1}>
+            <Link href={`/${locale}/mybookmark`} className={classes.link} onClick={closeDrawer}>
+              {messages.header.bookmark}
+            </Link>
+            <a href="#" className={classes.link}>
+              {messages.header.browse}
+            </a>
+            <a href="#" className={classes.link}>
+              {messages.header.termofuse}
+            </a>
+            <a href="#" className={classes.link}>
+              {messages.header.privacypolicy}
+            </a>
+          </Stack>
 
 
           <Divider my="sm" />
 
-          <Group justify="center" grow pb="xl" px="md">
-            <Button
-              variant="default"
-              onClick={() => {
-                toggleDrawer();
-                setOpened(true);
-              }}
-            >{messages.login.title}</Button>
-          </Group>
-
-          <Group align="center" justify="center" gap={12} style={{ width: '100%' }}>
+          <Group align="center" justify="center" gap={12} style={{ width: '100%' }} >
+            <LoginButtonOrUser />
             <LanguageToggle />
             <SwitchColorMode />
           </Group>

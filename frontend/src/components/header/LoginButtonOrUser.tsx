@@ -27,10 +27,8 @@ export function LoginButtonOrUser() {
 
     useEffect(() => {
         const updateSize = () => {
-            if (window.innerWidth < 600) {
-                setModalSize('95%')
-            } else if (window.innerWidth < 768) {
-                setModalSize('90%')
+            if (window.innerWidth < 768) {
+                setModalSize('100%')
             } else {
                 setModalSize('70%')
             }

@@ -23,6 +23,23 @@ export function LoginButtonOrUser() {
     const userProf = useXrpcAgentStore(state => state.userProf);
     const messages = useMessages();
     const isLoggedIn = !!client;
+    const [modalSize, setModalSize] = useState('70%')
+
+    useEffect(() => {
+        const updateSize = () => {
+            if (window.innerWidth < 600) {
+                setModalSize('95%')
+            } else if (window.innerWidth < 768) {
+                setModalSize('90%')
+            } else {
+                setModalSize('70%')
+            }
+        }
+
+        updateSize()
+        window.addEventListener('resize', updateSize)
+        return () => window.removeEventListener('resize', updateSize)
+    }, [])
 
     useEffect(() => {
         if (activeDid === null || client != null) {
@@ -78,7 +95,7 @@ export function LoginButtonOrUser() {
                     <Modal
                         opened={quickRegistBookmark}
                         onClose={() => setQuickRegistBookmark(false)}
-                        size="70%"
+                        size={modalSize}
                         title={messages.create.title}
                         centered
                     >

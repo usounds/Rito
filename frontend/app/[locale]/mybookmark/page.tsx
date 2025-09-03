@@ -1,10 +1,6 @@
 import { routing } from "@/i18n/routing";
-import { FeaturesGrid } from "@/components/features/Features";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
-export function generateStaticParams() {
-  return routing.locales.map(locale => ({ locale }));
-}
 
 export async function generateMetadata({
   params,
@@ -22,7 +18,6 @@ export async function generateMetadata({
     openGraph: {
       title: t("ogp.title"),
       description: t("ogp.description"),
-      url: `${baseUrl}/${locale}`,
       images: [
         {
           url: `${baseUrl}/rito_ogp.png`,
@@ -33,6 +28,10 @@ export async function generateMetadata({
       ],
     },
   };
+}
+
+export function generateStaticParams() {
+  return routing.locales.map(locale => ({ locale }));
 }
 
 export default async function HomePage({
@@ -46,7 +45,7 @@ export default async function HomePage({
 
   return (
     <div>
-        <FeaturesGrid t={t}/>
+        ぶっくまーく
     </div>
   );
 }

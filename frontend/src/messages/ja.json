@@ -57,8 +57,12 @@
 		}
 	},
 	"callback": {
-		"title": "認証中",
 		"description": "認証中です"
+	},
+	"mybookmark": {
+		"bookmark": "ブックマーク",
+		"resolver": "リゾルバ",
+		"settings": "設定"
 	},
 	"create": {
 		"title": "ブックマークの登録",

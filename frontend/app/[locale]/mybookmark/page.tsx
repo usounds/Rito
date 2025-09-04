@@ -1,35 +1,9 @@
 import { routing } from "@/i18n/routing";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-
-
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale });
-  
-
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
-
-  return {
-    title: t("title"),
-    description: t("ogp.description"), // OGP用説明文
-    openGraph: {
-      title: t("ogp.title"),
-      description: t("ogp.description"),
-      images: [
-        {
-          url: `${baseUrl}/rito_ogp.png`,
-          width: 1200,
-          height: 630,
-          alt: t("ogp.title"),
-        },
-      ],
-    },
-  };
-}
+import { Tabs, TabsList, TabsTab, TabsPanel } from '@mantine/core';
+import { FaBookmark } from "react-icons/fa";
+import { FaResolving } from "react-icons/fa";
+import { CiSettings } from "react-icons/ci";
 
 export function generateStaticParams() {
   return routing.locales.map(locale => ({ locale }));
@@ -45,8 +19,32 @@ export default async function HomePage({
   const t = await getTranslations({ locale });
 
   return (
-    <div>
-        ぶっくまーく
+    <div style={{ display: 'flex', justifyContent: 'center' }}>
+      <Tabs defaultValue="gallery">
+        <TabsList>
+          <TabsTab value="gallery" leftSection={<FaBookmark size={16} />}>
+            {t('mybookmark.bookmark')}
+          </TabsTab>
+          <TabsTab value="messages" leftSection={<FaResolving size={16} />}>
+            {t('mybookmark.resolver')}
+          </TabsTab>
+          <TabsTab value="settings" leftSection={<CiSettings size={16} />}>
+            {t('mybookmark.settings')}
+          </TabsTab>
+        </TabsList>
+
+        <TabsPanel value="gallery">
+          Gallery tab content
+        </TabsPanel>
+
+        <TabsPanel value="messages">
+          Messages tab content
+        </TabsPanel>
+
+        <TabsPanel value="settings">
+          Settings tab content
+        </TabsPanel>
+      </Tabs>
     </div>
   );
 }

@@ -58,7 +58,6 @@
 		}
 	},
 	"callback": {
-		"title": "Authenticating",
 		"description": "Authentication in progress"
 	},
 	"create": {

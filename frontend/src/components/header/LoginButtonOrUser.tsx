@@ -2,7 +2,6 @@
 import { Authentication } from "@/components/Authentication";
 import { Modal } from "@mantine/core";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { useMessages } from "next-intl";
 import { useEffect, useState } from 'react';
 import { getClientMetadata } from '@/logic/HandleOauth';
 import { RegistBookmark } from '@/components/RegistBookmark';
@@ -11,6 +10,7 @@ import { Client } from '@atcute/client';
 import { Avatar } from '@mantine/core';
 import { Affix, Button } from '@mantine/core';
 import { MdOutlineBookmarkAdd } from "react-icons/md";
+import { useLocale, useMessages } from 'next-intl';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -22,6 +22,7 @@ export function LoginButtonOrUser() {
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const messages = useMessages();
+    const locale = useLocale();
     const isLoggedIn = !!client;
     const [modalSize, setModalSize] = useState('70%')
 
@@ -49,7 +50,7 @@ export function LoginButtonOrUser() {
             configureOAuth({
                 metadata: {
                     client_id: serverMetadata.client_id || '',
-                    redirect_uri: serverMetadata.redirect_uris[0],
+                    redirect_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/callback`,
                 },
             });
             const session = await getSession(activeDid as `did:${string}:${string}`, { allowStale: true });

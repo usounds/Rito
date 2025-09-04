@@ -39,7 +39,7 @@
       "record": {
         "type": "object",
         "required": [
-          "titles",
+          "comments",
           "createdAt"
         ],
         "properties": {
@@ -47,7 +47,7 @@
             "type": "string",
             "format": "uri"
           },
-          "titles": {
+          "comments": {
             "type": "array",
             "description": "Title and comment in different languages.",
             "minLength": 1,
@@ -67,6 +67,14 @@
               "minLength": 1,
               "maxLength": 200
             }
+          },
+          "ogpTitle": {
+            "type": "string",
+            "description": "OGP Title"
+          },
+          "ogpDescription": {
+            "type": "string",
+            "description": "OGP Description"
           },
           "createdAt": {
             "type": "string",

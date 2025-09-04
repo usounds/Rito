@@ -1,5 +1,4 @@
 import '@mantine/core/styles.css';
-import { setRequestLocale } from "next-intl/server";
 import { MantineProvider, ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
 import { Notifications } from "@mantine/notifications";
 import '@mantine/notifications/styles.css';
@@ -8,6 +7,37 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/header/Header";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const t = await getTranslations({ locale });
+
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+
+  return {
+    title: t("title"),
+    description: t("ogp.description"), // OGP用説明文
+    openGraph: {
+      title: t("ogp.title"),
+      description: t("ogp.description"),
+      url: `${baseUrl}/${locale}`,
+      images: [
+        {
+          url: `${baseUrl}/rito_ogp.png`,
+          width: 1200,
+          height: 630,
+          alt: t("ogp.title"),
+        },
+      ],
+    },
+  };
+}
 
 export default async function RootLayout({
   children,

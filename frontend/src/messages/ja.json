@@ -56,6 +56,10 @@
 			"invalidhandle": "無効なハンドルです"
 		}
 	},
+	"callback": {
+		"title": "認証中",
+		"description": "認証中です"
+	},
 	"create": {
 		"title": "ブックマークの登録",
 		"description": "コメントやタグは公開されます。",

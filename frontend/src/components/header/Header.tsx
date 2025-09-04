@@ -5,36 +5,28 @@ import { SwitchColorMode } from '@/components/SwitchColorMode';
 import {
   Box,
   Burger,
-  Button,
-  Center,
-  Stack,
   Divider,
   Drawer,
   Group,
   ScrollArea,
+  Stack,
   Text,
   ThemeIcon,
   UnstyledButton,
   useMantineTheme
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import {
-  IconChevronDown
-} from '@tabler/icons-react';
-import { useMessages } from 'next-intl';
-import { useState } from 'react';
+import { useLocale, useMessages } from 'next-intl';
+import Link from 'next/link';
 import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
 import { FaBookmark } from "react-icons/fa";
 import classes from './Header.module.scss';
-import Link from 'next/link'
-import { useLocale } from "next-intl";
 
 export default function Header() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] = useDisclosure(false);
   const locale = useLocale();
   const theme = useMantineTheme();
   const messages = useMessages();
-  const [opened, setOpened] = useState(false);
 
   const mockdata = [
     {

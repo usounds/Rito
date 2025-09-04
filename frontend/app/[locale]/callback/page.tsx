@@ -14,6 +14,7 @@ export default function Home() {
     const setAgent = useXrpcAgentStore(state => state.setAgent);
     const addIdentity = useXrpcAgentStore(state => state.addIdentity);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
+    const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const messages = useMessages();
     const locale = useLocale();
 
@@ -43,6 +44,18 @@ export default function Home() {
                     const handle = window.localStorage.getItem('oauth.handle') || '/';
                     addIdentity(agent.sub, handle);
                     setActiveDid(agent.sub);
+
+                    const userProfile = await rpc.get(`app.bsky.actor.getProfile`, {
+                        params: {
+                            actor: agent.sub,
+                        },
+                    })
+                    if (!userProfile.ok) {
+                        return { success: false, message: 'System Error : Cannot get userProfile:' + agent.sub }
+
+                    }
+
+                    setUserProf(userProfile.data);
 
                 } catch (e) {
                     console.log(e);

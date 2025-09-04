@@ -44,7 +44,7 @@
 				"placeholder": "alice.bsky.social"
 			},
 			"agree": {
-				"title": "利用規約とプライバシーポリシーに同意する"
+				"title": "Agree to the Terms of Service and Privacy Policy"
 			}
 		},
 		"button": {
@@ -57,45 +57,49 @@
 			"invalidhandle": "Invalid handle"
 		}
 	},
+	"callback": {
+		"title": "Authenticating",
+		"description": "Authentication in progress"
+	},
 	"create": {
-		"title": "ブックマークの登録",
-		"description": "コメントやタグは公開されます。",
+		"title": "Register Bookmark",
+		"description": "Comments and tags will be public.",
 		"field": {
 			"url": {
 				"title": "URL",
 				"placeholder": "https://rito.blue",
-				"description": "ブックマークするURL",
-				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
+				"description": "The URL to bookmark",
+				"descriptionForOwner": "If you authenticate after registration, it will be treated as an owner bookmark."
 			},
 			"title": {
-				"title": "タイトル",
+				"title": "Title",
 				"placeholder": "Rito",
-				"description": "このブックマークの名前"
+				"description": "The name of this bookmark"
 			},
 			"tag": {
-				"title": "タグ",
+				"title": "Tag",
 				"placeholder": "ATProto",
-				"description": "URLを分類するタグ(10個まで)"
+				"description": "Tags to categorize the URL (up to 10)"
 			},
 			"comment": {
-				"title": "コメント",
-				"placeholder": "エキサイティングなサイトです",
-				"description": "URLのコメント"
+				"title": "Comment",
+				"placeholder": "This is an exciting site",
+				"description": "Comment for the URL"
 			}
 		},
 		"button": {
-			"regist": "登録",
-			"verify": "認証",
-			"ogp": "タイトルとコメントを取得",
-			"update": "更新"
+			"regist": "Register",
+			"verify": "Verify",
+			"ogp": "Fetch Title and Comment",
+			"update": "Update"
 		},
 		"inform": {
-			"canverify": "あなたはこのURLの認証コメントを登録できます"
+			"canverify": "You can register a verified comment for this URL"
 		},
 		"error": {
-			"invalidurl": "URLの形式が不正です",
-			"urlMandatory": "URLは必須です",
-			"titleMandatory": "タイトルは必須です"
+			"invalidurl": "Invalid URL format",
+			"urlMandatory": "URL is required",
+			"titleMandatory": "Title is required"
 		}
 	}
 }

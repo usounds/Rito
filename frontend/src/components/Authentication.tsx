@@ -1,27 +1,28 @@
 "use client";
+import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
+import { getClientMetadata } from '@/logic/HandleOauth';
+import type { Did } from '@atcute/lexicons';
+import { AuthorizationServerMetadata, configureOAuth, createAuthorizationUrl, IdentityMetadata, resolveFromIdentity } from '@atcute/oauth-browser-client';
 import {
   Anchor,
   Button,
   Group,
   PaperProps,
   Stack,
+  Switch,
   TextInput
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
-import { useMessages } from 'next-intl';
-import { getClientMetadata } from '@/logic/HandleOauth'
-import type { Did } from '@atcute/lexicons';
 import { notifications } from '@mantine/notifications';
-import { configureOAuth, createAuthorizationUrl, IdentityMetadata, AuthorizationServerMetadata, resolveFromIdentity } from '@atcute/oauth-browser-client';
-import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
+import { useLocale, useMessages } from 'next-intl';
+import { useState } from "react";
 import { HiX } from "react-icons/hi";
-import { useEffect, useState } from "react";
-import { Switch } from '@mantine/core';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [checked, setChecked] = useState(false);
   const messages = useMessages();
+  const locale = useLocale();
 
   function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -54,7 +55,7 @@ export function Authentication(props: PaperProps) {
     configureOAuth({
       metadata: {
         client_id: serverMetadata.client_id || '',
-        redirect_uri: serverMetadata.redirect_uris[0] || '',
+        redirect_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/callback`,
       },
     });
 
@@ -136,6 +137,7 @@ export function Authentication(props: PaperProps) {
       id: 'login-process',
       title: messages.login.title,
       message: message,
+      color: 'blue',
       loading: true,
       autoClose: false
     });
@@ -201,7 +203,7 @@ export function Authentication(props: PaperProps) {
 
         <Switch
           checked={checked}
-           label={messages.login.field.agree.title}
+          label={messages.login.field.agree.title}
           onChange={(event) => setChecked(event.currentTarget.checked)}
         />
 

@@ -1,11 +1,12 @@
 "use client";
-import { Center, Loader, Flex, Text } from '@mantine/core';
-import { useEffect } from "react";
-import { useRouter } from 'next/navigation';
-import { ClientMetadata, OAuthUserAgent, configureOAuth, finalizeAuthorization, getSession } from '@atcute/oauth-browser-client';
+import { getClientMetadata } from '@/logic/HandleOauth';
 import { useXrpcAgentStore } from '@/state/XrpcAgent';
 import { Client } from '@atcute/client';
-import { getClientMetadata } from '@/logic/HandleOauth'
+import { OAuthUserAgent, configureOAuth, finalizeAuthorization } from '@atcute/oauth-browser-client';
+import { Center, Flex, Loader, Text } from '@mantine/core';
+import { useLocale, useMessages } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
 
 export default function Home() {
     const router = useRouter();
@@ -13,6 +14,8 @@ export default function Home() {
     const setAgent = useXrpcAgentStore(state => state.setAgent);
     const addIdentity = useXrpcAgentStore(state => state.addIdentity);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
+    const messages = useMessages();
+    const locale = useLocale();
 
     useEffect(() => {
         const processAuthorization = async () => {
@@ -22,7 +25,7 @@ export default function Home() {
             configureOAuth({
                 metadata: {
                     client_id: serverMetadata.client_id || '',
-                    redirect_uri: serverMetadata.redirect_uris[0] || '',
+                    redirect_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/callback`,
                 },
             });
 
@@ -59,7 +62,7 @@ export default function Home() {
         <Center style={{ width: '100vw', height: '100vh' }}>
             <Flex gap="xl" align="center">
                 <Loader color="blue" />
-                <Text size="md">Processing...</Text>
+                <Text size="md">{messages.callback.description}</Text>
             </Flex>
         </Center>
     );

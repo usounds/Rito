@@ -22,7 +22,14 @@ const _mainSchema = /*#__PURE__*/ v.record(
   /*#__PURE__*/ v.tidString(),
   /*#__PURE__*/ v.object({
     $type: /*#__PURE__*/ v.literal("blue.rito.feed.bookmark"),
+    get comments() {
+      return /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.array(localeSchema), [
+        /*#__PURE__*/ v.arrayLength(1),
+      ]);
+    },
     createdAt: /*#__PURE__*/ v.datetimeString(),
+    ogpDescription: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
+    ogpTitle: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
     subject: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.genericUriString()),
     tags: /*#__PURE__*/ v.optional(
       /*#__PURE__*/ v.constrain(
@@ -35,11 +42,6 @@ const _mainSchema = /*#__PURE__*/ v.record(
         [/*#__PURE__*/ v.arrayLength(0, 10)],
       ),
     ),
-    get titles() {
-      return /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.array(localeSchema), [
-        /*#__PURE__*/ v.arrayLength(1),
-      ]);
-    },
   }),
 );
 

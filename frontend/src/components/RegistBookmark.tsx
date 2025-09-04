@@ -1,11 +1,11 @@
 "use client";
 import { BlueRitoFeedBookmark } from '@/lexicons';
-import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { nsidSchema } from "@/nsid/mapping";
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
-import { useMessages } from "next-intl";
+import { useLocale, useMessages } from 'next-intl';
 import { useState } from 'react';
 import { CgWebsite } from "react-icons/cg";
 import { IoMdPricetags } from "react-icons/io";
@@ -23,11 +23,14 @@ export const RegistBookmark: React.FC = () => {
     const [isCanVerify, setIsVerify] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
+    const [ogpTitle, setOgpTitle] = useState<string | null>(null);
+    const [ogpDescription, setOgpDescription] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
     const [schema, setSchema] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
+    const locale = useLocale();
     //const [aturi, setAturi] = useState<string>('');
     //const [cid, setCid] = useState<string>('');
     //const [lang, setLang] = useState<'ja' | 'en'>('ja');
@@ -94,6 +97,8 @@ export const RegistBookmark: React.FC = () => {
                 const data = await result.json();
                 setTitle(data.result?.ogTitle || '');
                 setComment(data.result?.ogDescription || '');
+                setOgpTitle(data.result?.ogTitle || '');
+                setOgpDescription(data.result?.ogDescription || '');
             } else {
                 console.log('Failed to fetch OGP data');
                 setUrlError(messages.create.error.invalidurl);
@@ -117,22 +122,51 @@ export const RegistBookmark: React.FC = () => {
             return
         }
         setIsSubmit(true)
-        const path = window.location.pathname
-        const parts = path.split('/').filter(Boolean)
-        const lang = parts[0] as 'ja' | 'en'
+        const lang = locale as 'ja' | 'en'
+
+        let ogpTitleLocal = ogpTitle
+        let ogpDescriptionLocal = ogpDescription
+
+        if (ogpTitleLocal) {
+            let ogpUrl = url
+            if (schema && aturiParsed) {
+                ogpUrl = schema.replace('{did}', aturiParsed.repo).replace('{rkey}', aturiParsed.rkey)
+            }
+            if (!url) {
+                setUrlError(messages.create.error.urlMandatory)
+                return
+            }
+            try {
+                const result = await fetch(`/api/fetchOgp?url=${encodeURIComponent(ogpUrl)}`, {
+                    method: 'GET',
+                });
+                if (result.status === 200) {
+                    const data = await result.json();
+                    ogpTitleLocal = data.result?.ogTitle || '';
+                    ogpDescriptionLocal = data.result?.ogDescription || '';
+                } else {
+                    console.log('Failed to fetch OGP data');
+                    setUrlError(messages.create.error.invalidurl);
+                }
+            } catch {
+                setUrlError(messages.create.error.invalidurl);
+            }
+        }
 
         const obj: BlueRitoFeedBookmark.Main = {
             $type: "blue.rito.feed.bookmark",
             createdAt: new Date().toISOString(),
             subject: url as `${string}:${string}`,
-            titles: [
+            comments: [
                 {
                     lang: lang,
                     title: title || '',
-                    comment: comment || '',
+                    comment: comment || ''
                 }
             ],
             tags: tags.length > 0 ? tags : undefined,
+            ogpTitle: ogpTitleLocal || '',
+            ogpDescription: ogpDescriptionLocal || ''
         }
         const rkey = TID.now();
         const writes = []

@@ -4,7 +4,7 @@ export const getClientMetadata: () => ClientMetadata = () => {
     return {
         client_id: `${process.env.NEXT_PUBLIC_URL}/api/client-metadata.json`,
         client_name: "Rito",
-        redirect_uris: [`${process.env.NEXT_PUBLIC_URL}/callback`],
+        redirect_uris: [`${process.env.NEXT_PUBLIC_URL}/en/callback`, `${process.env.NEXT_PUBLIC_URL}/ja/callback`],
         client_uri: `${process.env.NEXT_PUBLIC_URL}/`,
         scope: "atproto transition:generic",
         grant_types: ["authorization_code", "refresh_token"],

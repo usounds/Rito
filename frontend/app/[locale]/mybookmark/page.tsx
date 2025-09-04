@@ -9,6 +9,7 @@ export async function generateMetadata({
 }) {
   const { locale } = await params;
   const t = await getTranslations({ locale });
+  
 
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
 

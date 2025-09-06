@@ -75,7 +75,11 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           >
             {t('button.start')}
           </Button>
-          <Button leftSection={<FolderSearch size={14} />} variant="default">
+          <Button
+            component={Link}
+            href={`/${locale}/search`}
+            leftSection={<FolderSearch size={14}
+            />} variant="default">
             {t('button.search')}
           </Button>
         </Group>

@@ -1,5 +1,6 @@
 import { routing } from "@/i18n/routing";
 import { FeaturesGrid } from "@/components/features/Features";
+import { LatestBookmark } from "@/components/latestbookmark/LatestBookmark";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export function generateStaticParams() {
@@ -18,6 +19,7 @@ export default async function HomePage({
   return (
     <div>
         <FeaturesGrid t={t}/>
+        <LatestBookmark params={{ locale }} t={t}/>
     </div>
   );
 }

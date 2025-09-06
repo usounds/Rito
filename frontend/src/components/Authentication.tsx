@@ -186,6 +186,12 @@ export function Authentication(props: PaperProps) {
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack>
+        <Switch
+          checked={checked}
+          label={messages.login.field.agree.title}
+          onChange={(event) => setChecked(event.currentTarget.checked)}
+        />
+
         <TextInput
           required
           label={messages.login.field.handle.title}
@@ -200,13 +206,6 @@ export function Authentication(props: PaperProps) {
             },
           }}
         />
-
-        <Switch
-          checked={checked}
-          label={messages.login.field.agree.title}
-          onChange={(event) => setChecked(event.currentTarget.checked)}
-        />
-
       </Stack>
 
 

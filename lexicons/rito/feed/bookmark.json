@@ -76,6 +76,11 @@
             "type": "string",
             "description": "OGP Description"
           },
+          "ogpImage": {
+            "type": "string",
+            "format": "uri",
+            "description": "OGP Description"
+          },
           "createdAt": {
             "type": "string",
             "format": "datetime"

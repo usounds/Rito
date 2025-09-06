@@ -60,9 +60,11 @@
 		"description": "認証中です"
 	},
 	"mybookmark": {
-		"bookmark": "ブックマーク",
-		"resolver": "リゾルバ",
-		"settings": "設定"
+		"field": {
+			"original": {
+				"title": "引用元"
+			}
+		}
 	},
 	"create": {
 		"title": "ブックマークの登録",
@@ -97,12 +99,14 @@
 			"update": "更新"
 		},
 		"inform": {
-			"canverify": "あなたはこのURLの認証コメントを登録できます"
+			"canverify": "あなたはこのURLの認証コメントを登録できます",
+			"success": "登録しました"
 		},
 		"error": {
 			"invalidurl": "URLの形式が不正です",
 			"urlMandatory": "URLは必須です",
-			"titleMandatory": "タイトルは必須です"
+			"titleMandatory": "タイトルは必須です",
+			"blockUrl": "このURLはブックマークできません"
 		}
 	}
 }

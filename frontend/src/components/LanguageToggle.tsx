@@ -2,7 +2,7 @@
 
 import { ActionIcon } from '@mantine/core';
 import React from "react";
-import { IoLanguageSharp } from "react-icons/io5";
+import { Languages } from 'lucide-react';
 import { useRouter, usePathname } from 'next/navigation';
 
 const LanguageToggle: React.FC = () => {
@@ -25,7 +25,7 @@ const LanguageToggle: React.FC = () => {
       size="lg"
       aria-label="Toggle language"
     >
-      <IoLanguageSharp size={20} />
+      <Languages size={20} />
     </ActionIcon>
   );
 };

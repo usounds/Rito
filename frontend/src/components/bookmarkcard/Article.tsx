@@ -33,16 +33,17 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
 
     return (
         <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <div>
-                <a {...linkProps}>
-                    {(image&&false) &&
+            {(image && false) &&
+                <div>
+                    <a {...linkProps}>
                         <Image src={image} height={180} />
-                    }
-                </a>
-            </div>
+
+                    </a>
+                </div>
+            }
 
             {tags.length > 0 && (
-                <Group mt="md" gap="xs">
+                <Group mb="xs" gap="xs">
                     {tags.map((tag, idx) => (
                         <Badge
                             key={idx}
@@ -63,7 +64,7 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
             </Text>
 
 
-            <Group className={classes.footer}>
+            <Group className={classes.footer} gap='sm'>
                 <Link
                     href={url}
                     target="_blank"
@@ -75,7 +76,7 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
                     }}
                 >
                     <Text fz="xs" c="dimmed">
-                        {messages.mybookmark.field.original.title} : {domain} <TimeAgo date={date}/>
+                        {messages.mybookmark.field.original.title} : {domain} <TimeAgo date={date} />
                     </Text>
                 </Link>
 

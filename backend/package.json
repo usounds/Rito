@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "target": "esnext",
   "scripts": {
     "start": "npx tsx src/index.ts",
     "prisma": "npx prisma migrate dev --name init"

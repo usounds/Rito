@@ -50,14 +50,17 @@ model BookmarkTag {
 
 model JetstreamIndex {
   service String @id
-  index   Int
+  index   String   // bigint から string に変更
+
+  @@map("jetstreamindex") // PostgreSQL のテーブル名
 }
 
 model Resolver {
   nsid     String
   did      String
-  schema   String?
+  schema   String
   verified Boolean
 
   @@id([nsid, did])
+  @@map("resolver") // PostgreSQL のテーブル名
 }

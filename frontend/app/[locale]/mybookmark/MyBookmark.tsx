@@ -1,15 +1,18 @@
 "use client";
 import { Article } from '@/components/bookmarkcard/Article';
+import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import type { Bookmark } from '@/type/ApiTypes';
-import { SimpleGrid, Stack } from '@mantine/core';
-import { useLocale } from 'next-intl';
+import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
+import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
+    const client = useXrpcAgentStore(state => state.client);
     const [bookmarks, setBookmarks] = useState<Bookmark[] | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const messages = useMessages();
     const locale = useLocale();
 
     useEffect(() => {
@@ -25,18 +28,60 @@ export function MyBookmark() {
 
             const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
             setBookmarks(data)
-            setIsLoading(false)
         };
         fetchBookmarks();
+        setIsLoading(false)
     }, [activeDid])
 
-    if (isLoading) return <>Loading...</>;
-    if (!isLoading && (bookmarks?.length === 0 || !bookmarks)) return <>右下からブックマークを登録してね！</>;
-    if (!isLoading && !activeDid) return <>ログインしてね！</>;
+    //未ログイン
+    if (!client) return <>
+        <Box
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '80vh',
+                gap: '1rem',
+            }}
+        >
+            <Text>{messages.mybookmark.login}</Text>
+            <LoginButtonOrUser />
+        </Box>
+    </>
+    if (isLoading) return <>
+        <Box
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '80vh',
+                gap: '1rem',
+            }}
+        >
+            {messages.loading}
+        </Box></>;
+    if (!isLoading && (bookmarks?.length === 0 || !bookmarks)) return <>
+        <Box
+            style={{
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                height: '80vh',
+                gap: '1rem',
+            }}
+        >
+           {messages.mybookmark.empty}
+        </Box>
+    </>;
 
     return (
 
         <Stack gap="md">
+
+
             <SimpleGrid
                 cols={{ base: 1, sm: 2, md: 3 }}
                 spacing="md"

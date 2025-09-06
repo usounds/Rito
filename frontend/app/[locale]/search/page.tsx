@@ -1,7 +1,7 @@
+import { LatestBookmark } from '@/components/latestbookmark/LatestBookmark';
 import { routing } from "@/i18n/routing";
-import { FeaturesGrid } from "@/components/features/Features";
-import { LatestBookmark } from "@/components/latestbookmark/LatestBookmark";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { Container } from "@mantine/core";
 
 export function generateStaticParams() {
   return routing.locales.map(locale => ({ locale }));
@@ -17,8 +17,8 @@ export default async function HomePage({
   const t = await getTranslations({ locale });
 
   return (
-    <div>
-        <FeaturesGrid t={t} locale={locale}/>
-    </div>
+    <Container size="md" mx="auto" my="sx">
+      <LatestBookmark params={{ locale }} t={t}/>
+    </Container>
   );
 }

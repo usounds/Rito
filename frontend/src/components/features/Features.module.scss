@@ -5,8 +5,8 @@ $mantine-breakpoint-lg: 75em;
 $mantine-breakpoint-xl: 88em;
 
 .wrapper {
-  padding-top: calc(var(--mantine-spacing-xl) * 4);
-  padding-bottom: calc(var(--mantine-spacing-xl) * 4);
+  padding-top: calc(var(--mantine-spacing-xl) * 2);
+  padding-bottom: calc(var(--mantine-spacing-xl) * 1);
 }
 
 .title {

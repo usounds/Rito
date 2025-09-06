@@ -1,0 +1,63 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Bookmark {
+  uri             String          @id                     // ATProto の URI を主キーに
+  did             String
+  subject         String
+  ogp_title       String?
+  ogp_description String?
+  ogp_image       String?
+  created_at      DateTime        @default(now())
+  indexed_at      DateTime        @default(now())
+  comments        Comment[]
+  tags            BookmarkTag[]
+}
+
+model Comment {
+  id           Int      @id @default(autoincrement())
+  bookmark_uri String                               // Bookmark.uri と対応
+  lang         String
+  title        String?
+  comment      String?
+
+  bookmark     Bookmark @relation(fields: [bookmark_uri], references: [uri], onDelete: Cascade)
+  @@index([bookmark_uri])  // インデックス追加
+}
+
+model Tag {
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  bookmarks BookmarkTag[]
+}
+
+model BookmarkTag {
+  bookmark_uri String
+  tag_id       Int
+
+  bookmark Bookmark @relation(fields: [bookmark_uri], references: [uri], onDelete: Cascade)
+  tag      Tag      @relation(fields: [tag_id], references: [id], onDelete: Cascade)
+
+  @@id([bookmark_uri, tag_id])
+  @@index([bookmark_uri])  // bookmark_uri 単独での検索を高速化
+}
+
+model JetstreamIndex {
+  service String @id
+  index   Int
+}
+
+model Resolver {
+  nsid     String
+  did      String
+  schema   String?
+  verified Boolean
+
+  @@id([nsid, did])
+}

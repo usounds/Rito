@@ -60,6 +60,7 @@
 		"description": "認証中です"
 	},
 	"mybookmark": {
+		"latest": "最新のブックマーク",
 		"field": {
 			"original": {
 				"title": "引用元"

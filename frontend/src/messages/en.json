@@ -61,6 +61,7 @@
 		"description": "Authentication in progress"
 	},
 	"mybookmark": {
+		"latest": "Latest Bookmark",
 		"field": {
 			"original": {
 				"title": "Original"

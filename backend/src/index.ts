@@ -1,10 +1,9 @@
 import { PrismaClient } from "@prisma/client";
-import { CommitCreateEvent, CommitUpdateEvent, CommitDeleteEvent } from '@skyware/jetstream';
-import { Jetstream } from '@skyware/jetstream';
+import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
 import WebSocket from 'ws';
+import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE } from './config';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
-import { BOOKMARK, SERVICE, JETSREAM_URL, CURSOR_UPDATE_INTERVAL } from './config';
 
 const prisma = new PrismaClient();
 let cursor = "0";

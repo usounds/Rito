@@ -1,17 +1,14 @@
-import { IconBookmark, IconHeart, IconShare } from '@tabler/icons-react';
 import {
-    ActionIcon,
-    Avatar,
     Badge,
     Card,
-    Center,
     Group,
     Image,
     Text,
-    useMantineTheme,
+    useMantineTheme
 } from '@mantine/core';
+import { useMessages } from 'next-intl';
+import Link from 'next/link';
 import classes from './Article.module.scss';
-import { useLocale, useMessages } from 'next-intl';
 
 type ArticleCardProps = {
     url: string;
@@ -23,14 +20,21 @@ type ArticleCardProps = {
 
 export function Article({ url, title, comment, tags, image }: ArticleCardProps) {
     const linkProps = { href: url, target: '_blank', rel: 'noopener noreferrer' };
-    const theme = useMantineTheme();
-        const messages = useMessages();
+    const messages = useMessages();
+
+    const domain = (() => {
+        try {
+            return new URL(url).hostname; // ドメイン部分だけ取得
+        } catch {
+            return url; // URL が不正な場合はそのまま表示
+        }
+    })();
 
     return (
-        <Card withBorder radius="md" className={classes.card}>
+        <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
             <Card.Section>
                 <a {...linkProps}>
-                    {image &&
+                    {(image && false) &&
                         <Image src={image} height={180} />
                     }
                 </a>
@@ -41,8 +45,7 @@ export function Article({ url, title, comment, tags, image }: ArticleCardProps) 
                     {tags.map((tag, idx) => (
                         <Badge
                             key={idx}
-                            variant="gradient"
-                            gradient={{ from: "yellow", to: "red" }}
+                            variant="light"
                         >
                             {tag}
                         </Badge>
@@ -59,23 +62,21 @@ export function Article({ url, title, comment, tags, image }: ArticleCardProps) 
             </Text>
 
             <Group justify="space-between" className={classes.footer}>
-                <Center>
-                    <Text fz='xs' inline>
-                        {messages.mybookmark.field.original.title} : {url}
+                <Link
+                    href={url}
+                    target="_blank"
+                    style={{
+                        textDecoration: 'none',
+                        color: 'inherit',
+                        wordBreak: 'break-all',   // 単語途中でも改行
+                        overflowWrap: 'anywhere', // 長いURLを折り返す
+                    }}
+                >
+                    <Text fz="xs" c="dimmed">
+                        {messages.mybookmark.field.original.title}:{domain}
                     </Text>
-                </Center>
+                </Link>
 
-                <Group gap={8} mr={0}>
-                    <ActionIcon className={classes.action}>
-                        <IconHeart size={16} color={theme.colors.red[6]} />
-                    </ActionIcon>
-                    <ActionIcon className={classes.action}>
-                        <IconBookmark size={16} color={theme.colors.yellow[7]} />
-                    </ActionIcon>
-                    <ActionIcon className={classes.action}>
-                        <IconShare size={16} color={theme.colors.blue[6]} />
-                    </ActionIcon>
-                </Group>
             </Group>
         </Card>
     );

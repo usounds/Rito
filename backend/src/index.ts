@@ -4,7 +4,8 @@ import { Jetstream } from '@skyware/jetstream';
 import WebSocket from 'ws';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
-import { BOOKMARK,SERVICE, JETSREAM_URL, CURSOR_UPDATE_INTERVAL } from './config';
+import { BOOKMARK, SERVICE, JETSREAM_URL, CURSOR_UPDATE_INTERVAL } from './config';
+import { Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 let cursor = 0;
@@ -21,9 +22,10 @@ async function loadCursor(): Promise<number> {
     const indexRecord = await prisma.jetstreamIndex.findUnique({
       where: { service: 'rito' }
     });
-    if (indexRecord) {
-      logger.info(`Cursor from DB: ${indexRecord.index} (${epochUsToDateTime(indexRecord.index)})`);
-      return indexRecord.index;
+    if (indexRecord && indexRecord.index) {
+      const cursor = Number(indexRecord.index);
+      logger.info(`Cursor from DB: ${cursor} (${epochUsToDateTime(cursor)})`);
+      return cursor;
     } else {
       const nowUs = Math.floor(Date.now() * 1000);
       logger.info(`No DB cursor found, using current time: ${nowUs} (${epochUsToDateTime(nowUs)})`);
@@ -35,6 +37,7 @@ async function loadCursor(): Promise<number> {
     return nowUs;
   }
 }
+
 
 // 初期化
 cursor = await loadCursor();
@@ -56,11 +59,11 @@ jetstream.on('open', () => {
 
       try {
         // JetstreamIndex に upsert（存在すれば更新、なければ作成）
-        await prisma.jetstreamIndex.upsert({
-          where: { service: 'rito' },
-          update: { index: jetstream.cursor },
-          create: { service: 'rito', index: jetstream.cursor },
-        });
+await prisma.jetstreamIndex.upsert({
+  where: { service: 'rito' },
+  update: { index: jetstream.cursor.toString() },
+  create: { service: 'rito', index: jetstream.cursor.toString() },
+});
       } catch (err) {
         logger.error('Failed to update JetstreamIndex:', err);
       }
@@ -94,7 +97,7 @@ jetstream.onCreate(BOOKMARK, async (event: CommitCreateEvent<typeof BOOKMARK>) =
     // Bookmark を作成
     await prisma.bookmark.create({
       data: {
-        uri : aturi,
+        uri: aturi,
         did: event.did,
         subject: record.subject ?? '',
         ogp_title: record.ogpTitle,
@@ -132,10 +135,10 @@ jetstream.onUpdate(BOOKMARK, async (event: CommitUpdateEvent<typeof BOOKMARK>) =
 
   try {
     // 既存のBookmark取得
-const bookmark = await prisma.bookmark.findUnique({
-  where: { uri: aturi }, // 文字列をそのまま
-  include: { tags: true, comments: true },
-});
+    const bookmark = await prisma.bookmark.findUnique({
+      where: { uri: aturi }, // 文字列をそのまま
+      include: { tags: true, comments: true },
+    });
     if (!bookmark) return;
 
     // タグを同期
@@ -200,7 +203,7 @@ jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) =
   const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`
 
   try {
-    await prisma.bookmark.deleteMany({ where: { uri:aturi } });
+    await prisma.bookmark.deleteMany({ where: { uri: aturi } });
 
   } catch (err) {
     logger.error(err);

@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Bookmark" ALTER COLUMN "created_at" SET DATA TYPE TIMESTAMPTZ,
+ALTER COLUMN "indexed_at" SET DATA TYPE TIMESTAMPTZ;

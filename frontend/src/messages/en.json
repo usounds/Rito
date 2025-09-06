@@ -60,6 +60,13 @@
 	"callback": {
 		"description": "Authentication in progress"
 	},
+	"mybookmark": {
+		"field": {
+			"original": {
+				"title": "Original"
+			}
+		}
+	},
 	"create": {
 		"title": "Register Bookmark",
 		"description": "Comments and tags will be public.",
@@ -93,12 +100,14 @@
 			"update": "Update"
 		},
 		"inform": {
-			"canverify": "You can register a verified comment for this URL"
+			"canverify": "You can register a verified comment for this URL",
+			"success": "登録しました"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",
 			"urlMandatory": "URL is required",
-			"titleMandatory": "Title is required"
+			"titleMandatory": "Title is required",
+			"blockUrl": "This URL cannot be bookmarked"
 		}
 	}
 }

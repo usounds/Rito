@@ -129,7 +129,7 @@ export const RegistBookmark: React.FC = () => {
             const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
             const data = await res.json() as {result:boolean}
             if(data){
-                setTitleError(messages.create.error.blockUrl)
+                setUrlError(messages.create.error.blockUrl)
                 return
 
             }

@@ -6,13 +6,10 @@ import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } 
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { BadgeCheck, BookmarkPlus, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from 'react';
-import { Tag } from 'lucide-react';
-import { BookmarkPlus } from 'lucide-react';
-import { PanelsTopLeft } from 'lucide-react';
-import { BadgeCheck } from 'lucide-react';
-import { X } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export const RegistBookmark: React.FC = () => {
     const messages = useMessages();
@@ -129,7 +126,7 @@ export const RegistBookmark: React.FC = () => {
             const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
             const data = await res.json() as {result:boolean}
             if(data){
-                setTitleError(messages.create.error.blockUrl)
+                setUrlError(messages.create.error.blockUrl)
                 return
 
             }
@@ -208,7 +205,7 @@ export const RegistBookmark: React.FC = () => {
             title: 'Success',
             message: messages.create.inform.success,
             color: 'teal',
-            icon: <X />
+            icon: <Check />
         });
 
         setIsSubmit(false)

@@ -17,7 +17,7 @@ export default async function HomePage({
   const t = await getTranslations({ locale });
 
   return (
-    <Container size="md" mx="auto">
+    <Container size="md" mx="auto" my="sx">
       <MyBookmark />
     </Container>
   );

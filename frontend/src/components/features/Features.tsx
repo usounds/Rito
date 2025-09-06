@@ -1,10 +1,14 @@
-import { Container, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core';
+import { Container, SimpleGrid, Text, ThemeIcon, Title, Button, Group } from '@mantine/core';
 import { getTranslations } from "next-intl/server";
 import classes from './Features.module.scss';
 import { Bookmark, AtSign, FileText } from 'lucide-react';
+import { FolderSearch } from 'lucide-react';
+import { SquareArrowOutUpRight } from 'lucide-react';
+import Link from "next/link";
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
+  locale: string; // 👈 追加
 }
 
 interface FeatureProps {
@@ -14,6 +18,7 @@ interface FeatureProps {
 }
 
 export function Features({ icon: Icon, title, description }: FeatureProps) {
+
   return (
     <div>
       <ThemeIcon variant="light" size={40} radius={40}>
@@ -29,7 +34,8 @@ export function Features({ icon: Icon, title, description }: FeatureProps) {
   );
 }
 
-export function FeaturesGrid({ t }: FeaturesGridProps) {
+export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
+
   const MOCKDATA = [
     {
       icon: Bookmark,
@@ -60,6 +66,23 @@ export function FeaturesGrid({ t }: FeaturesGridProps) {
         <Text size="sm" className={classes.description}>
           {t('description')}
         </Text>
+        <Group justify="center" gap="md" mt="md">
+          <Button
+            component={Link}
+            href={`/${locale}/mybookmark`}
+            leftSection={<SquareArrowOutUpRight size={14} />}
+            variant="default"
+          >
+            {t('button.start')}
+          </Button>
+          <Button
+            component={Link}
+            href={`/${locale}/search`}
+            leftSection={<FolderSearch size={14}
+            />} variant="default">
+            {t('button.search')}
+          </Button>
+        </Group>
       </Container>
 
       <SimpleGrid

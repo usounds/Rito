@@ -6,6 +6,10 @@
 		"title": "リト",
 		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
 	},
+	"button":{
+		"search" : "探す",
+		"start" : "始める"
+	},
 	"header": {
 		"home": "ホーム",
 		"bookmark": "マイブックマーク",

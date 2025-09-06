@@ -9,6 +9,13 @@ export class ResolverError extends Error {
   }
 }
 
+export async function getPdsUrl(did: string) {
+  const res = await fetch(`https://plc.directory/${did}`);
+  const data = await res.json();
+
+  return data.service.find((s: any) => s.type === "AtprotoPersonalDataServer")?.serviceEndpoint;
+}
+
 export const resolveHandleViaHttp = async (handle: string): Promise<Did> => {
 	const response = await fetch(`/api/resolveHandle?handle=${encodeURIComponent(handle)}`);
 

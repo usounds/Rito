@@ -79,9 +79,9 @@ export default function Header() {
               {messages.header.bookmark}
             </Link>
 
-            <a href="#" className={classes.link}>
+            <Link href={`/${locale}/search`} className={classes.link}>
               {messages.header.browse}
-            </a>
+            </Link>
             <a href="#" className={classes.link}>
               {messages.header.termofuse}
             </a>
@@ -117,9 +117,9 @@ export default function Header() {
             <Link href={`/${locale}/mybookmark`} className={classes.link} onClick={closeDrawer}>
               {messages.header.bookmark}
             </Link>
-            <a href="#" className={classes.link}>
+            <Link href={`/${locale}/search`} className={classes.link}>
               {messages.header.browse}
-            </a>
+            </Link>
             <a href="#" className={classes.link}>
               {messages.header.termofuse}
             </a>

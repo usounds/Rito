@@ -1,3 +1,6 @@
+import TimeAgo from "@/components/TimeAgo";
+import { nsidSchema } from "@/nsid/mapping";
+import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
     Badge,
     Card,
@@ -8,7 +11,8 @@ import {
 import { useMessages } from 'next-intl';
 import Link from 'next/link';
 import classes from './Article.module.scss';
-import TimeAgo from "@/components/TimeAgo"
+import {getPdsUrl} from "@/logic/HandleDidredolver";
+
 
 type ArticleCardProps = {
     url: string;
@@ -20,16 +24,38 @@ type ArticleCardProps = {
 };
 
 export function Article({ url, title, comment, tags, image, date }: ArticleCardProps) {
-    const linkProps = { href: url, target: '_blank', rel: 'noopener noreferrer' };
     const messages = useMessages();
+
+    const localUrl = (() => {
+        if (url.startsWith('https://')) {
+            return url
+        } else if (url.startsWith('at://')) {
+            const result = parseCanonicalResourceUri(url);
+            if (result.ok) {
+                const schemaEntry = nsidSchema.find(entry => entry.nsid === result.value.collection);
+                if (schemaEntry) {
+                    const schema = schemaEntry?.schema ?? null;
+                    const newUrl = schema?.replace('{did}', result.value.repo).replace('{rkey}', result.value.rkey)
+                    console.log(newUrl)
+                return newUrl
+                }else{
+                    const pds = getPdsUrl(result.value.repo)
+                    return  `https://pdsls.dev/${url}`
+                }
+            }
+        }
+    })();
+
 
     const domain = (() => {
         try {
-            return new URL(url).hostname; // ドメイン部分だけ取得
+            return new URL(localUrl || '').hostname; // ドメイン部分だけ取得
         } catch {
             return url; // URL が不正な場合はそのまま表示
         }
     })();
+
+    const linkProps = { href: localUrl, target: '_blank', rel: 'noopener noreferrer' };
 
     return (
         <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -66,7 +92,7 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
 
             <Group className={classes.footer} gap='sm'>
                 <Link
-                    href={url}
+                    href={localUrl || ''}
                     target="_blank"
                     style={{
                         textDecoration: 'none',

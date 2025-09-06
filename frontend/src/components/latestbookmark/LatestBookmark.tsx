@@ -50,7 +50,7 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
               >
                 <Article
                   url={b.subject}
-                  title={b.ogp_title}
+                  title={b.ogp_title||comment.title}
                   comment={b.ogp_description}
                   tags={[]}
                   image={b.ogp_image}

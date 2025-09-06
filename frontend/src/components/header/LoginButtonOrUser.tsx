@@ -8,7 +8,7 @@ import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browse
 import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { MdOutlineBookmarkAdd } from "react-icons/md";
+import { BookmarkPlus } from 'lucide-react';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -83,7 +83,7 @@ export function LoginButtonOrUser() {
                     <Affix position={{ bottom: 20, right: 20 }}>
                         <Button
                             onClick={() => setQuickRegistBookmark(true)}
-                            leftSection={<MdOutlineBookmarkAdd size={16} />}
+                            leftSection={<BookmarkPlus size={16} />}
                         >
                             {messages.create.title}
                         </Button>

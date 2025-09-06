@@ -1,6 +1,5 @@
 "use client";
 import { BlueRitoFeedBookmark } from '@/lexicons';
-import { isBlocked } from "@/logic/HandleBlocklist";
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
@@ -9,11 +8,11 @@ import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/c
 import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from 'react';
-import { CgWebsite } from "react-icons/cg";
-import { HiCheck } from "react-icons/hi";
-import { IoMdPricetags } from "react-icons/io";
-import { MdOutlineBookmarkAdd } from "react-icons/md";
-import { RiVerifiedBadgeLine } from "react-icons/ri";
+import { Tag } from 'lucide-react';
+import { BookmarkPlus } from 'lucide-react';
+import { PanelsTopLeft } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
+import { X } from 'lucide-react';
 
 export const RegistBookmark: React.FC = () => {
     const messages = useMessages();
@@ -101,7 +100,7 @@ export const RegistBookmark: React.FC = () => {
                 setComment(data.result?.ogDescription || '');
                 setOgpTitle(data.result?.ogTitle || '');
                 setOgpDescription(data.result?.ogDescription || '');
-                setOgpImage(data.result?.ogImage?.[0]?.url  || '')
+                setOgpImage(data.result?.ogImage?.[0]?.url || '')
             } else {
                 console.log('Failed to fetch OGP data');
                 setUrlError(messages.create.error.invalidurl);
@@ -127,7 +126,9 @@ export const RegistBookmark: React.FC = () => {
         if (url.startsWith('https://')) {
             const urlLocal = new URL(url)
             const domain = urlLocal.hostname
-            if (isBlocked(domain)) {
+            const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
+            const data = await res.json() as {result:boolean}
+            if(data){
                 setTitleError(messages.create.error.blockUrl)
                 return
 
@@ -207,7 +208,7 @@ export const RegistBookmark: React.FC = () => {
             title: 'Success',
             message: messages.create.inform.success,
             color: 'teal',
-            icon: <HiCheck />
+            icon: <X />
         });
 
         setIsSubmit(false)
@@ -221,13 +222,13 @@ export const RegistBookmark: React.FC = () => {
                     description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
                     placeholder={messages.create.field.url.placeholder}
                     value={url} onChange={handleUrlChange}
-                    leftSection={isCanVerify && <RiVerifiedBadgeLine size={16} />}
+                    leftSection={isCanVerify && <BadgeCheck size={16} />}
                     withAsterisk
                     error={urlError}
                     styles={{ input: { fontSize: 16, }, }} />
                 <Group justify="center">
                     <Button
-                        leftSection={<CgWebsite size={16} />}
+                        leftSection={<PanelsTopLeft size={16} />}
                         variant="default"
                         onClick={handleGetOgp}
                         loading={isFetchOGP}
@@ -268,11 +269,11 @@ export const RegistBookmark: React.FC = () => {
                     placeholder={messages.create.field.tag.placeholder}
                     maxTags={10}
                     maxLength={20}
-                    leftSection={<IoMdPricetags size={16} />}
+                    leftSection={<Tag size={16} />}
                     styles={{ input: { fontSize: 16, }, }} />
 
                 <Group justify="right">
-                    <Button leftSection={<MdOutlineBookmarkAdd size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
+                    <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
                 </Group>
             </Stack >
 

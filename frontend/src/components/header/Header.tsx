@@ -18,8 +18,7 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
-import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
-import { FaBookmark } from "react-icons/fa";
+import { Bookmark, AtSign, FileText } from 'lucide-react';
 import classes from './Header.module.scss';
 
 export default function Header() {
@@ -30,17 +29,17 @@ export default function Header() {
 
   const mockdata = [
     {
-      icon: CiBookmark,
+      icon: Bookmark,
       title: messages.header.feature.allbookmark.title,
       description: messages.header.feature.allbookmark.description,
     },
     {
-      icon: CiAt,
+      icon: AtSign,
       title: messages.header.feature.atproto.title,
       description: messages.header.feature.atproto.description,
     },
     {
-      icon: CiFileOn,
+      icon: FileText,
       title: messages.header.feature.ownerbenefit.title,
       description: messages.header.feature.ownerbenefit.description,
     }
@@ -70,7 +69,7 @@ export default function Header() {
       <header className={classes.header}>
         <Group justify="space-between" h="100%">
           <Group align="center" gap="sm">
-            <FaBookmark color={theme.colors.blue[6]} />
+            <Bookmark color={theme.colors.blue[6]} />
             <Text><Link href={`/${locale}/`} className={classes.title}>{messages.title}</Link></Text>
           </Group>
 

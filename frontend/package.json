@@ -21,12 +21,12 @@
     "@mantine/hooks": "^8.2.7",
     "@mantine/notifications": "^8.2.8",
     "@tabler/icons-react": "^3.34.1",
+    "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "next-intl": "^4.3.5",
     "open-graph-scraper": "^6.10.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
     "sass": "^1.91.0",
     "zustand": "^5.0.8"

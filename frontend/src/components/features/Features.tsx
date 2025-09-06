@@ -1,16 +1,14 @@
-import { IconCookie, IconGauge, IconLock, IconMessage2, IconUser } from '@tabler/icons-react';
 import { Container, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core';
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { getTranslations } from "next-intl/server";
 import classes from './Features.module.scss';
-import { CiAt, CiBookmark, CiFileOn } from "react-icons/ci";
+import { Bookmark, AtSign, FileText } from 'lucide-react';
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
 }
 
-
 interface FeatureProps {
-  icon: React.FC<any>;
+  icon: React.ElementType;
   title: React.ReactNode;
   description: React.ReactNode;
 }
@@ -19,7 +17,7 @@ export function Features({ icon: Icon, title, description }: FeatureProps) {
   return (
     <div>
       <ThemeIcon variant="light" size={40} radius={40}>
-        <Icon size={18} stroke={1.5} />
+        <Icon size={18} strokeWidth={1.5} /> {/* 👈 strokeWidth に修正 */}
       </ThemeIcon>
       <Text mt="sm" mb={7}>
         {title}
@@ -32,25 +30,27 @@ export function Features({ icon: Icon, title, description }: FeatureProps) {
 }
 
 export function FeaturesGrid({ t }: FeaturesGridProps) {
-
   const MOCKDATA = [
-        {
-          icon: CiBookmark,
-          title:t('header.feature.allbookmark.title'),
-          description: t('header.feature.allbookmark.longdescription'),
-        },
-        {
-          icon: CiAt,
-          title:t('header.feature.atproto.title'),
-          description: t('header.feature.atproto.longdescription'),
-        },
-        {
-          icon: CiFileOn,
-          title:t('header.feature.ownerbenefit.title'),
-          description: t('header.feature.ownerbenefit.longdescription'),
-        }
+    {
+      icon: Bookmark,
+      title: t('header.feature.allbookmark.title'),
+      description: t('header.feature.allbookmark.longdescription'),
+    },
+    {
+      icon: AtSign,
+      title: t('header.feature.atproto.title'),
+      description: t('header.feature.atproto.longdescription'),
+    },
+    {
+      icon: FileText,
+      title: t('header.feature.ownerbenefit.title'),
+      description: t('header.feature.ownerbenefit.longdescription'),
+    },
   ];
-  const features = MOCKDATA.map((feature, index) => <Features {...feature} key={index} />);
+
+  const features = MOCKDATA.map((feature, index) => (
+    <Features {...feature} key={index} />
+  ));
 
   return (
     <Container className={classes.wrapper}>

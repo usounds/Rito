@@ -16,7 +16,7 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from "react";
-import { HiX } from "react-icons/hi";
+import { X } from 'lucide-react';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -90,7 +90,7 @@ export function Authentication(props: PaperProps) {
             color: 'red',
             loading: false,
             autoClose: true,
-            icon: <HiX />
+            icon: <X />
           });
           setIsLoading(false);
           return;
@@ -115,7 +115,7 @@ export function Authentication(props: PaperProps) {
         color: 'red',
         loading: false,
         autoClose: true,
-        icon: <HiX />
+        icon: <X />
       });
       setIsLoading(false);
       return;
@@ -156,7 +156,7 @@ export function Authentication(props: PaperProps) {
         title: 'Error',
         message: 'Failed to create authorization URL',
         color: 'red',
-        icon: <HiX />
+        icon: <X />
       });
       setIsLoading(false);
       return;

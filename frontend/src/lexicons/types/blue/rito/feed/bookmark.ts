@@ -29,6 +29,7 @@ const _mainSchema = /*#__PURE__*/ v.record(
     },
     createdAt: /*#__PURE__*/ v.datetimeString(),
     ogpDescription: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
+    ogpImage: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.genericUriString()),
     ogpTitle: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.string()),
     subject: /*#__PURE__*/ v.optional(/*#__PURE__*/ v.genericUriString()),
     tags: /*#__PURE__*/ v.optional(

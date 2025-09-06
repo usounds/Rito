@@ -1,16 +1,14 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
-import { Modal } from "@mantine/core";
-import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { useEffect, useState } from 'react';
-import { getClientMetadata } from '@/logic/HandleOauth';
 import { RegistBookmark } from '@/components/RegistBookmark';
-import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browser-client';
+import { getClientMetadata } from '@/logic/HandleOauth';
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Client } from '@atcute/client';
-import { Avatar } from '@mantine/core';
-import { Affix, Button } from '@mantine/core';
-import { MdOutlineBookmarkAdd } from "react-icons/md";
+import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browser-client';
+import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { useLocale, useMessages } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { MdOutlineBookmarkAdd } from "react-icons/md";
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);

@@ -6,7 +6,8 @@
   "target": "esnext",
   "scripts": {
     "start": "npx tsx src/index.ts",
-    "prisma": "npx prisma migrate dev --name init",
+    "prisma:apply": "npx prisma migrate dev --name init",
+    "prisma:generate": "npx prisma generate",
     "docker:build": "docker build -t rito-backend:latest .",
     "docker:run": "docker run -it --rm --name rito-backend --env-file .env rito-backend:latest",
     "docker:push": "docker build -t ghcr.io/usounds/rito-backend:latest . && docker push ghcr.io/usounds/rito-backend:latest"

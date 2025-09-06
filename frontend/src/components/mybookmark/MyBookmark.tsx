@@ -1,13 +1,10 @@
 "use client";
+import { Article } from '@/components/bookmarkcard/Article';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import type { Bookmark } from '@/type/ApiTypes';
-import {
-    Text
-} from '@mantine/core';
+import { SimpleGrid, Stack } from '@mantine/core';
 import { useLocale } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { Article } from '@/components/bookmarkcard/Article';
-import { Stack } from "@mantine/core";
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -34,27 +31,41 @@ export function MyBookmark() {
     }, [activeDid])
 
     if (isLoading) return <>Loading...</>;
-    if (!isLoading && (bookmarks?.length===0 || !bookmarks)) return <>右下からックマークを登録してね！</>;
+    if (!isLoading && (bookmarks?.length === 0 || !bookmarks)) return <>右下からブックマークを登録してね！</>;
     if (!isLoading && !activeDid) return <>ログインしてね！</>;
 
-return (
-  <Stack gap="md">
-    {bookmarks && bookmarks.map((b) => {
-      const comment =
-        b.comments.find((c) => c.lang === locale) || b.comments[0];
+    return (
 
-      return (
-        <Article
-          key={b.uri}
-          url={b.subject}
-          title={comment.title}
-          comment={comment.comment}
-          tags={b.tags}
-          image={b.ogp_image}
-        />
-      );
-    })}
-  </Stack>
-);
+        <Stack gap="md">
+            <SimpleGrid
+                cols={{ base: 1, sm: 2, md: 3 }}
+                spacing="md"
+            >
+                {bookmarks?.map((b) => {
+                    const comment =
+                        b.comments.find((c) => c.lang === locale) || b.comments[0];
+
+                    return (
+                        <div
+                            key={b.uri}
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                height: '100%',
+                            }}
+                        >
+                            <Article
+                                url={b.subject}
+                                title={comment.title}
+                                comment={comment.comment}
+                                tags={b.tags}
+                                image={b.ogp_image}
+                            />
+                        </div>
+                    );
+                })}
+            </SimpleGrid>
+        </Stack>
+    );
 
 }

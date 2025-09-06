@@ -3,12 +3,12 @@ import {
     Card,
     Group,
     Image,
-    Text,
-    useMantineTheme
+    Text
 } from '@mantine/core';
 import { useMessages } from 'next-intl';
 import Link from 'next/link';
 import classes from './Article.module.scss';
+import TimeAgo from "@/components/TimeAgo"
 
 type ArticleCardProps = {
     url: string;
@@ -16,9 +16,10 @@ type ArticleCardProps = {
     comment: string;
     tags: string[];
     image?: string | null;
+    date: Date
 };
 
-export function Article({ url, title, comment, tags, image }: ArticleCardProps) {
+export function Article({ url, title, comment, tags, image, date }: ArticleCardProps) {
     const linkProps = { href: url, target: '_blank', rel: 'noopener noreferrer' };
     const messages = useMessages();
 
@@ -32,13 +33,13 @@ export function Article({ url, title, comment, tags, image }: ArticleCardProps) 
 
     return (
         <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-            <Card.Section>
+            <div>
                 <a {...linkProps}>
-                    {(image && false) &&
+                    {(image&&false) &&
                         <Image src={image} height={180} />
                     }
                 </a>
-            </Card.Section>
+            </div>
 
             {tags.length > 0 && (
                 <Group mt="md" gap="xs">
@@ -61,7 +62,8 @@ export function Article({ url, title, comment, tags, image }: ArticleCardProps) 
                 {comment}
             </Text>
 
-            <Group justify="space-between" className={classes.footer}>
+
+            <Group className={classes.footer}>
                 <Link
                     href={url}
                     target="_blank"
@@ -73,7 +75,7 @@ export function Article({ url, title, comment, tags, image }: ArticleCardProps) 
                     }}
                 >
                     <Text fz="xs" c="dimmed">
-                        {messages.mybookmark.field.original.title}:{domain}
+                        {messages.mybookmark.field.original.title} : {domain} <TimeAgo date={date}/>
                     </Text>
                 </Link>
 

@@ -18,7 +18,7 @@ export default async function HomePage({
 
   return (
     <div>
-        <FeaturesGrid t={t}/>
+        <FeaturesGrid t={t} locale={locale}/>
         <LatestBookmark params={{ locale }} t={t}/>
     </div>
   );

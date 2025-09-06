@@ -16,6 +16,7 @@ model Bookmark {
   ogp_image       String?
   created_at      DateTime        @default(now())
   indexed_at      DateTime        @default(now())
+  verified        Boolean         @default(false)
   comments        Comment[]
   tags            BookmarkTag[]
 }

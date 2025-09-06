@@ -1,13 +1,16 @@
 "use client";
 import { BlueRitoFeedBookmark } from '@/lexicons';
+import { isBlocked } from "@/logic/HandleBlocklist";
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
+import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from 'react';
 import { CgWebsite } from "react-icons/cg";
+import { HiCheck } from "react-icons/hi";
 import { IoMdPricetags } from "react-icons/io";
 import { MdOutlineBookmarkAdd } from "react-icons/md";
 import { RiVerifiedBadgeLine } from "react-icons/ri";
@@ -25,15 +28,14 @@ export const RegistBookmark: React.FC = () => {
     const [titleError, setTitleError] = useState<string | null>(null);
     const [ogpTitle, setOgpTitle] = useState<string | null>(null);
     const [ogpDescription, setOgpDescription] = useState<string | null>(null);
+    const [ogpImage, setOgpImage] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
+    const [bookmarkAtUri, setBookmarkAtUri] = useState<ParsedCanonicalResourceUri | null>(null);
     const [schema, setSchema] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
     const locale = useLocale();
-    //const [aturi, setAturi] = useState<string>('');
-    //const [cid, setCid] = useState<string>('');
-    //const [lang, setLang] = useState<'ja' | 'en'>('ja');
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const value = e.target.value;
@@ -99,6 +101,7 @@ export const RegistBookmark: React.FC = () => {
                 setComment(data.result?.ogDescription || '');
                 setOgpTitle(data.result?.ogTitle || '');
                 setOgpDescription(data.result?.ogDescription || '');
+                setOgpImage(data.result?.ogImage?.[0]?.url  || '')
             } else {
                 console.log('Failed to fetch OGP data');
                 setUrlError(messages.create.error.invalidurl);
@@ -121,11 +124,22 @@ export const RegistBookmark: React.FC = () => {
             setTitleError(messages.create.error.titleMandatory)
             return
         }
+        if (url.startsWith('https://')) {
+            const urlLocal = new URL(url)
+            const domain = urlLocal.hostname
+            if (isBlocked(domain)) {
+                setTitleError(messages.create.error.blockUrl)
+                return
+
+            }
+
+        }
         setIsSubmit(true)
         const lang = locale as 'ja' | 'en'
 
         let ogpTitleLocal = ogpTitle
         let ogpDescriptionLocal = ogpDescription
+        let ogpImageLocal = ogpImage
 
         if (ogpTitleLocal) {
             let ogpUrl = url
@@ -144,6 +158,7 @@ export const RegistBookmark: React.FC = () => {
                     const data = await result.json();
                     ogpTitleLocal = data.result?.ogTitle || '';
                     ogpDescriptionLocal = data.result?.ogDescription || '';
+                    ogpImageLocal = data.result?.ogImage?.[0]?.url || ''
                 } else {
                     console.log('Failed to fetch OGP data');
                     setUrlError(messages.create.error.invalidurl);
@@ -166,7 +181,8 @@ export const RegistBookmark: React.FC = () => {
             ],
             tags: tags.length > 0 ? tags : undefined,
             ogpTitle: ogpTitleLocal || '',
-            ogpDescription: ogpDescriptionLocal || ''
+            ogpDescription: ogpDescriptionLocal || '',
+            ogpImage: (ogpImageLocal || '') as `${string}:${string}`
         }
         const rkey = TID.now();
         const writes = []
@@ -187,8 +203,12 @@ export const RegistBookmark: React.FC = () => {
                 writes: writes
             },
         });
-
-        console.log(ret);
+        notifications.show({
+            title: 'Success',
+            message: messages.create.inform.success,
+            color: 'teal',
+            icon: <HiCheck />
+        });
 
         setIsSubmit(false)
     }
@@ -253,7 +273,6 @@ export const RegistBookmark: React.FC = () => {
 
                 <Group justify="right">
                     <Button leftSection={<MdOutlineBookmarkAdd size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
-                    {isCanVerify && <Button leftSection={<RiVerifiedBadgeLine size={16} />} onClick={handleSubmit} loading={isSubmit} variant="light">{messages.create.button.verify}</Button>}
                 </Group>
             </Stack >
 

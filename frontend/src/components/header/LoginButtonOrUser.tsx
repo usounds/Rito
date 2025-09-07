@@ -15,6 +15,7 @@ export function LoginButtonOrUser() {
     const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
     const client = useXrpcAgentStore(state => state.client);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
+    const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
     const setOauthUserAgent = useXrpcAgentStore(state => state.setOauthUserAgent);
     const setAgent = useXrpcAgentStore(state => state.setAgent);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
@@ -65,7 +66,9 @@ export function LoginButtonOrUser() {
                 },
             })
             if (!userProfile.ok) {
-                return { success: false, message: 'System Error : Cannot get userProfile:' + agent.sub }
+                setAgent(null)
+                setActiveDid(null)
+                return
 
             }
 

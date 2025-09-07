@@ -27,14 +27,14 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
   const bookmarks: Bookmark[] = await res.json();
 
   return (
-    <Container size="md" mx="auto">
+    < >
       <Stack py="md">
         <Text size="sm" className={classes.description}>
           {t('mybookmark.latest')}
         </Text>
       </Stack>
 
-      <Stack gap="md">
+      <Stack >
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {bookmarks.map((b) => {
             const comment = b.comments.find((c) => c.lang === locale) || b.comments[0];
@@ -61,7 +61,7 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
           })}
         </SimpleGrid>
       </Stack>
-    </Container>
+    </>
   );
 }
 

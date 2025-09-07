@@ -2,16 +2,20 @@
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { Bookmark } from "@/type/ApiTypes";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { BadgeCheck, BookmarkPlus, PanelsTopLeft, Tag, X } from 'lucide-react';
+import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
-import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
-export const RegistBookmark: React.FC = () => {
+type RegistBookmarkProps = {
+    aturi?: string;
+};
+
+export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
     const [title, setTitle] = useState<string>('');
@@ -26,12 +30,50 @@ export const RegistBookmark: React.FC = () => {
     const [ogpDescription, setOgpDescription] = useState<string | null>(null);
     const [ogpImage, setOgpImage] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
-    const [bookmarkAtUri, setBookmarkAtUri] = useState<ParsedCanonicalResourceUri | null>(null);
+    const [rkey, setRkey] = useState<string | null>(null);
     const [schema, setSchema] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
     const locale = useLocale();
+
+    useEffect(() => {
+        const fetchBookmark = async () => {
+            if (!aturi) return
+            try {
+                const res = await fetch(
+                    `https://api.rito.blue/rpc/get_bookmark_details?p_uri=${encodeURIComponent(aturi)}`
+                );
+
+                if (!res.ok) {
+                    throw new Error(`API error: ${res.status}`);
+                }
+
+                const data = await res.json() as Bookmark[]
+
+                // API の戻り値は配列 ([]) なので最初の要素を取り出す
+                if (Array.isArray(data) && data.length > 0) {
+                    setTags(data[0].tags);
+                    setUrl(data[0].subject);
+                    const matchedComment = data[0].comments.find((c: { lang: string }) => c.lang === locale);
+                    setTitle(matchedComment?.title || '')
+                    setComment(matchedComment?.comment || '')
+                    const parse = parseCanonicalResourceUri(aturi)
+                    if (parse.ok) setRkey(parse.value.rkey)
+
+                } else {
+                    //setBookmark(null);
+                }
+            } catch (err) {
+                console.error(err);
+                //setBookmark(null);
+            } finally {
+                //setLoading(false);
+            }
+        };
+
+        fetchBookmark();
+    }, [aturi]);
 
     const handleUrlChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const value = e.target.value;
@@ -124,8 +166,8 @@ export const RegistBookmark: React.FC = () => {
             const urlLocal = new URL(url)
             const domain = urlLocal.hostname
             const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
-            const data = await res.json() as {result:boolean}
-            if(data){
+            const data = await res.json() as { result: boolean }
+            if (data) {
                 setUrlError(messages.create.error.blockUrl)
                 return
 
@@ -182,14 +224,27 @@ export const RegistBookmark: React.FC = () => {
             ogpDescription: ogpDescriptionLocal || '',
             ogpImage: (ogpImageLocal || '') as `${string}:${string}`
         }
-        const rkey = TID.now();
+        let rkeyLocal
         const writes = []
-        writes.push({
-            $type: "com.atproto.repo.applyWrites#create" as const,
-            collection: "blue.rito.feed.bookmark" as `${string}.${string}.${string}`,
-            rkey: rkey,
-            value: obj as Record<string, unknown>,
-        });
+
+        if (rkey) {
+            rkeyLocal = rkey
+            writes.push({
+                $type: "com.atproto.repo.applyWrites#update" as const,
+                collection: "blue.rito.feed.bookmark" as `${string}.${string}.${string}`,
+                rkey: rkeyLocal,
+                value: obj as Record<string, unknown>,
+            });
+        } else {
+            rkeyLocal = TID.now();
+            writes.push({
+                $type: "com.atproto.repo.applyWrites#create" as const,
+                collection: "blue.rito.feed.bookmark" as `${string}.${string}.${string}`,
+                rkey: rkeyLocal,
+                value: obj as Record<string, unknown>,
+            });
+
+        }
 
         if (!client || !oauthUserAgent) {
             return
@@ -201,12 +256,24 @@ export const RegistBookmark: React.FC = () => {
                 writes: writes
             },
         });
-        notifications.show({
-            title: 'Success',
-            message: messages.create.inform.success,
-            color: 'teal',
-            icon: <Check />
-        });
+
+        if (ret.ok) {
+            setRkey(rkeyLocal)
+            notifications.show({
+                title: 'Success',
+                message: messages.create.inform.success,
+                color: 'teal',
+                icon: <Check />
+            });
+        } else {
+            notifications.show({
+                title: 'Error',
+                message: messages.create.error.unknownError,
+                color: 'red',
+                icon: <X />
+            });
+
+        }
 
         setIsSubmit(false)
     }

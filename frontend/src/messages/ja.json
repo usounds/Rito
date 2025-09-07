@@ -114,7 +114,8 @@
 			"invalidurl": "URLの形式が不正です",
 			"urlMandatory": "URLは必須です",
 			"titleMandatory": "タイトルは必須です",
-			"blockUrl": "このURLはブックマークできません"
+			"blockUrl": "このURLはブックマークできません",
+			"unknownError": "投稿に失敗しました"
 		}
 	}
 }

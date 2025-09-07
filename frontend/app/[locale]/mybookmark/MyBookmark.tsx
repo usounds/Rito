@@ -106,6 +106,7 @@ export function MyBookmark() {
                                 tags={b.tags}
                                 image={b.ogp_image}
                                 date={new Date(b.indexed_at)}
+                                atUri={b.uri}
                             />
                         </div>
                     );

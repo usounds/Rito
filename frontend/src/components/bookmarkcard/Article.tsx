@@ -17,6 +17,7 @@ import { RegistBookmark } from '@/components/RegistBookmark';
 import { SquarePen } from 'lucide-react';
 import { ActionIcon } from '@mantine/core';
 import { useState, useEffect } from 'react';
+import Markdown from 'react-markdown'
 
 type ArticleCardProps = {
     url: string;
@@ -83,38 +84,6 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
             height: '100%', display: 'flex', flexDirection: 'column',
             position: 'relative',
         }}>
-            {/* 右上固定の atUri エリア */}
-            {atUri && (
-                <div
-                    style={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        display: 'flex',
-                        gap: 4,
-                        zIndex: 10,
-                    }}
-                >
-                    <ActionIcon
-                        variant="transparent"
-                        color="gray"
-                        aria-label="Edit"
-                        onClick={() => setQuickRegistBookmark(true)}
-                    >
-                        <SquarePen size={16} />
-                    </ActionIcon>
-
-                    <Modal
-                        opened={quickRegistBookmark}
-                        onClose={() => setQuickRegistBookmark(false)}
-                        size={modalSize}
-                        title={messages.create.title}
-                        centered
-                    >
-                        <RegistBookmark aturi={atUri} />
-                    </Modal>
-                </div>
-            )}
 
             {(image && false) &&
                 <div>
@@ -142,11 +111,35 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                 {title}
             </Text>
 
-            <Text fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                {comment}
+            <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                <Markdown>{comment}</Markdown>
             </Text>
 
             <Group className={classes.footer} gap='xs'>
+
+            {/* 右上固定の atUri エリア */}
+            {atUri && (
+                <>
+                    <ActionIcon
+                        variant="transparent"
+                        color="gray"
+                        aria-label="Edit"
+                        onClick={() => setQuickRegistBookmark(true)}
+                    >
+                        <SquarePen size={16} />
+                    </ActionIcon>
+
+                    <Modal
+                        opened={quickRegistBookmark}
+                        onClose={() => setQuickRegistBookmark(false)}
+                        size={modalSize}
+                        title={messages.create.title}
+                        centered
+                    >
+                        <RegistBookmark aturi={atUri} />
+                    </Modal>
+                </>
+            )}
                 <Link
                     href={localUrl || ''}
                     target="_blank"

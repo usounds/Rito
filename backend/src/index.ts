@@ -185,7 +185,7 @@ async function init() {
       }
 
       // タグの upsert
-      const tagRecords = await Promise.all((tagsLocal?? []).map(name =>
+      const tagRecords = await Promise.all((tagsLocal ?? []).map(name =>
         prisma.tag.upsert({
           where: { name },
           update: {},
@@ -228,23 +228,39 @@ async function init() {
 
       const flaggedCategories = await checkModeration(textsToCheck);
       logger.info(`Moderation result : ${flaggedCategories}`);
-      await prisma.bookmark.upsert({
-        where: { uri: aturi },
-        update: {
-          moderation: flaggedCategories.join(','), // カンマ区切りで保存
-        },
-        create: {
-          uri: aturi,
-          did: event.did,
-          subject: record.subject ?? '',
-          ogp_title: record.ogpTitle,
-          ogp_description: record.ogpDescription,
-          ogp_image: record.ogpImage,
-          created_at: new Date(),
-          indexed_at: new Date(),
-          moderation: flaggedCategories.join(','), // カンマ区切りで保存
-        },
-      });
+
+      // 2. 既存の moderation を取得
+      const oldModerationIds = await prisma.bookmarkModeration.findMany({
+        where: { bookmark_uri: aturi },
+        select: { moderation_id: true },
+      }).then(res => res.map(r => r.moderation_id));
+
+      // 3. flaggedCategories を Moderation テーブルに upsert
+      const newModerationIds: number[] = [];
+      for (const name of flaggedCategories) {
+        const mod = await prisma.moderation.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        });
+        newModerationIds.push(mod.id);
+      }
+
+      // 4. 不要な moderation 削除
+      const removeModIds = oldModerationIds.filter(id => !newModerationIds.includes(id));
+      if (removeModIds.length > 0) {
+        await prisma.bookmarkModeration.deleteMany({
+          where: { bookmark_uri: aturi, moderation_id: { in: removeModIds } },
+        });
+      }
+
+      // 5. 新しい moderation 追加
+      const addModIds = newModerationIds.filter(id => !oldModerationIds.includes(id));
+      for (const id of addModIds) {
+        await prisma.bookmarkModeration.create({
+          data: { bookmark_uri: aturi, moderation_id: id },
+        });
+      }
 
       logger.info(`Upserted: ${aturi}`);
     } catch (err) {

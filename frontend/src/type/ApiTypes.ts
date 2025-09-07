@@ -7,12 +7,13 @@ export interface Bookmark {
   created_at: string;  // ISO 8601 形式の文字列
   indexed_at: string;  // ISO 8601 形式の文字列
   verified: boolean;
+  moderation?: string;
   comments: Comment[];
   tags: string[];
 }
 
 export interface Comment {
-  lang: string;
+  lang: 'ja' | 'en'
   title: string;
   comment: string;
 }

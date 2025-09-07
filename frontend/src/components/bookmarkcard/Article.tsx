@@ -1,22 +1,24 @@
 "use client"
+import { RegistBookmark } from '@/components/RegistBookmark';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
+    ActionIcon,
     Badge,
     Card,
     Group,
     Image,
-    Text,
-    Modal
+    Modal,
+    Text
 } from '@mantine/core';
+import { SquarePen } from 'lucide-react';
+import { BadgeCheck } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import Markdown from 'react-markdown';
 import classes from './Article.module.scss';
-import { RegistBookmark } from '@/components/RegistBookmark';
-import { SquarePen } from 'lucide-react';
-import { ActionIcon } from '@mantine/core';
-import { useState,useEffect } from 'react';
 
 type ArticleCardProps = {
     url: string;
@@ -79,7 +81,11 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
     const linkProps = { href: localUrl, target: '_blank', rel: 'noopener noreferrer' };
 
     return (
-        <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Card withBorder radius="md" className={classes.card} style={{
+            height: '100%', display: 'flex', flexDirection: 'column',
+            position: 'relative',
+        }}>
+
             {(image && false) &&
                 <div>
                     <a {...linkProps}>
@@ -95,8 +101,19 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                         <Badge
                             key={idx}
                             variant="light"
+                            color={tag === 'Verified' ? 'orange' : 'blue'} // Verified は青、それ以外は灰色
+                            styles={{ root: { textTransform: 'none' } }}
                         >
-                            {tag}
+                            {tag === 'Verified' && (
+                                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                    <BadgeCheck size={12} />  {tag}
+                                </span>
+                            )}
+                            {tag != 'Verified' && (
+                                <span style={{ display: 'flex', alignItems: 'center' }}>
+                                    {tag}
+                                </span>
+                            )}
                         </Badge>
                     ))}
                 </Group>
@@ -106,14 +123,23 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                 {title}
             </Text>
 
-            <Text fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                {comment}
+            <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                <Markdown>{comment}</Markdown>
             </Text>
 
             <Group className={classes.footer} gap='xs'>
-                {atUri &&
+
+                {/* 右上固定の atUri エリア */}
+                {atUri && (
                     <>
-                        <ActionIcon variant="transparent" color="gray" aria-label="Edit" onClick={() => setQuickRegistBookmark(true)}><SquarePen size={16} /></ActionIcon>
+                        <ActionIcon
+                            variant="transparent"
+                            color="gray"
+                            aria-label="Edit"
+                            onClick={() => setQuickRegistBookmark(true)}
+                        >
+                            <SquarePen size={16} />
+                        </ActionIcon>
 
                         <Modal
                             opened={quickRegistBookmark}
@@ -125,7 +151,7 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                             <RegistBookmark aturi={atUri} />
                         </Modal>
                     </>
-                }
+                )}
                 <Link
                     href={localUrl || ''}
                     target="_blank"

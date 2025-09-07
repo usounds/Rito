@@ -4,6 +4,34 @@ import WebSocket from 'ws';
 import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE } from './config';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
+import OpenAI from "openai";
+import { Client, simpleFetchHandler } from '@atcute/client';
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
+});
+
+async function checkModeration(texts: string[]): Promise<string[]> {
+  try {
+    const response = await client.moderations.create({
+      model: "omni-moderation-latest",
+      input: texts,
+    });
+
+    const flaggedCategories: Set<string> = new Set();
+
+    response.results.forEach(result => {
+      for (const [category, value] of Object.entries(result.categories)) {
+        if (value) flaggedCategories.add(category);
+      }
+    });
+
+    return Array.from(flaggedCategories); // 問題なければ空配列 []
+  } catch (error) {
+    console.error("Moderation error:", error);
+    throw error;
+  }
+}
 
 const prisma = new PrismaClient();
 let cursor = "0";
@@ -74,103 +102,159 @@ async function init() {
     }, CURSOR_UPDATE_INTERVAL);
   });
 
-  // ----------- CREATE / UPDATE / DELETE イベント -----------
-  jetstream.onCreate(BOOKMARK, async (event: CommitCreateEvent<typeof BOOKMARK>) => {
-    cursor = event.time_us.toString();
+  async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
     const record = event.commit.record as BlueRitoFeedBookmark.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    cursor = event.time_us.toString();
 
     try {
-      const tagRecords = await Promise.all((record.tags ?? []).map(name =>
-        prisma.tag.upsert({
-          where: { name },
-          update: {},
-          create: { name }
-        })
-      ));
 
-      await prisma.bookmark.create({
-        data: {
+      // Bookmark の upsert
+      await prisma.bookmark.upsert({
+        where: { uri: aturi },
+        update: {
+          subject: record.subject ?? '',
+          ogp_title: record.ogpTitle,
+          ogp_description: record.ogpDescription,
+          ogp_image: record.ogpImage,
+          indexed_at: new Date(),
+        },
+        create: {
           uri: aturi,
           did: event.did,
           subject: record.subject ?? '',
           ogp_title: record.ogpTitle,
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
-          created_at: new Date(record.createdAt),
+          created_at: new Date(),
           indexed_at: new Date(),
-          comments: {
-            create: record.comments.map((c: any) => ({
-              lang: c.lang,
-              title: c.title,
-              comment: c.comment
-            }))
-          },
-          tags: {
-            create: tagRecords.map(t => ({ tag: { connect: { id: t.id } } }))
-          }
-        }
+        },
       });
 
-      logger.info(`Created: ${aturi}`);
-    } catch (err) {
-      logger.error('Error in onCreate:', err);
-    }
-  });
-
-  jetstream.onUpdate(BOOKMARK, async (event: CommitUpdateEvent<typeof BOOKMARK>) => {
-    cursor = event.time_us.toString();
-    const record = event.commit.record;
-    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-
-    try {
-      const bookmark = await prisma.bookmark.findUnique({
-        where: { uri: aturi },
-        include: { tags: true, comments: true },
-      });
-      if (!bookmark) return;
-
-      const tagRecords = await Promise.all((record.tags ?? []).map((name: string) =>
-        prisma.tag.upsert({ where: { name }, update: {}, create: { name } })
-      ));
-
-      const oldTagIds = bookmark.tags.map(bt => bt.tag_id);
-      const newTagIds = tagRecords.map(t => t.id);
-
-      const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
-      await prisma.bookmarkTag.deleteMany({ where: { bookmark_uri: bookmark.uri, tag_id: { in: removeIds } } });
-
-      const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
-      for (const id of addIds) {
-        await prisma.bookmarkTag.create({ data: { bookmark_uri: bookmark.uri, tag_id: id } });
-      }
-
-      await prisma.comment.deleteMany({ where: { bookmark_uri: bookmark.uri } });
+      // コメントの更新
+      await prisma.comment.deleteMany({ where: { bookmark_uri: aturi } });
       await prisma.comment.createMany({
-        data: record.comments.map((c: any) => ({
-          bookmark_uri: bookmark.uri,
+        data: (record.comments ?? []).map(c => ({
+          bookmark_uri: aturi,
           lang: c.lang,
           title: c.title,
-          comment: c.comment
-        }))
+          comment: c.comment,
+        })),
       });
 
-      await prisma.bookmark.update({
-        where: { uri: bookmark.uri },
-        data: {
-          subject: record.subject,
+      // タグの更新
+      //verifiedが含まれていたら除外する
+
+      const publicAgent = new Client({
+        handler: simpleFetchHandler({
+          service: 'https://public.api.bsky.app',
+        }),
+      })
+
+      let isVerify = false
+
+
+
+      try {
+        // URLが正しいかチェック
+        const url = new URL(event.commit.record.subject || '')
+        const domain = url.hostname
+
+        if (url.pathname === '/' || url.pathname === '') {
+
+          const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+            params: {
+              actor: event.did,
+            },
+          })
+
+          if (userProfile.ok && (domain == userProfile.data.handle || domain.endsWith('.' + userProfile.data.handle))) {
+            isVerify = true
+          }
+        }
+      } catch {
+
+      }
+
+      let tagsLocal = (record.tags ?? [])
+        .filter((name) => name.toLowerCase() !== "verified"); // まず既存の "verified" は削除
+
+      if (isVerify) {
+        // true の場合は必ず追加
+        tagsLocal.push("Verified");
+      }
+
+      // タグの upsert
+      const tagRecords = await Promise.all((tagsLocal?? []).map(name =>
+        prisma.tag.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        })
+      ));
+
+      const oldTagIds = await prisma.bookmarkTag.findMany({
+        where: { bookmark_uri: aturi },
+        select: { tag_id: true },
+      }).then(res => res.map(r => r.tag_id));
+
+      const newTagIds = tagRecords.map(t => t.id);
+
+      // 不要なタグ削除
+      const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
+      if (removeIds.length > 0) {
+        await prisma.bookmarkTag.deleteMany({
+          where: { bookmark_uri: aturi, tag_id: { in: removeIds } },
+        });
+      }
+
+      // 追加タグ登録
+      const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
+      for (const id of addIds) {
+        await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
+      }
+
+      const textsToCheck: string[] = [];
+
+      if (record.ogpTitle) textsToCheck.push(record.ogpTitle);
+      if (record.ogpDescription) textsToCheck.push(record.ogpDescription);
+
+      if (record.comments) {
+        record.comments.forEach(comment => {
+          if (comment.title) textsToCheck.push(comment.title);
+          if (comment.comment) textsToCheck.push(comment.comment);
+        });
+      }
+
+      const flaggedCategories = await checkModeration(textsToCheck);
+      logger.info(`Moderation result : ${flaggedCategories}`);
+      await prisma.bookmark.upsert({
+        where: { uri: aturi },
+        update: {
+          moderation: flaggedCategories.join(','), // カンマ区切りで保存
+        },
+        create: {
+          uri: aturi,
+          did: event.did,
+          subject: record.subject ?? '',
           ogp_title: record.ogpTitle,
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
-          indexed_at: new Date()
-        }
+          created_at: new Date(),
+          indexed_at: new Date(),
+          moderation: flaggedCategories.join(','), // カンマ区切りで保存
+        },
       });
 
-      logger.info(`Updated: ${aturi}`);
+      logger.info(`Upserted: ${aturi}`);
     } catch (err) {
-      logger.error('Error in onUpdate:', err);
+      logger.error('Error in upsertBookmark:', err);
     }
-  });
+  }
+
+  // イベント登録
+  jetstream.onCreate(BOOKMARK, upsertBookmark);
+  jetstream.onUpdate(BOOKMARK, upsertBookmark);
 
   jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) => {
     cursor = event.time_us.toString();

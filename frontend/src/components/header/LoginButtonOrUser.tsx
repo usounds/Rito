@@ -9,6 +9,8 @@ import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { BookmarkPlus } from 'lucide-react';
+import { Bookmark } from '@/type/ApiTypes';
+import { useMyBookmark } from "@/state/MyBookmark";
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -20,6 +22,7 @@ export function LoginButtonOrUser() {
     const setAgent = useXrpcAgentStore(state => state.setAgent);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const userProf = useXrpcAgentStore(state => state.userProf);
+    const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const messages = useMessages();
     const locale = useLocale();
     const isLoggedIn = !!client;
@@ -71,8 +74,17 @@ export function LoginButtonOrUser() {
                 return
 
             }
-
             setUserProf(userProfile.data);
+            const res = await fetch(`https://api.rito.blue/rpc/get_bookmark?p_did=${encodeURIComponent(activeDid)}`);
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
+
+            }
+
+            const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
+            setMyBookmark(data)
+
 
         })();
     }, [activeDid, client]);
@@ -83,7 +95,7 @@ export function LoginButtonOrUser() {
                 // ログイン済みの場合に表示する要素
                 <>
                     <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} />
-                    <Affix position={{ bottom: 20, right: 20 }}>
+                    <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
                         <Button
                             onClick={() => setQuickRegistBookmark(true)}
                             leftSection={<BookmarkPlus size={16} />}

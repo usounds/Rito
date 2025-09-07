@@ -16,8 +16,7 @@ model Bookmark {
   ogp_image       String?
   created_at DateTime @default(now()) @db.Timestamptz
   indexed_at DateTime @default(now()) @db.Timestamptz
-  verified        Boolean         @default(false)
-  moderation      String?
+  moderations     BookmarkModeration[]
   comments        Comment[]
   tags            BookmarkTag[]
 }
@@ -48,6 +47,23 @@ model BookmarkTag {
 
   @@id([bookmark_uri, tag_id])
   @@index([bookmark_uri])  // bookmark_uri 単独での検索を高速化
+}
+
+model Moderation {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  bookmarks BookmarkModeration[]
+}
+
+model BookmarkModeration {
+  bookmark_uri String
+  moderation_id Int
+
+  bookmark   Bookmark   @relation(fields: [bookmark_uri], references: [uri], onDelete: Cascade)
+  moderation Moderation @relation(fields: [moderation_id], references: [id], onDelete: Cascade)
+
+  @@id([bookmark_uri, moderation_id])
+  @@index([bookmark_uri])
 }
 
 model JetstreamIndex {

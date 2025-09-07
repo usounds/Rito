@@ -75,6 +75,21 @@
 			}
 		}
 	},
+	"moderations": {
+		"sexual": "Sexual",
+		"sexual/minors": "Sexual (Minors)",
+		"harassment": "Harassment",
+		"harassment/threatening": "Harassment (Threat)",
+		"hate": "Hate",
+		"hate/threatening": "Hate (Threat)",
+		"self-harm": "Self-Harm",
+		"self-harm/intent": "Self-Harm (Intent)",
+		"self-harm/instructions": "Self-Harm (Instructions)",
+		"violence": "Violence",
+		"violence/graphic": "Graphic Violence",
+		"illicit": "Illicit",
+		"illicit/violent": "Violent Illicit"
+	},
 	"create": {
 		"title": "Register Bookmark",
 		"description": "Comments and tags will be public.",

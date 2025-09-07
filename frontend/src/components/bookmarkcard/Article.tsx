@@ -36,10 +36,9 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
                 if (schemaEntry) {
                     const schema = schemaEntry?.schema ?? null;
                     const newUrl = schema?.replace('{did}', result.value.repo).replace('{rkey}', result.value.rkey)
-                    console.log(newUrl)
-                return newUrl
+                    return newUrl
                 }else{
-                    const pds = getPdsUrl(result.value.repo)
+                    //const pds = getPdsUrl(result.value.repo)
                     return  `https://pdsls.dev/${url}`
                 }
             }

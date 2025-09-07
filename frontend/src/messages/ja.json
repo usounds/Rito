@@ -6,9 +6,9 @@
 		"title": "リト",
 		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
 	},
-	"button":{
-		"search" : "探す",
-		"start" : "始める"
+	"button": {
+		"search": "探す",
+		"start": "始める"
 	},
 	"header": {
 		"home": "ホーム",
@@ -105,6 +105,10 @@
 			"verify": "認証",
 			"ogp": "タイトルとコメントを取得",
 			"update": "更新"
+		},
+		"tab": {
+			"en": "英語",
+			"ja": "日本語"
 		},
 		"inform": {
 			"canverify": "あなたはこのURLの認証コメントを登録できます",

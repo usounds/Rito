@@ -4,6 +4,33 @@ import WebSocket from 'ws';
 import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE } from './config';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
+import OpenAI from "openai";
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
+});
+
+async function checkModeration(texts: string[]): Promise<string[]> {
+  try {
+    const response = await client.moderations.create({
+      model: "omni-moderation-latest",
+      input: texts,
+    });
+
+    const flaggedCategories: Set<string> = new Set();
+
+    response.results.forEach(result => {
+      for (const [category, value] of Object.entries(result.categories)) {
+        if (value) flaggedCategories.add(category);
+      }
+    });
+
+    return Array.from(flaggedCategories); // 問題なければ空配列 []
+  } catch (error) {
+    console.error("Moderation error:", error);
+    throw error;
+  }
+}
 
 const prisma = new PrismaClient();
 let cursor = "0";
@@ -90,7 +117,7 @@ async function init() {
       ));
 
       // Bookmark の upsert
-      const bookmark = await prisma.bookmark.upsert({
+      await prisma.bookmark.upsert({
         where: { uri: aturi },
         update: {
           subject: record.subject ?? '',
@@ -143,6 +170,39 @@ async function init() {
       for (const id of addIds) {
         await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
       }
+
+
+      const textsToCheck: string[] = [];
+
+      if (record.ogpTitle) textsToCheck.push(record.ogpTitle);
+      if (record.ogpDescription) textsToCheck.push(record.ogpDescription);
+
+      if (record.comments) {
+        record.comments.forEach(comment => {
+          if (comment.title) textsToCheck.push(comment.title);
+          if (comment.comment) textsToCheck.push(comment.comment);
+        });
+      }
+
+      const flaggedCategories = await checkModeration(textsToCheck);
+      logger.info(`Checked : ${flaggedCategories}`);
+      await prisma.bookmark.upsert({
+        where: { uri: aturi },
+        update: {
+          moderation: flaggedCategories.join(','), // カンマ区切りで保存
+        },
+        create: {
+          uri: aturi,
+          did: event.did,
+          subject: record.subject ?? '',
+          ogp_title: record.ogpTitle,
+          ogp_description: record.ogpDescription,
+          ogp_image: record.ogpImage,
+          created_at: new Date(),
+          indexed_at: new Date(),
+          moderation: flaggedCategories.join(','), // カンマ区切りで保存
+        },
+      });
 
       logger.info(`Upserted: ${aturi}`);
     } catch (err) {

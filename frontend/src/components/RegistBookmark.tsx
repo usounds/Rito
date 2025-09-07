@@ -167,7 +167,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             const domain = urlLocal.hostname
             const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
             const data = await res.json() as { result: boolean }
-            if (data) {
+            if (data.result) {
                 setUrlError(messages.create.error.blockUrl)
                 return
 

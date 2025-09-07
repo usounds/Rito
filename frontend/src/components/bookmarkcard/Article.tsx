@@ -1,3 +1,4 @@
+"use client"
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
@@ -6,13 +7,16 @@ import {
     Card,
     Group,
     Image,
-    Text
+    Text,
+    Modal
 } from '@mantine/core';
 import { useMessages } from 'next-intl';
 import Link from 'next/link';
 import classes from './Article.module.scss';
-import {getPdsUrl} from "@/logic/HandleDidredolver";
-
+import { RegistBookmark } from '@/components/RegistBookmark';
+import { SquarePen } from 'lucide-react';
+import { ActionIcon } from '@mantine/core';
+import { useState,useEffect } from 'react';
 
 type ArticleCardProps = {
     url: string;
@@ -20,11 +24,29 @@ type ArticleCardProps = {
     comment: string;
     tags: string[];
     image?: string | null;
-    date: Date
+    date: Date,
+    atUri?: string
 };
 
-export function Article({ url, title, comment, tags, image, date }: ArticleCardProps) {
+export function Article({ url, title, comment, tags, image, date, atUri }: ArticleCardProps) {
     const messages = useMessages();
+    const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
+    const [modalSize, setModalSize] = useState('70%')
+
+    useEffect(() => {
+        const updateSize = () => {
+            if (window.innerWidth < 768) {
+                setModalSize('100%')
+            } else {
+                setModalSize('70%')
+            }
+        }
+
+        updateSize()
+        window.addEventListener('resize', updateSize)
+        return () => window.removeEventListener('resize', updateSize)
+    }, [])
+
 
     const localUrl = (() => {
         if (url.startsWith('https://')) {
@@ -36,11 +58,10 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
                 if (schemaEntry) {
                     const schema = schemaEntry?.schema ?? null;
                     const newUrl = schema?.replace('{did}', result.value.repo).replace('{rkey}', result.value.rkey)
-                    console.log(newUrl)
-                return newUrl
-                }else{
-                    const pds = getPdsUrl(result.value.repo)
-                    return  `https://pdsls.dev/${url}`
+                    return newUrl
+                } else {
+                    //const pds = getPdsUrl(result.value.repo)
+                    return `https://pdsls.dev/${url}`
                 }
             }
         }
@@ -85,12 +106,26 @@ export function Article({ url, title, comment, tags, image, date }: ArticleCardP
                 {title}
             </Text>
 
-            <Text fz="sm" c="dimmed" lineClamp={4}>
+            <Text fz="sm" c="dimmed" lineClamp={4} mb="sm">
                 {comment}
             </Text>
 
+            <Group className={classes.footer} gap='xs'>
+                {atUri &&
+                    <>
+                        <ActionIcon variant="transparent" color="gray" aria-label="Edit" onClick={() => setQuickRegistBookmark(true)}><SquarePen size={16} /></ActionIcon>
 
-            <Group className={classes.footer} gap='sm'>
+                        <Modal
+                            opened={quickRegistBookmark}
+                            onClose={() => setQuickRegistBookmark(false)}
+                            size={modalSize}
+                            title={messages.create.title}
+                            centered
+                        >
+                            <RegistBookmark aturi={atUri} />
+                        </Modal>
+                    </>
+                }
                 <Link
                     href={localUrl || ''}
                     target="_blank"

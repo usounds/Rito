@@ -117,7 +117,7 @@ export default function Header() {
             <Link href={`/${locale}/mybookmark`} className={classes.link} onClick={closeDrawer}>
               {messages.header.bookmark}
             </Link>
-            <Link href={`/${locale}/search`} className={classes.link}>
+            <Link href={`/${locale}/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}
             </Link>
             <a href="#" className={classes.link}>

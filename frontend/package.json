@@ -8,7 +8,7 @@
     "build": "next build --turbopack",
     "start": "next start",
     "lex-gen": "npx lex-cli generate -c ./lex.config.js",
-    "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | tee src/data/blocklist.txt | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/blocklist.json"
+    "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/blocklist.json"
   },
   "dependencies": {
     "@atcute/bluesky": "^3.2.1",

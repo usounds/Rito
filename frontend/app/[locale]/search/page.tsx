@@ -1,4 +1,4 @@
-import { LatestBookmark } from '@/components/latestbookmark/LatestBookmark';
+import { LatestBookmark } from './latestbookmark/LatestBookmark';
 import { routing } from "@/i18n/routing";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Container } from "@mantine/core";

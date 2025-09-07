@@ -6,8 +6,7 @@ export interface Bookmark {
   ogp_image: string | null;
   created_at: string;  // ISO 8601 形式の文字列
   indexed_at: string;  // ISO 8601 形式の文字列
-  verified: boolean;
-  moderation?: string;
+  moderations: string[];
   comments: Comment[];
   tags: string[];
 }

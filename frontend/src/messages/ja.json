@@ -74,6 +74,21 @@
 			}
 		}
 	},
+	"moderations": {
+		"sexual": "性的",
+		"sexual/minors": "未成年性的",
+		"harassment": "嫌がらせ",
+		"harassment/threatening": "脅迫的嫌がらせ",
+		"hate": "差別",
+		"hate/threatening": "脅迫的差別",
+		"self-harm": "自傷・自殺",
+		"self-harm/intent": "自傷意図",
+		"self-harm/instructions": "自傷方法",
+		"violence": "暴力",
+		"violence/graphic": "残虐",
+		"illicit": "違法",
+		"illicit/violent": "暴力的違法"
+	},
 	"create": {
 		"title": "ブックマークの登録",
 		"description": "コメントやタグは公開されます。",

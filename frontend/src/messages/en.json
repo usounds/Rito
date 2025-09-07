@@ -115,7 +115,8 @@
 			"invalidurl": "Invalid URL format",
 			"urlMandatory": "URL is required",
 			"titleMandatory": "Title is required",
-			"blockUrl": "This URL cannot be bookmarked"
+			"blockUrl": "This URL cannot be bookmarked",
+			"unknownError": "Failed to regist"
 		}
 	}
 }

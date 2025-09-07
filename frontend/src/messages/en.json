@@ -107,6 +107,10 @@
 			"ogp": "Fetch Title and Comment",
 			"update": "Update"
 		},
+		"tab": {
+			"en": "English",
+			"ja": "Japanese"
+		},
 		"inform": {
 			"canverify": "You can register a verified comment for this URL",
 			"success": "登録しました"

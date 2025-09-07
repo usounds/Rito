@@ -10,6 +10,8 @@ import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { Tabs } from '@mantine/core';
+import { Comment } from "@/type/ApiTypes"
 
 type RegistBookmarkProps = {
     aturi?: string;
@@ -18,8 +20,10 @@ type RegistBookmarkProps = {
 export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
-    const [title, setTitle] = useState<string>('');
-    const [comment, setComment] = useState<string>('');
+    const [comments, setComments] = useState<Comment[]>([
+        { lang: "ja", title: "", comment: "" },
+        { lang: "en", title: "", comment: "" },
+    ]);
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
@@ -36,6 +40,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
     const locale = useLocale();
+    const [activeTab, setActiveTab] = useState<string | null>(locale);
 
     useEffect(() => {
         const fetchBookmark = async () => {
@@ -55,9 +60,17 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                 if (Array.isArray(data) && data.length > 0) {
                     setTags(data[0].tags);
                     setUrl(data[0].subject);
-                    const matchedComment = data[0].comments.find((c: { lang: string }) => c.lang === locale);
-                    setTitle(matchedComment?.title || '')
-                    setComment(matchedComment?.comment || '')
+                    // 取得した comments を Comment[] 型で整形
+                    const loadedComments: Comment[] = (["ja", "en"] as ("ja" | "en")[]).map((lang) => {
+                        const matched = data[0].comments.find((c: { lang: string }) => c.lang === lang);
+                        return {
+                            lang,
+                            title: matched?.title || "",
+                            comment: matched?.comment || "",
+                        };
+                    });
+
+                    setComments(loadedComments);
                     const parse = parseCanonicalResourceUri(aturi)
                     if (parse.ok) setRkey(parse.value.rkey)
 
@@ -135,8 +148,16 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             });
             if (result.status === 200) {
                 const data = await result.json();
-                setTitle(data.result?.ogTitle || '');
-                setComment(data.result?.ogDescription || '');
+                setComments((prev) =>
+                    prev.map((c) =>
+                        c.lang === activeTab
+                            ? {
+                                ...c,
+                                title: data.result?.ogTitle || c.title,
+                                comment: data.result?.ogDescription || c.comment,
+                            }
+                            : c
+                    ))
                 setOgpTitle(data.result?.ogTitle || '');
                 setOgpDescription(data.result?.ogDescription || '');
                 setOgpImage(data.result?.ogImage?.[0]?.url || '')
@@ -158,9 +179,10 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             setUrlError(messages.create.error.urlMandatory)
             return
         }
-        if (!title) {
-            setTitleError(messages.create.error.titleMandatory)
-            return
+        const current = comments.find((c) => c.lang === activeTab);
+        if (!current?.title) {
+            setTitleError(messages.create.error.titleMandatory);
+            return;
         }
         if (url.startsWith('https://')) {
             const urlLocal = new URL(url)
@@ -186,25 +208,24 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             if (schema && aturiParsed) {
                 ogpUrl = schema.replace('{did}', aturiParsed.repo).replace('{rkey}', aturiParsed.rkey)
             }
-            if (!url) {
+            if (!ogpUrl) {
                 setUrlError(messages.create.error.urlMandatory)
                 return
             }
-            try {
-                const result = await fetch(`/api/fetchOgp?url=${encodeURIComponent(ogpUrl)}`, {
-                    method: 'GET',
-                });
-                if (result.status === 200) {
-                    const data = await result.json();
-                    ogpTitleLocal = data.result?.ogTitle || '';
-                    ogpDescriptionLocal = data.result?.ogDescription || '';
-                    ogpImageLocal = data.result?.ogImage?.[0]?.url || ''
-                } else {
+            if (ogpUrl.startsWith('https://')) {
+                try {
+                    const result = await fetch(`/api/fetchOgp?url=${encodeURIComponent(ogpUrl)}`, {
+                        method: 'GET',
+                    });
+                    if (result.status === 200) {
+                        const data = await result.json();
+                        ogpTitleLocal = data.result?.ogTitle || '';
+                        ogpDescriptionLocal = data.result?.ogDescription || '';
+                        ogpImageLocal = data.result?.ogImage?.[0]?.url || ''
+                    }
+                } catch {
                     console.log('Failed to fetch OGP data');
-                    setUrlError(messages.create.error.invalidurl);
                 }
-            } catch {
-                setUrlError(messages.create.error.invalidurl);
             }
         }
 
@@ -212,18 +233,19 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             $type: "blue.rito.feed.bookmark",
             createdAt: new Date().toISOString(),
             subject: url as `${string}:${string}`,
-            comments: [
-                {
-                    lang: lang,
-                    title: title || '',
-                    comment: comment || ''
-                }
-            ],
+            comments: comments
+                .filter((c) => c.title.trim() !== "") // タイトルが空でないものだけ
+                .map((c) => ({
+                    lang: c.lang,
+                    title: c.title,
+                    comment: c.comment || "",
+                })),
             tags: tags.length > 0 ? tags : undefined,
-            ogpTitle: ogpTitleLocal || '',
-            ogpDescription: ogpDescriptionLocal || '',
-            ogpImage: (ogpImageLocal || '') as `${string}:${string}`
-        }
+            ogpTitle: ogpTitleLocal || "",
+            ogpDescription: ogpDescriptionLocal || "",
+            ogpImage: (ogpImageLocal || "") as `${string}:${string}`,
+        };
+
         let rkeyLocal
         const writes = []
 
@@ -278,9 +300,18 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
         setIsSubmit(false)
     }
 
+    const handleChange = (lang: string, field: keyof Comment, value: string) => {
+        setComments((prev) =>
+            prev.map((c) =>
+                c.lang === lang ? { ...c, [field]: value } : c
+            )
+        );
+    };
+
+
     return (
         <>
-            <Stack gap="md">
+            <Stack gap="sm">
                 <TextInput
                     label={messages.create.field.url.title}
                     description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
@@ -305,25 +336,6 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                         {messages.create.button.ogp}
                     </Button>
                 </Group>
-                <TextInput
-                    label={messages.create.field.title.title}
-                    placeholder={messages.create.field.title.placeholder}
-                    description={messages.create.field.title.description}
-                    value={title}
-                    maxLength={50}
-                    onChange={(e) => setTitle(e.target.value)}
-                    error={titleError}
-                    withAsterisk
-                    styles={{ input: { fontSize: 16, }, }} />
-                <Textarea
-                    label={messages.create.field.comment.title}
-                    description={messages.create.field.comment.description}
-                    placeholder={messages.create.field.comment.placeholder}
-                    value={comment}
-                    maxLength={2000}
-                    autosize
-                    onChange={(e) => setComment(e.target.value)}
-                    styles={{ input: { fontSize: 16, }, }} />
                 <TagsInput
                     data={[]}
                     value={tags}
@@ -334,7 +346,63 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                     maxTags={10}
                     maxLength={20}
                     leftSection={<Tag size={16} />}
+                    clearable
                     styles={{ input: { fontSize: 16, }, }} />
+                <Tabs value={activeTab} onChange={setActiveTab}>
+                    <Tabs.List>
+                        <Tabs.Tab value="ja">{messages.create.tab.ja}</Tabs.Tab>
+                        <Tabs.Tab value="en">{messages.create.tab.en}</Tabs.Tab>
+                    </Tabs.List>
+
+
+                    <Tabs.Panel value="ja">
+                        <TextInput
+                            label={messages.create.field.title.title}
+                            placeholder={messages.create.field.title.placeholder}
+                            description={messages.create.field.title.description}
+                            error={titleError}
+                            value={comments.find((c) => c.lang === "ja")?.title || ""}
+                            maxLength={50}
+                            onChange={(e) => handleChange("ja", "title", e.currentTarget.value)}
+                            withAsterisk
+                            styles={{ input: { fontSize: 16 } }}
+                        />
+                        <Textarea
+                            label={messages.create.field.comment.title}
+                            description={messages.create.field.comment.description}
+                            placeholder={messages.create.field.comment.placeholder}
+                            value={comments.find((c) => c.lang === "ja")?.comment || ""}
+                            maxLength={2000}
+                            autosize
+                            onChange={(e) => handleChange("ja", "comment", e.currentTarget.value)}
+                            styles={{ input: { fontSize: 16 } }}
+                        />
+                    </Tabs.Panel>
+
+                    <Tabs.Panel value="en">
+                        <TextInput
+                            label={messages.create.field.title.title}
+                            placeholder={messages.create.field.title.placeholder}
+                            description={messages.create.field.title.description}
+                            error={titleError}
+                            value={comments.find((c) => c.lang === "en")?.title || ""}
+                            maxLength={50}
+                            onChange={(e) => handleChange("en", "title", e.currentTarget.value)}
+                            withAsterisk
+                            styles={{ input: { fontSize: 16 } }}
+                        />
+                        <Textarea
+                            label={messages.create.field.comment.title}
+                            description={messages.create.field.comment.description}
+                            placeholder={messages.create.field.comment.placeholder}
+                            value={comments.find((c) => c.lang === "en")?.comment || ""}
+                            maxLength={2000}
+                            autosize
+                            onChange={(e) => handleChange("en", "comment", e.currentTarget.value)}
+                            styles={{ input: { fontSize: 16 } }}
+                        />
+                    </Tabs.Panel>
+                </Tabs>
 
                 <Group justify="right">
                     <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>

@@ -17,6 +17,7 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@atcute/client": "^4.0.3",
     "@prisma/client": "^6.15.0",
     "@skyware/jetstream": "^0.2.5",
     "openai": "^5.19.1",

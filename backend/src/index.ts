@@ -5,6 +5,7 @@ import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE } from './confi
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
 import OpenAI from "openai";
+import { Client, simpleFetchHandler } from '@atcute/client';
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
@@ -107,14 +108,6 @@ async function init() {
     cursor = event.time_us.toString();
 
     try {
-      // タグの upsert
-      const tagRecords = await Promise.all((record.tags ?? []).map(name =>
-        prisma.tag.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        })
-      ));
 
       // Bookmark の upsert
       await prisma.bookmark.upsert({
@@ -150,6 +143,56 @@ async function init() {
       });
 
       // タグの更新
+      //verifiedが含まれていたら除外する
+
+      const publicAgent = new Client({
+        handler: simpleFetchHandler({
+          service: 'https://public.api.bsky.app',
+        }),
+      })
+
+      let isVerify = false
+
+
+
+      try {
+        // URLが正しいかチェック
+        const url = new URL(event.commit.record.subject || '')
+        const domain = url.hostname
+
+        if (url.pathname === '/' || url.pathname === '') {
+
+          const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+            params: {
+              actor: event.did,
+            },
+          })
+
+          if (userProfile.ok && (domain == userProfile.data.handle || domain.endsWith('.' + userProfile.data.handle))) {
+            isVerify = true
+          }
+        }
+      } catch {
+
+      }
+
+      let tagsLocal = (record.tags ?? [])
+        .filter((name) => name.toLowerCase() !== "verified"); // まず既存の "verified" は削除
+
+      if (isVerify) {
+        // true の場合は必ず追加
+        tagsLocal.push("Verified");
+      }
+
+      // タグの upsert
+      const tagRecords = await Promise.all((tagsLocal?? []).map(name =>
+        prisma.tag.upsert({
+          where: { name },
+          update: {},
+          create: { name },
+        })
+      ));
+
       const oldTagIds = await prisma.bookmarkTag.findMany({
         where: { bookmark_uri: aturi },
         select: { tag_id: true },
@@ -171,7 +214,6 @@ async function init() {
         await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
       }
 
-
       const textsToCheck: string[] = [];
 
       if (record.ogpTitle) textsToCheck.push(record.ogpTitle);
@@ -185,7 +227,7 @@ async function init() {
       }
 
       const flaggedCategories = await checkModeration(textsToCheck);
-      logger.info(`Checked : ${flaggedCategories}`);
+      logger.info(`Moderation result : ${flaggedCategories}`);
       await prisma.bookmark.upsert({
         where: { uri: aturi },
         update: {

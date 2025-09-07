@@ -16,7 +16,7 @@ import classes from './Article.module.scss';
 import { RegistBookmark } from '@/components/RegistBookmark';
 import { SquarePen } from 'lucide-react';
 import { ActionIcon } from '@mantine/core';
-import { useState,useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 type ArticleCardProps = {
     url: string;
@@ -79,7 +79,43 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
     const linkProps = { href: localUrl, target: '_blank', rel: 'noopener noreferrer' };
 
     return (
-        <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Card withBorder radius="md" className={classes.card} style={{
+            height: '100%', display: 'flex', flexDirection: 'column',
+            position: 'relative',
+        }}>
+            {/* 右上固定の atUri エリア */}
+            {atUri && (
+                <div
+                    style={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        display: 'flex',
+                        gap: 4,
+                        zIndex: 10,
+                    }}
+                >
+                    <ActionIcon
+                        variant="transparent"
+                        color="gray"
+                        aria-label="Edit"
+                        onClick={() => setQuickRegistBookmark(true)}
+                    >
+                        <SquarePen size={16} />
+                    </ActionIcon>
+
+                    <Modal
+                        opened={quickRegistBookmark}
+                        onClose={() => setQuickRegistBookmark(false)}
+                        size={modalSize}
+                        title={messages.create.title}
+                        centered
+                    >
+                        <RegistBookmark aturi={atUri} />
+                    </Modal>
+                </div>
+            )}
+
             {(image && false) &&
                 <div>
                     <a {...linkProps}>
@@ -111,21 +147,6 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
             </Text>
 
             <Group className={classes.footer} gap='xs'>
-                {atUri &&
-                    <>
-                        <ActionIcon variant="transparent" color="gray" aria-label="Edit" onClick={() => setQuickRegistBookmark(true)}><SquarePen size={16} /></ActionIcon>
-
-                        <Modal
-                            opened={quickRegistBookmark}
-                            onClose={() => setQuickRegistBookmark(false)}
-                            size={modalSize}
-                            title={messages.create.title}
-                            centered
-                        >
-                            <RegistBookmark aturi={atUri} />
-                        </Modal>
-                    </>
-                }
                 <Link
                     href={localUrl || ''}
                     target="_blank"

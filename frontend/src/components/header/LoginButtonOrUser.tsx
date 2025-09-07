@@ -83,7 +83,7 @@ export function LoginButtonOrUser() {
                 // ログイン済みの場合に表示する要素
                 <>
                     <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} />
-                    <Affix position={{ bottom: 20, right: 20 }}>
+                    <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
                         <Button
                             onClick={() => setQuickRegistBookmark(true)}
                             leftSection={<BookmarkPlus size={16} />}

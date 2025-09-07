@@ -181,7 +181,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
         let ogpDescriptionLocal = ogpDescription
         let ogpImageLocal = ogpImage
 
-        if (ogpTitleLocal) {
+        if (!ogpTitleLocal) {
             let ogpUrl = url
             if (schema && aturiParsed) {
                 ogpUrl = schema.replace('{did}', aturiParsed.repo).replace('{rkey}', aturiParsed.rkey)

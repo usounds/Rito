@@ -6,14 +6,14 @@ import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
     ActionIcon,
     Badge,
+    Box,
     Card,
     Group,
     Image,
     Modal,
     Text
 } from '@mantine/core';
-import { SquarePen } from 'lucide-react';
-import { BadgeCheck } from 'lucide-react';
+import { BadgeCheck, SquarePen, Trash2 } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -27,12 +27,14 @@ type ArticleCardProps = {
     tags: string[];
     image?: string | null;
     date: Date,
-    atUri?: string
+    atUri?: string,
+    moderations: string[]
 };
 
-export function Article({ url, title, comment, tags, image, date, atUri }: ArticleCardProps) {
+export function Article({ url, title, comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
     const messages = useMessages();
     const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
+    const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
 
     useEffect(() => {
@@ -95,37 +97,60 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                 </div>
             }
 
-            {tags.length > 0 && (
-                <Group mb="xs" gap="xs">
-                    {tags.map((tag, idx) => (
-                        <Badge
-                            key={idx}
-                            variant="light"
-                            color={tag === 'Verified' ? 'orange' : 'blue'} // Verified は青、それ以外は灰色
-                            styles={{ root: { textTransform: 'none' } }}
-                        >
-                            {tag === 'Verified' && (
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                    <BadgeCheck size={12} />  {tag}
-                                </span>
-                            )}
-                            {tag != 'Verified' && (
-                                <span style={{ display: 'flex', alignItems: 'center' }}>
-                                    {tag}
-                                </span>
-                            )}
-                        </Badge>
-                    ))}
-                </Group>
-            )}
+            <Box style={{ position: 'relative' }} onClick={() => setIsClicked(!isClicked)}>
+                {(moderations.length > 0 && !isClicked) && (
+                    <Box
+                        style={{
+                            position: 'absolute',
+                            inset: 0,
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 10,
+                        }}
+                    />
+                )}
 
-            <Text className={classes.title} fw={500} component="a" {...linkProps}>
-                {title}
-            </Text>
+                {tags.length > 0 && (
+                    <Group mb="xs" gap={3}>
+                        {tags.map((tag, idx) => (
+                            <Badge
+                                key={idx}
+                                variant="light"
+                                color={tag === 'Verified' ? 'orange' : 'blue'}
+                                styles={{ root: { textTransform: 'none' } }}
+                            >
+                                {tag === 'Verified' ? (
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                                        <BadgeCheck size={12} /> {tag}
+                                    </span>
+                                ) : (
+                                    <span style={{ display: 'flex', alignItems: 'center' }}>{tag}</span>
+                                )}
+                            </Badge>
+                        ))}
+                    </Group>
+                )}
 
-            <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                <Markdown>{comment}</Markdown>
-            </Text>
+                <Text className={classes.title} fw={500} component="a" {...linkProps}>
+                    {title}
+                </Text>
+
+                <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                    <Markdown>{comment}</Markdown>
+                </Text>
+            </Box>
+<Group mb="xs" gap={4}>
+  {moderations.map((mod, idx) => (
+    <Badge
+      key={idx}
+      color="gray"
+      variant="outline"
+      styles={{ root: { textTransform: 'none' } }}
+    >
+      {messages?.moderations?.[mod] ?? mod}
+      {/* messages に翻訳があればそれを表示、なければ生の値 */}
+    </Badge>
+  ))}
+</Group>
 
             <Group className={classes.footer} gap='xs'>
 
@@ -139,6 +164,14 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                             onClick={() => setQuickRegistBookmark(true)}
                         >
                             <SquarePen size={16} />
+                        </ActionIcon>
+                        <ActionIcon
+                            variant="transparent"
+                            color="red"
+                            aria-label="Edit"
+                            onClick={() => setQuickRegistBookmark(true)}
+                        >
+                            <Trash2 size={16} />
                         </ActionIcon>
 
                         <Modal

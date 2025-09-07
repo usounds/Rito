@@ -51,7 +51,7 @@ export function MyBookmark() {
 
 
             <SimpleGrid
-                cols={{ base: 1, sm: 2, md: 3 }}
+                cols={{ base: 1, sm: 2, md: 2 }}
                 spacing="md"
             >
                 {myBookmark?.map((b) => {
@@ -75,6 +75,7 @@ export function MyBookmark() {
                                 image={b.ogp_image}
                                 date={new Date(b.indexed_at)}
                                 atUri={b.uri}
+                                moderations={b.moderations}
                             />
                         </div>
                     );

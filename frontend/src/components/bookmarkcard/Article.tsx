@@ -88,8 +88,8 @@ export function Article({ url, title, comment, tags, image, date, atUri }: Artic
                 <div
                     style={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
+                        top: 10,
+                        right: 10,
                         display: 'flex',
                         gap: 4,
                         zIndex: 10,

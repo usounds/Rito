@@ -1,12 +1,10 @@
 "use client";
 import { Article } from '@/components/bookmarkcard/Article';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
+import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import type { Bookmark } from '@/type/ApiTypes';
 import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
-import { useEffect, useState } from 'react';
-import { useMyBookmark } from "@/state/MyBookmark";
 
 export function MyBookmark() {
     const client = useXrpcAgentStore(state => state.client);
@@ -75,7 +73,7 @@ export function MyBookmark() {
                                 image={b.ogp_image}
                                 date={new Date(b.indexed_at)}
                                 atUri={b.uri}
-                                moderations={b.moderations}
+                                moderations={comment.moderation_result}
                             />
                         </div>
                     );

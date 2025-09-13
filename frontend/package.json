@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
     "build": "npm run prisma:generate && next build --turbopack",
-    "prisma:generate": "cp ../backend/prisma/schema.prisma ./prisma/schema.prisma && npx prisma generate --schema=./prisma/schema.prisma",
+    "prisma:generate": "test -f ../backend/prisma/schema.prisma && cp ../backend/prisma/schema.prisma ./prisma/schema.prisma && npx prisma generate --schema=./prisma/schema.prisma",
     "start": "next start",
     "lex-gen": "npx lex-cli generate -c ./lex.config.js",
     "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/blocklist.json"

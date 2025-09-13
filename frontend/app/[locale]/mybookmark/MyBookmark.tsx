@@ -51,7 +51,7 @@ export function MyBookmark() {
 
 
             <SimpleGrid
-                cols={{ base: 1, sm: 2, md: 2 }}
+                cols={{ base: 1, sm: 2, md: 3 }}
                 spacing="md"
             >
                 {Array.isArray(myBookmark) && myBookmark.map((b) => (

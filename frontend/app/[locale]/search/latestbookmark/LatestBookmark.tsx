@@ -3,7 +3,6 @@ import type { Bookmark } from '@/type/ApiTypes';
 import { SimpleGrid, Stack, Text } from '@mantine/core';
 import { getTranslations } from "next-intl/server";
 import { Container } from "@mantine/core";
-import { getPrisma } from '../../../../src/logic/HandlePrismaClient';
 import classes from './LatestBookmark.module.scss';
 import type { PrismaBookmarkWithRelations } from '@/type/ApiTypes';
 
@@ -17,8 +16,7 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
   const locale = params.locale;
 
   // API Route から取得
-  console.log(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`)
-const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`);
+  const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`);
   if (!res.ok) {
     throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
   }

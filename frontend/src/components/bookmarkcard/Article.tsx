@@ -112,6 +112,15 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     />
                 )}
 
+
+                <Text className={classes.title} fw={500} component="a" {...linkProps}>
+                    {title}
+                </Text>
+                <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                    <Markdown>{comment}</Markdown>
+                </Text>
+
+
                 {tags.length > 0 && (
                     <Group mb="xs" gap={3}>
                         {tags.map((tag, idx) => (
@@ -133,13 +142,6 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     </Group>
                 )}
 
-                <Text className={classes.title} fw={500} component="a" {...linkProps}>
-                    {title}
-                </Text>
-
-                <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                    <Markdown>{comment}</Markdown>
-                </Text>
             </Box>
             <Group mb="xs" gap={4}>
                 {moderations.map((mod, idx) => (
@@ -191,7 +193,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         <Modal
                             opened={deleteBookmark}
                             onClose={() => setDeleteBookmark(false)}
-                            size={modalSize}
+                            size="md"
                             title={messages.delete.title}
                             centered
                         >

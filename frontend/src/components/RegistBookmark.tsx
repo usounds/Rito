@@ -2,7 +2,6 @@
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Comment } from "@/type/ApiTypes";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput } from '@mantine/core';
@@ -11,13 +10,14 @@ import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-r
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
+import { Comment, Bookmark } from "@/type/ApiTypes";
 
 type RegistBookmarkProps = {
     aturi?: string;
     onClose: () => void;
 };
 
-export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi,onClose }) => {
+export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
@@ -48,6 +48,29 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi,onClose })
         const fetchBookmark = async () => {
             if (!aturi) return
             try {
+
+
+
+                // ① Zustand から先に初期表示用データを探す
+                const localBookmark = useMyBookmark.getState().myBookmark.find(
+                    (b: Bookmark) => b.uri === aturi
+                );
+
+                if (localBookmark) {
+                    // ここで localBookmark を初期値としてセット
+                    setUrl(localBookmark.subject); // subject が Bookmark にある前提
+                    setTags(localBookmark.tags?.filter((t: string) => t !== "Verified") ?? []);
+                    setComments(
+                        (["ja", "en"] as ("ja" | "en")[]).map((lang) => ({
+                            lang,
+                            title: "",
+                            comment: "",
+                            moderations: [],
+                        }))
+                    );
+                }
+
+                // 念の為サーバーの最新値を
                 const res = await fetch(
                     `/xrpc/blue.rito.feed.getBookmark?uri=${encodeURIComponent(aturi)}`
                 );
@@ -196,6 +219,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi,onClose })
             setTitleError("activeDid is null");
             return;
         }
+        setIsSubmit(true)
         if (url.startsWith('https://')) {
             const urlLocal = new URL(url)
             const domain = urlLocal.hostname
@@ -208,7 +232,6 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi,onClose })
             }
 
         }
-        setIsSubmit(true)
         const lang = locale as 'ja' | 'en'
 
         let ogpTitleLocal = ogpTitle

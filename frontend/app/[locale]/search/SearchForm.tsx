@@ -1,9 +1,9 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { TagsInput, Button, Group } from '@mantine/core'
-import { useLocale, useMessages } from 'next-intl';
+import { Button, Group, TagsInput } from '@mantine/core';
 import { Search } from 'lucide-react';
+import { useMessages } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 type SearchFormProps = {
     locale: string;
@@ -38,6 +38,7 @@ export function SearchForm({ locale, defaultTags, defaultHandles }: SearchFormPr
                     placeholder={messages.search.field.tag.placeholder}
                     value={tags}
                     onChange={setTags}
+                    styles={{ input: { fontSize: 16 } }}
                     clearable
                 />
                 <TagsInput
@@ -45,6 +46,7 @@ export function SearchForm({ locale, defaultTags, defaultHandles }: SearchFormPr
                     placeholder={messages.search.field.user.placeholder}
                     value={handles}
                     onChange={setHandles}
+                    styles={{ input: { fontSize: 16 } }}
                     clearable
                 />
             </Group>

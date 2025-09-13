@@ -5,7 +5,7 @@ export async function GET(req: Request) {
   const handle = searchParams.get("handle");
 
   if (!handle) {
-    return NextResponse.json({ error: "Missing handle" }, { status: 400 });
+      return NextResponse.json({ error: "handle parameter is required" }, { status: 400 });
   }
 
   try {

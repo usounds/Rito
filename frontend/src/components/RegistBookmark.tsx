@@ -2,27 +2,27 @@
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Bookmark } from "@/type/ApiTypes";
+import { Comment } from "@/type/ApiTypes";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, TagsInput, Textarea, TextInput } from '@mantine/core';
+import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
-import { Tabs } from '@mantine/core';
-import { Comment } from "@/type/ApiTypes"
+import { useMyBookmark } from "@/state/MyBookmark";
 
 type RegistBookmarkProps = {
     aturi?: string;
+    onClose: () => void;
 };
 
-export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
+export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi,onClose }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
-        { lang: "ja", title: "", comment: "", moderation_result: [] },
-        { lang: "en", title: "", comment: "", moderation_result: [] },
+        { lang: "ja", title: "", comment: "", moderations: [] },
+        { lang: "en", title: "", comment: "", moderations: [] },
     ]);
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
@@ -34,11 +34,13 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const [ogpDescription, setOgpDescription] = useState<string | null>(null);
     const [ogpImage, setOgpImage] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
+    const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
     const [rkey, setRkey] = useState<string | null>(null);
     const [schema, setSchema] = useState<string | null>(null);
     const client = useXrpcAgentStore(state => state.client);
     const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
     const identities = useXrpcAgentStore(state => state.identities);
+    const activeDid = useXrpcAgentStore(state => state.activeDid);
     const locale = useLocale();
     const [activeTab, setActiveTab] = useState<string | null>(locale);
 
@@ -68,13 +70,17 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                             lang,
                             title: matched?.title || "",
                             comment: matched?.comment || "",
-                            moderation_result: []
+                            moderations: []
                         };
                     });
 
                     setComments(loadedComments);
                     const parse = parseCanonicalResourceUri(aturi)
-                    if (parse.ok) setRkey(parse.value.rkey)
+                    if (parse.ok) {
+                        setRkey(parse.value.rkey)
+                        parse.value.repo
+                        parse.value.rkey
+                    }
 
                 } else {
                     //setBookmark(null);
@@ -186,10 +192,14 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             setTitleError(messages.create.error.titleMandatory);
             return;
         }
+        if (!activeDid) {
+            setTitleError("activeDid is null");
+            return;
+        }
         if (url.startsWith('https://')) {
             const urlLocal = new URL(url)
             const domain = urlLocal.hostname
-            const res = await fetch(`/api/checkDomain?d=${encodeURIComponent(domain)}`)
+            const res = await fetch(`/api/checkDomain?domain=${encodeURIComponent(domain)}`)
             const data = await res.json() as { result: boolean }
             if (data.result) {
                 setUrlError(messages.create.error.blockUrl)
@@ -260,6 +270,29 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                 value: obj as Record<string, unknown>,
             });
         } else {
+
+
+            try {
+                const result = await fetch(`/xrpc/blue.rito.feed.getBookmarkBySubject?subject=${encodeURIComponent(url)}&did=${encodeURIComponent(activeDid)}`, {
+                    method: 'GET',
+                });
+                if (result.status === 200) {
+                    const data = await result.json();
+                    if (data.length != 0) {
+                        notifications.show({
+                            title: 'Error',
+                            message: messages.create.error.duplicate,
+                            color: 'red',
+                            icon: <X />
+                        });
+                        setIsSubmit(false)
+                        return
+
+                    }
+                }
+            } catch {
+                console.log('Failed to fetch OGP data');
+            }
             rkeyLocal = TID.now();
             writes.push({
                 $type: "com.atproto.repo.applyWrites#create" as const,
@@ -290,6 +323,9 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                     color: 'teal',
                     icon: <Check />
                 });
+
+                setIsNeedReload(true)
+                onClose()
             } else {
                 notifications.show({
                     title: 'Error',

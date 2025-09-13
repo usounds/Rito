@@ -74,11 +74,11 @@
 		"field": {
 			"tag": {
 				"title": "Tag",
-				"placeholder": "検索するタグ"
+				"placeholder": "Search Tags"
 			},
 			"user": {
 				"title": "User",
-				"placeholder": "投稿者のハンドル"
+				"placeholder": "Search user handle"
 			}
 		},
 		"button": {
@@ -108,7 +108,7 @@
 				"title": "URL",
 				"placeholder": "https://rito.blue",
 				"description": "The URL to bookmark",
-				"descriptionForOwner": "If you authenticate after registration, it will be treated as an owner bookmark."
+				"descriptionForOwner": "It will be treated as an owner bookmark."
 			},
 			"title": {
 				"title": "Title",
@@ -128,9 +128,8 @@
 		},
 		"button": {
 			"regist": "Register",
-			"verify": "Verify",
-			"ogp": "Fetch Title and Comment",
-			"update": "Update"
+			"delete": "Delete",
+			"ogp": "Fetch Title and Comment"
 		},
 		"tab": {
 			"en": "English",
@@ -145,7 +144,20 @@
 			"urlMandatory": "URL is required",
 			"titleMandatory": "Title is required",
 			"blockUrl": "This URL cannot be bookmarked",
-			"unknownError": "Failed to regist"
+			"unknownError": "Failed to regist",
+			"duplicate": "This URL is already registered"
 		}
-	}
+	},
+	"delete": {
+		"title": "Delete Bookmark",
+		"description": "Do you want to delete this bookmark?",
+		"button": {
+			"close": "Close",
+			"delete": "Delete"
+		}
+	},
+		"inform": {
+			"error": "System Error occured",
+			"success": "Delete operation successed"
+		}
 }

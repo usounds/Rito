@@ -28,18 +28,14 @@ export default async function BookmarksPage({ params, searchParams }: PageProps)
 
   // --- tag を配列化 ---
   const tag = resolvedSearch.tag
-    ? Array.isArray(resolvedSearch.tag)
-      ? resolvedSearch.tag
-      : [resolvedSearch.tag]
+    ? resolvedSearch.tag.toString().split(',').map(t => t.trim()).filter(Boolean)
     : undefined;
 
   // --- handle を配列化 ---
   const handle = resolvedSearch.handle
-    ? Array.isArray(resolvedSearch.handle)
-      ? resolvedSearch.handle
-      : [resolvedSearch.handle]
+    ? resolvedSearch.handle.toString().split(',').map(h => h.trim()).filter(Boolean)
     : undefined;
-
+    
   // --- query オブジェクト ---
   const query = {
     sort: resolvedSearch.sort as 'created' | 'updated' | undefined,

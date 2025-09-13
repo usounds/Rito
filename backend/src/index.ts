@@ -109,149 +109,153 @@ async function init() {
     }, CURSOR_UPDATE_INTERVAL);
   });
 
-  async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
-    const record = event.commit.record as BlueRitoFeedBookmark.Main;
-    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-    cursor = event.time_us.toString();
+async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
+  const record = event.commit.record as BlueRitoFeedBookmark.Main;
+  const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+  cursor = event.time_us.toString();
 
-    let handle = 'no handle';
-    let isVerify = false;
+  let handle = 'no handle';
+  let isVerify = false;
 
-    try {
-      // ユーザー情報取得
-      const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-        params: { actor: event.did },
-      });
+  try {
+    // ユーザー情報取得
+    const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+      params: { actor: event.did },
+    });
 
-      if (userProfile.ok) {
-        handle = userProfile.data.handle;
+    if (userProfile.ok) {
+      handle = userProfile.data.handle;
 
-        // URL が正しいかチェック
-        try {
-          const url = new URL(event.commit.record.subject || '');
-          const domain = url.hostname;
+      // URL が正しいかチェック
+      try {
+        const url = new URL(event.commit.record.subject || '');
+        const domain = url.hostname;
 
-          if (url.pathname === '/' || url.pathname === '') {
-            if (domain === handle || domain.endsWith('.' + handle)) {
-              isVerify = true;
-            }
+        if (url.pathname === '/' || url.pathname === '') {
+          if (domain === handle || domain.endsWith('.' + handle)) {
+            isVerify = true;
           }
-        } catch {
-          // URL パースエラーは無視
         }
+      } catch {
+        // URL パースエラーは無視
       }
-    } catch (err) {
-      logger.error(`Error fetching userProfile: ${err}`);
     }
+  } catch (err) {
+    logger.error(`Error fetching userProfile: ${err}`);
+  }
 
-    try {
-      // OGP用のmoderation
-      const ogpTexts: string[] = [];
-      if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
-      if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
-      const ogpFlaggedCategories = await checkModeration(ogpTexts);
-      const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
+  try {
+    // OGP用のmoderation
+    const ogpTexts: string[] = [];
+    if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
+    if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
+    const ogpFlaggedCategories = await checkModeration(ogpTexts);
+    const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
 
-      // DID->Handleテーブル
-      await prisma.userDidHandle.upsert({
-        where: { did: event.did },
-        update: {},
-        create: { did: event.did, handle: handle }, // handle は取得済み
-      });
+    // DID->Handleテーブル
+    await prisma.userDidHandle.upsert({
+      where: { did: event.did },
+      update: {},
+      create: { did: event.did, handle: handle },
+    });
 
-      // Bookmark の upsert
-      await prisma.bookmark.upsert({
-        where: { uri: aturi },
+    // Bookmark の upsert
+    await prisma.bookmark.upsert({
+      where: { uri: aturi },
+      update: {
+        subject: record.subject ?? '',
+        ogp_title: record.ogpTitle,
+        ogp_description: record.ogpDescription,
+        ogp_image: record.ogpImage,
+        moderation_result: ogpModerationResult,
+        handle: handle,
+        indexed_at: new Date(),
+      },
+      create: {
+        uri: aturi,
+        did: event.did,
+        subject: record.subject ?? '',
+        ogp_title: record.ogpTitle,
+        ogp_description: record.ogpDescription,
+        ogp_image: record.ogpImage,
+        moderation_result: ogpModerationResult,
+        handle: handle,
+        created_at: new Date(),
+        indexed_at: new Date(),
+      },
+    });
+
+    // コメントの upsert（個別に moderation）
+    for (const c of record.comments ?? []) {
+      const commentTexts: string[] = [];
+      if (c.title) commentTexts.push(c.title);
+      if (c.comment) commentTexts.push(c.comment);
+      const commentFlaggedCategories = await checkModeration(commentTexts);
+      const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
+
+      await prisma.comment.upsert({
+        where: {
+          bookmark_uri_lang: { // 複合ユニークを事前に Prisma schema で定義しておく
+            bookmark_uri: aturi,
+            lang: c.lang,
+          }
+        },
         update: {
-          subject: record.subject ?? '',
-          ogp_title: record.ogpTitle,
-          ogp_description: record.ogpDescription,
-          ogp_image: record.ogpImage,
-          moderation_result: ogpModerationResult,
-          handle: handle,
-          indexed_at: new Date(),
+          title: c.title,
+          comment: c.comment,
+          moderation_result: commentModerationResult,
         },
         create: {
-          uri: aturi,
-          did: event.did,
-          subject: record.subject ?? '',
-          ogp_title: record.ogpTitle,
-          ogp_description: record.ogpDescription,
-          ogp_image: record.ogpImage,
-          moderation_result: ogpModerationResult,
-          handle: handle,
-          created_at: new Date(),
-          indexed_at: new Date(),
-        },
-      });
-
-      // コメントの更新（個別にmoderation）
-      await prisma.comment.deleteMany({ where: { bookmark_uri: aturi } });
-
-      const commentsData = await Promise.all((record.comments ?? []).map(async (c) => {
-        const commentTexts: string[] = [];
-        if (c.title) commentTexts.push(c.title);
-        if (c.comment) commentTexts.push(c.comment);
-        const commentFlaggedCategories = await checkModeration(commentTexts);
-        const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
-
-        return {
           bookmark_uri: aturi,
           lang: c.lang,
           title: c.title,
           comment: c.comment,
           moderation_result: commentModerationResult,
-        };
-      }));
-
-      await prisma.comment.createMany({
-        data: commentsData,
+        },
       });
-
-      // タグの更新
-      let tagsLocal = (record.tags ?? [])
-        .filter((name) => name.toLowerCase() !== "verified"); // まず既存の "verified" は削除
-
-      if (isVerify) {
-        // true の場合は必ず追加
-        tagsLocal.push("Verified");
-      }
-
-      // タグの upsert
-      const tagRecords = await Promise.all((tagsLocal ?? []).map(name =>
-        prisma.tag.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        })
-      ));
-
-      const oldTagIds: number[] = await prisma.bookmarkTag.findMany({
-        where: { bookmark_uri: aturi },
-        select: { tag_id: true },
-      }).then((res: { tag_id: number }[]) => res.map(r => r.tag_id));
-
-      const newTagIds = tagRecords.map(t => t.id);
-
-      // 不要なタグ削除
-      const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
-      if (removeIds.length > 0) {
-        await prisma.bookmarkTag.deleteMany({
-          where: { bookmark_uri: aturi, tag_id: { in: removeIds } },
-        });
-      }
-
-      // 追加タグ登録
-      const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
-      for (const id of addIds) {
-        await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
-      }
-
-      logger.info(`Upserted bookmark: ${aturi}, OGP moderation: ${ogpModerationResult}`);
-    } catch (err) {
-      logger.error(`Error in upsert:${err}`);
     }
+
+    // タグの更新
+    let tagsLocal = (record.tags ?? []).filter((name) => name.toLowerCase() !== "verified");
+    if (isVerify) tagsLocal.push("Verified");
+
+    // タグの upsert
+    const tagRecords = await Promise.all(tagsLocal.map(name =>
+      prisma.tag.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      })
+    ));
+
+    // BookmarkTag の更新
+    const oldTagIds = await prisma.bookmarkTag.findMany({
+      where: { bookmark_uri: aturi },
+      select: { tag_id: true },
+    }).then(res => res.map(r => r.tag_id));
+
+    const newTagIds = tagRecords.map(t => t.id);
+
+    // 不要タグ削除
+    const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
+    if (removeIds.length > 0) {
+      await prisma.bookmarkTag.deleteMany({
+        where: { bookmark_uri: aturi, tag_id: { in: removeIds } },
+      });
+    }
+
+    // 新規タグ追加
+    const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
+    for (const id of addIds) {
+      await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
+    }
+
+    logger.info(`Upserted bookmark: ${aturi}, OGP moderation: ${ogpModerationResult}`);
+  } catch (err) {
+    logger.error(`Error in upsert: ${err}`);
   }
+}
+
 
   async function upsertPost(event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>) {
     const record = event.commit.record as any;
@@ -332,8 +336,10 @@ async function init() {
           urls: links,
           moderation_result: postModerationResult,
           indexed_at: new Date(),
+          did: event.did,
         },
       });
+
 
       logger.info(`Upserted post: ${aturi}, handle: ${handle}, urls: ${links.join(', ')}, moderation: ${postModerationResult}`);
     } catch (err) {

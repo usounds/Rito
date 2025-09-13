@@ -64,7 +64,7 @@ export function MyBookmark() {
                             image={b.ogpImage}
                             date={new Date(b.indexedAt)}
                             atUri={b.uri}
-                            moderations={b.comments[0]?.moderation_result ?? []}
+                            moderations={[]}
                         />
                     </div>
                 ))}

@@ -1,6 +1,6 @@
 export interface Bookmark {
   uri: string;
-  did: string;             // DB に合わせて追加
+//  did: string;             // DB に合わせて追加
   handle: string;          // 追加
   subject: string;
   ogpTitle: string | null;
@@ -17,13 +17,13 @@ export interface Comment {
   lang: 'ja' | 'en';
   title: string;
   comment: string;
-  moderation_result: string[] | null; // 同上
+  moderations: string[]; // 同上
 }
 
 export function normalizeBookmarks(raw: any[]): Bookmark[] {
   return raw.map(b => ({
     uri: b.uri,
-    did: b.did,
+ //   did: b.did,
     handle: b.handle,
     subject: b.subject,
     ogpTitle: b.ogp_title,
@@ -33,14 +33,14 @@ export function normalizeBookmarks(raw: any[]): Bookmark[] {
     indexedAt: b.indexed_at,
     moderations: Array.isArray(b.moderation_result)
       ? b.moderation_result
-      : b.moderation_result ? [b.moderation_result] : null,
+      : b.moderation_result ? [b.moderation_result] : [],
     comments: b.comments.map((c: any) => ({
       lang: c.lang,
       title: c.title,
       comment: c.comment,
-      moderation_result: Array.isArray(c.moderation_result)
+      moderations: Array.isArray(c.moderation_result)
         ? c.moderation_result
-        : c.moderation_result ? [c.moderation_result] : null,
+        : c.moderation_result ? [c.moderation_result] : [],
     })),
     tags: Array.isArray(b.tags)
       ? b.tags

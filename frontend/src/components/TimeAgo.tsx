@@ -1,7 +1,17 @@
 'use client';
-export default function TimeAgo({ date, locale = 'ja' }: { date: Date; locale?: string }) {
+
+export default function TimeAgo({
+  date,
+  locale = 'ja',
+}: {
+  date: string | Date;
+  locale?: string;
+}) {
+  // date が文字列なら Date に変換
+  const d = typeof date === 'string' ? new Date(date) : date;
+
   const now = new Date().getTime();
-  const diffMs = now - new Date(date).getTime();
+  const diffMs = now - d.getTime();
 
   const seconds = Math.floor(diffMs / 1000);
   const minutes = Math.floor(seconds / 60);

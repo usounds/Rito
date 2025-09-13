@@ -23,8 +23,8 @@ export function SearchForm({ locale, defaultTags, defaultHandles }: SearchFormPr
         setIsLoading(true);
 
         const params = new URLSearchParams();
-        tags.forEach((t) => params.append('tag', t));
-        handles.forEach((h) => params.append('handle', h));
+        if (tags.length) params.set('tag', tags.join(','));        // tag=foo,bar
+        if (handles.length) params.set('handle', handles.join(',')); // handle=rito.blue,usounds.work
 
         router.push(`/${locale}/search?${params.toString()}`);
         setIsLoading(false);

@@ -69,15 +69,15 @@
 		"login": "自分のブックマークを管理するにはログインしてください",
 		"empty": "右下からブックマークを登録してください"
 	},
-	"search":{
+	"search": {
 		"field": {
-			"tag":{
+			"tag": {
 				"title": "タグ",
 				"placeholder": "検索するタグ"
 			},
-			"user":{
+			"user": {
 				"title": "ユーザー",
-				"placeholder": "投稿者のハンドル"
+				"placeholder": "検索するハンドル"
 			}
 		},
 		"button": {
@@ -107,7 +107,7 @@
 				"title": "URL",
 				"placeholder": "https://rito.blue",
 				"description": "ブックマークするURL",
-				"descriptionForOwner": "登録後に認証すると、オーナーブックマークとして取り扱われます。"
+				"descriptionForOwner": "オーナーブックマークとして取り扱われます。"
 			},
 			"title": {
 				"title": "タイトル",
@@ -127,9 +127,8 @@
 		},
 		"button": {
 			"regist": "登録",
-			"verify": "認証",
-			"ogp": "タイトルとコメントを取得",
-			"update": "更新"
+			"delete": "削除",
+			"ogp": "タイトルとコメントを取得"
 		},
 		"tab": {
 			"en": "英語",
@@ -144,7 +143,20 @@
 			"urlMandatory": "URLは必須です",
 			"titleMandatory": "タイトルは必須です",
 			"blockUrl": "このURLはブックマークできません",
-			"unknownError": "投稿に失敗しました"
+			"unknownError": "投稿に失敗しました",
+			"duplicate": "同じURLが登録済みです"
+		}
+	},
+	"delete": {
+		"title": "ブックマークの削除",
+		"description": "ブックマークを削除しますか？",
+		"button": {
+			"close": "閉じる",
+			"delete": "削除"
+		},
+		"inform": {
+			"error": "システムエラーが発生しました",
+			"success": "登録しました"
 		}
 	}
 }

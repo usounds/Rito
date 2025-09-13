@@ -78,7 +78,7 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
             ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderation_result || []) : []),
           ];
 
-          const displayDate = new Date(b[orderField as 'created_at' | 'indexed_at']);
+          const displayDate = new Date(b[orderField as 'createdAt' | 'indexedAt']);
 
           return (
             <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

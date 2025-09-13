@@ -61,10 +61,10 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
         },
       },
     },
-  }) 
+  })
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
-
+  
   return (
     <Stack>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -75,10 +75,14 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
 
           const moderationList: string[] = [
             ...(b.moderations || []),
-            ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderation_result || []) : []),
+            ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
           ];
 
-          const displayDate = new Date(b[orderField as 'createdAt' | 'indexedAt']);
+          const orderField: 'createdAt' | 'indexedAt' =
+            query?.sort === 'created' ? 'createdAt' : 'indexedAt';
+
+          // displayDate にそのまま使う
+          const displayDate = new Date(b[orderField]);
 
           return (
             <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>

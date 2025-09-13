@@ -16,7 +16,7 @@
             "en"
           ],
           "maxLength": 6,
-          "description": "URI's title"
+          "description": "Comments Language"
         },
         "title": {
           "type": "string",
@@ -79,7 +79,7 @@
           "ogpImage": {
             "type": "string",
             "format": "uri",
-            "description": "OGP Description"
+            "description": "OGP Image Uri"
           },
           "createdAt": {
             "type": "string",

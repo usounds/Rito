@@ -56,6 +56,7 @@ model Comment {
   moderation_result String?  // "spam", "adult", "safe" など
   
   @@index([bookmark_uri])  // インデックス追加
+  @@unique([bookmark_uri, lang], name: "bookmark_uri_lang") 
 }
 
 model Tag {

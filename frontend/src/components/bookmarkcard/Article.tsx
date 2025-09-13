@@ -1,5 +1,6 @@
 "use client"
 import { RegistBookmark } from '@/components/RegistBookmark';
+import { DeleteBookmark } from '@/components/DeleteBookmark';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
@@ -32,9 +33,10 @@ type ArticleCardProps = {
     moderations: string[]
 };
 
-export function Article({ url, title, handle,comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
     const messages = useMessages();
     const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
+    const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
 
@@ -170,7 +172,7 @@ export function Article({ url, title, handle,comment, tags, image, date, atUri, 
                             variant="transparent"
                             color="red"
                             aria-label="Edit"
-                            onClick={() => setQuickRegistBookmark(true)}
+                            onClick={() => setDeleteBookmark(true)}
                         >
                             <Trash2 size={16} />
                         </ActionIcon>
@@ -182,7 +184,18 @@ export function Article({ url, title, handle,comment, tags, image, date, atUri, 
                             title={messages.create.title}
                             centered
                         >
-                            <RegistBookmark aturi={atUri} />
+                            <RegistBookmark aturi={atUri}  onClose={() => setQuickRegistBookmark(false)} />
+                        </Modal>
+
+
+                        <Modal
+                            opened={deleteBookmark}
+                            onClose={() => setDeleteBookmark(false)}
+                            size={modalSize}
+                            title={messages.delete.title}
+                            centered
+                        >
+                            <DeleteBookmark aturi={atUri} onClose={() => setDeleteBookmark(false)} />
                         </Modal>
                     </>
                 )}

@@ -13,27 +13,27 @@ export async function GET(req: Request) {
     }
 
     let bookmarks = [];
-if (isDid(actor)) {
-  // DID で直接検索
-  bookmarks = await prisma.bookmark.findMany({
-    where: { did: actor },
-    orderBy: { indexed_at: 'desc' },
-    include: {
-      comments: true,
-      tags: { include: { tag: true } },
-    },
-  });
-} else {
-  // handle で検索
-  bookmarks = await prisma.bookmark.findMany({
-    where: { handle: actor },
-    orderBy: { indexed_at: 'desc' },
-    include: {
-      comments: true,
-      tags: { include: { tag: true } },
-    },
-  });
-}
+    if (isDid(actor)) {
+      // DID で直接検索
+      bookmarks = await prisma.bookmark.findMany({
+        where: { did: actor },
+        orderBy: { indexed_at: 'desc' },
+        include: {
+          comments: true,
+          tags: { include: { tag: true } },
+        },
+      });
+    } else {
+      // handle で検索
+      bookmarks = await prisma.bookmark.findMany({
+        where: { handle: actor },
+        orderBy: { indexed_at: 'desc' },
+        include: {
+          comments: true,
+          tags: { include: { tag: true } },
+        },
+      });
+    }
 
     const normalized = normalizeBookmarks(bookmarks)
     return NextResponse.json(normalized);

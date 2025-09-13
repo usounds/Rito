@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "public"."Post" ADD COLUMN     "indexed_at" TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;

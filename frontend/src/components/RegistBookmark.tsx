@@ -21,8 +21,8 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
-        { lang: "ja", title: "", comment: "" },
-        { lang: "en", title: "", comment: "" },
+        { lang: "ja", title: "", comment: "", moderation_result:[] },
+        { lang: "en", title: "", comment: "", moderation_result:[] },
     ]);
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
@@ -67,6 +67,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                             lang,
                             title: matched?.title || "",
                             comment: matched?.comment || "",
+                            moderation_result:[]
                         };
                     });
 
@@ -272,22 +273,32 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             return
         }
 
-        const ret = await client.post('com.atproto.repo.applyWrites', {
-            input: {
-                repo: oauthUserAgent.sub,
-                writes: writes
-            },
-        });
-
-        if (ret.ok) {
-            setRkey(rkeyLocal)
-            notifications.show({
-                title: 'Success',
-                message: messages.create.inform.success,
-                color: 'teal',
-                icon: <Check />
+        try {
+            const ret = await client.post('com.atproto.repo.applyWrites', {
+                input: {
+                    repo: oauthUserAgent.sub,
+                    writes: writes
+                },
             });
-        } else {
+
+            if (ret.ok) {
+                setRkey(rkeyLocal)
+                notifications.show({
+                    title: 'Success',
+                    message: messages.create.inform.success,
+                    color: 'teal',
+                    icon: <Check />
+                });
+            } else {
+                notifications.show({
+                    title: 'Error',
+                    message: messages.create.error.unknownError,
+                    color: 'red',
+                    icon: <X />
+                });
+
+            }
+        } catch {
             notifications.show({
                 title: 'Error',
                 message: messages.create.error.unknownError,

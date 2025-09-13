@@ -138,19 +138,19 @@ export function Article({ url, title, comment, tags, image, date, atUri, moderat
                     <Markdown>{comment}</Markdown>
                 </Text>
             </Box>
-<Group mb="xs" gap={4}>
-  {moderations.map((mod, idx) => (
-    <Badge
-      key={idx}
-      color="gray"
-      variant="outline"
-      styles={{ root: { textTransform: 'none' } }}
-    >
-      {messages?.moderations?.[mod] ?? mod}
-      {/* messages に翻訳があればそれを表示、なければ生の値 */}
-    </Badge>
-  ))}
-</Group>
+            <Group mb="xs" gap={4}>
+                {moderations.map((mod, idx) => (
+                    <Badge
+                        key={idx}
+                        color="gray"
+                        variant="outline"
+                        styles={{ root: { textTransform: 'none' } }}
+                    >
+                        {messages?.moderations?.[mod] ?? mod}
+                        {/* messages に翻訳があればそれを表示、なければ生の値 */}
+                    </Badge>
+                ))}
+            </Group>
 
             <Group className={classes.footer} gap='xs'>
 

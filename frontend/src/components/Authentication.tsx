@@ -147,7 +147,7 @@ export function Authentication(props: PaperProps) {
       authUrl = await createAuthorizationUrl({
         metadata: metadata,
         identity: identity,
-        scope: 'atproto transition:generic',
+        scope:  "atproto repo:blue.rito.feed.bookmark?action=create&action=update&action=delete rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
       });
     } catch (e) {
       console.error('createAuthorizationUrl error:', e);

@@ -1,11 +1,18 @@
 import { PrismaClient } from "@prisma/client";
 import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
 import WebSocket from 'ws';
-import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE } from './config';
+import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION } from './config';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
 import OpenAI from "openai";
 import { Client, simpleFetchHandler } from '@atcute/client';
+
+
+const publicAgent = new Client({
+  handler: simpleFetchHandler({
+    service: 'https://public.api.bsky.app',
+  }),
+});
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
@@ -57,7 +64,7 @@ async function loadCursor(): Promise<string> {
       return nowUs;
     }
   } catch (err) {
-    logger.error('Failed to load cursor from DB:', err);
+    logger.error(`Failed to load cursor from DB: ${err}`);
     return Date.now().toString();
   }
 }
@@ -68,7 +75,7 @@ async function init() {
   logger.info(`Cursor initialized: ${cursor} (${epochUsToDateTime(cursor)})`);
 
   const jetstream = new Jetstream({
-    wantedCollections: [BOOKMARK, SERVICE],
+    wantedCollections: [BOOKMARK, SERVICE, POST_COLLECTION],
     endpoint: JETSREAM_URL,
     cursor: Number(cursor),
     ws: WebSocket,
@@ -89,7 +96,7 @@ async function init() {
             create: { service: 'rito', index: currentCursor },
           });
         } catch (err) {
-          logger.error('Failed to update JetstreamIndex:', err);
+          logger.error(`Failed to load cursor from DB: ${err}`);
         }
 
         // 前回と同じなら再接続
@@ -108,6 +115,12 @@ async function init() {
     cursor = event.time_us.toString();
 
     try {
+      // OGP用のmoderation
+      const ogpTexts: string[] = [];
+      if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
+      if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
+      const ogpFlaggedCategories = await checkModeration(ogpTexts);
+      const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
 
       // Bookmark の upsert
       await prisma.bookmark.upsert({
@@ -117,6 +130,7 @@ async function init() {
           ogp_title: record.ogpTitle,
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
+          moderation_result: ogpModerationResult,
           indexed_at: new Date(),
         },
         create: {
@@ -126,54 +140,57 @@ async function init() {
           ogp_title: record.ogpTitle,
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
+          moderation_result: ogpModerationResult,
           created_at: new Date(),
           indexed_at: new Date(),
         },
       });
 
-      // コメントの更新
+      // コメントの更新（個別にmoderation）
       await prisma.comment.deleteMany({ where: { bookmark_uri: aturi } });
-      await prisma.comment.createMany({
-        data: (record.comments ?? []).map(c => ({
+
+      const commentsData = await Promise.all((record.comments ?? []).map(async (c) => {
+        const commentTexts: string[] = [];
+        if (c.title) commentTexts.push(c.title);
+        if (c.comment) commentTexts.push(c.comment);
+        const commentFlaggedCategories = await checkModeration(commentTexts);
+        const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
+
+        return {
           bookmark_uri: aturi,
           lang: c.lang,
           title: c.title,
           comment: c.comment,
-        })),
+          moderation_result: commentModerationResult,
+        };
+      }));
+
+      await prisma.comment.createMany({
+        data: commentsData,
       });
 
       // タグの更新
-      //verifiedが含まれていたら除外する
 
-      const publicAgent = new Client({
-        handler: simpleFetchHandler({
-          service: 'https://public.api.bsky.app',
-        }),
-      })
-
-      let isVerify = false
-
-
+      let isVerify = false;
 
       try {
         // URLが正しいかチェック
-        const url = new URL(event.commit.record.subject || '')
-        const domain = url.hostname
+        const url = new URL(event.commit.record.subject || '');
+        const domain = url.hostname;
 
         if (url.pathname === '/' || url.pathname === '') {
-
           const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
             params: {
               actor: event.did,
             },
-          })
+          });
 
           if (userProfile.ok && (domain == userProfile.data.handle || domain.endsWith('.' + userProfile.data.handle))) {
-            isVerify = true
+            isVerify = true;
           }
         }
       } catch {
-
+        // URLパースエラー等は無視
       }
 
       let tagsLocal = (record.tags ?? [])
@@ -193,10 +210,10 @@ async function init() {
         })
       ));
 
-      const oldTagIds = await prisma.bookmarkTag.findMany({
+      const oldTagIds: number[] = await prisma.bookmarkTag.findMany({
         where: { bookmark_uri: aturi },
         select: { tag_id: true },
-      }).then(res => res.map(r => r.tag_id));
+      }).then((res: { tag_id: number }[]) => res.map(r => r.tag_id));
 
       const newTagIds = tagRecords.map(t => t.id);
 
@@ -214,57 +231,97 @@ async function init() {
         await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
       }
 
-      const textsToCheck: string[] = [];
-
-      if (record.ogpTitle) textsToCheck.push(record.ogpTitle);
-      if (record.ogpDescription) textsToCheck.push(record.ogpDescription);
-
-      if (record.comments) {
-        record.comments.forEach(comment => {
-          if (comment.title) textsToCheck.push(comment.title);
-          if (comment.comment) textsToCheck.push(comment.comment);
-        });
-      }
-
-      const flaggedCategories = await checkModeration(textsToCheck);
-      logger.info(`Moderation result : ${flaggedCategories}`);
-
-      // 2. 既存の moderation を取得
-      const oldModerationIds = await prisma.bookmarkModeration.findMany({
-        where: { bookmark_uri: aturi },
-        select: { moderation_id: true },
-      }).then(res => res.map(r => r.moderation_id));
-
-      // 3. flaggedCategories を Moderation テーブルに upsert
-      const newModerationIds: number[] = [];
-      for (const name of flaggedCategories) {
-        const mod = await prisma.moderation.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        });
-        newModerationIds.push(mod.id);
-      }
-
-      // 4. 不要な moderation 削除
-      const removeModIds = oldModerationIds.filter(id => !newModerationIds.includes(id));
-      if (removeModIds.length > 0) {
-        await prisma.bookmarkModeration.deleteMany({
-          where: { bookmark_uri: aturi, moderation_id: { in: removeModIds } },
-        });
-      }
-
-      // 5. 新しい moderation 追加
-      const addModIds = newModerationIds.filter(id => !oldModerationIds.includes(id));
-      for (const id of addModIds) {
-        await prisma.bookmarkModeration.create({
-          data: { bookmark_uri: aturi, moderation_id: id },
-        });
-      }
-
-      logger.info(`Upserted: ${aturi}`);
+      logger.info(`Upserted bookmark: ${aturi}, OGP moderation: ${ogpModerationResult}`);
     } catch (err) {
-      logger.error('Error in upsertBookmark:', err);
+      logger.error(`Error in upsert:${err}`);
+    }
+  }
+
+  async function upsertPost(event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>) {
+    const record = event.commit.record as any;
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    //cursor = event.time_us.toString();
+
+    try {
+      // facetsからリンクを抽出
+      const links: string[] = [];
+      if (record.facets) {
+        for (const facet of record.facets) {
+          if (facet.features) {
+            for (const feature of facet.features) {
+              if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) {
+                links.push(feature.uri);
+              }
+            }
+          }
+        }
+      }
+
+      // embedのexternalのuriも抽出
+      if (record.embed && record.embed.$type === 'app.bsky.embed.external' && record.embed.external && record.embed.external.uri) {
+        links.push(record.embed.external.uri);
+      }
+
+      // Bookmarkのsubjectに含まれるリンクがあるかチェック
+      if (links.length === 0) return;
+
+      const matchingBookmarks = await prisma.bookmark.findMany({
+        where: {
+          subject: {
+            in: links
+          }
+        }
+      });
+
+      if (matchingBookmarks.length === 0) return;
+
+      let handle = 'no handle'
+
+      try {
+        const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+          params: {
+            actor: event.did,
+          },
+        });
+        if (userProfile.ok) {
+          handle = userProfile.data.handle
+        }
+      } catch (err) {
+        logger.error(`Error in upsert:${err}`);
+
+      }
+
+      // Postのmoderationチェック
+      const postTexts: string[] = [];
+      if (record.text) postTexts.push(record.text);
+      const postFlaggedCategories = await checkModeration(postTexts);
+      const postModerationResult = postFlaggedCategories.length > 0 ? postFlaggedCategories.join(',') : null;
+
+      // Post の upsert
+      await prisma.post.upsert({
+        where: { uri: aturi },
+        update: {
+          handle: handle,
+          text: record.text || '',
+          lang: record.langs || [],
+          urls: links,
+          moderation_result: postModerationResult,
+          indexed_at: new Date(),
+        },
+        create: {
+          uri: aturi,
+          handle: handle,
+          text: record.text || '',
+          lang: record.langs || [],
+          urls: links,
+          moderation_result: postModerationResult,
+          indexed_at: new Date(),
+        },
+      });
+
+      logger.info(`Upserted post: ${aturi}, handle: ${handle}, urls: ${links.join(', ')}, moderation: ${postModerationResult}`);
+    } catch (err) {
+      logger.error(`Error in upsertPost: ${err}`);
     }
   }
 
@@ -272,15 +329,34 @@ async function init() {
   jetstream.onCreate(BOOKMARK, upsertBookmark);
   jetstream.onUpdate(BOOKMARK, upsertBookmark);
 
+  jetstream.onCreate(POST_COLLECTION, upsertPost);
+  jetstream.onUpdate(POST_COLLECTION, upsertPost);
+
   jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) => {
     cursor = event.time_us.toString();
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
 
     try {
-      await prisma.bookmark.deleteMany({ where: { uri: aturi } });
-      logger.info(`Deleted: ${aturi}`);
+      const result = await prisma.bookmark.deleteMany({ where: { uri: aturi } });
+      if (result.count > 0) {
+        logger.info(`Deleted bookmark: ${aturi} (${result.count} records)`);
+      }
     } catch (err) {
-      logger.error('Error in onDelete:', err);
+      logger.error(`Error in onDelete bookmark: ${err}`);
+    }
+  });
+
+  jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
+    cursor = event.time_us.toString();
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+
+    try {
+      const result = await prisma.post.deleteMany({ where: { uri: aturi } });
+      if (result.count > 0) {
+        logger.info(`Deleted post: ${aturi} (${result.count} records)`);
+      }
+    } catch (err) {
+      logger.error(`Error in onDelete post: ${err}`);
     }
   });
 

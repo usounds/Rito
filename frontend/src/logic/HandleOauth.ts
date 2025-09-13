@@ -6,7 +6,7 @@ export const getClientMetadata: () => ClientMetadata = () => {
         client_name: "Rito",
         redirect_uris: [`${process.env.NEXT_PUBLIC_URL}/en/callback`, `${process.env.NEXT_PUBLIC_URL}/ja/callback`],
         client_uri: `${process.env.NEXT_PUBLIC_URL}/`,
-        scope: "atproto transition:generic",
+        scope: "atproto repo:blue.rito.feed.bookmark?action=create&action=update&action=delete rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
         grant_types: ["authorization_code", "refresh_token"],
         response_types: ["code"],
         token_endpoint_auth_method: "none",

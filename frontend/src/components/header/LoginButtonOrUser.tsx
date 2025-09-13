@@ -63,6 +63,16 @@ export function LoginButtonOrUser() {
             setAgent(rpc);
             console.log(`${agent.sub} was successfully resumed session from ${agent.session.info.server.issuer}.`)
 
+            const res = await fetch(`https://api.rito.blue/rpc/get_bookmark?p_did=${encodeURIComponent(activeDid)}`);
+
+            if (!res.ok) {
+                throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
+
+            }
+
+            const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
+            setMyBookmark(data)
+
             const userProfile = await rpc.get(`app.bsky.actor.getProfile`, {
                 params: {
                     actor: agent.sub,
@@ -75,15 +85,6 @@ export function LoginButtonOrUser() {
 
             }
             setUserProf(userProfile.data);
-            const res = await fetch(`https://api.rito.blue/rpc/get_bookmark?p_did=${encodeURIComponent(activeDid)}`);
-
-            if (!res.ok) {
-                throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
-
-            }
-
-            const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
-            setMyBookmark(data)
 
 
         })();

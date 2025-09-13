@@ -23,6 +23,7 @@ import classes from './Article.module.scss';
 type ArticleCardProps = {
     url: string;
     title: string;
+    handle?: string;
     comment: string;
     tags: string[];
     image?: string | null;
@@ -31,7 +32,7 @@ type ArticleCardProps = {
     moderations: string[]
 };
 
-export function Article({ url, title, comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
+export function Article({ url, title, handle,comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
     const messages = useMessages();
     const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
@@ -196,7 +197,7 @@ export function Article({ url, title, comment, tags, image, date, atUri, moderat
                     }}
                 >
                     <Text fz="xs" c="dimmed">
-                        {domain} <TimeAgo date={date} />
+                        {domain} {handle ? "by @" + handle : ""} <TimeAgo date={date} />
                     </Text>
                 </Link>
 

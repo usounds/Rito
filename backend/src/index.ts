@@ -114,6 +114,36 @@ async function init() {
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     cursor = event.time_us.toString();
 
+    let handle = 'no handle';
+    let isVerify = false;
+
+    try {
+      // ユーザー情報取得
+      const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+        params: { actor: event.did },
+      });
+
+      if (userProfile.ok) {
+        handle = userProfile.data.handle;
+
+        // URL が正しいかチェック
+        try {
+          const url = new URL(event.commit.record.subject || '');
+          const domain = url.hostname;
+
+          if (url.pathname === '/' || url.pathname === '') {
+            if (domain === handle || domain.endsWith('.' + handle)) {
+              isVerify = true;
+            }
+          }
+        } catch {
+          // URL パースエラーは無視
+        }
+      }
+    } catch (err) {
+      logger.error(`Error fetching userProfile: ${err}`);
+    }
+
     try {
       // OGP用のmoderation
       const ogpTexts: string[] = [];
@@ -121,6 +151,13 @@ async function init() {
       if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
       const ogpFlaggedCategories = await checkModeration(ogpTexts);
       const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
+
+      // DID->Handleテーブル
+      await prisma.userDidHandle.upsert({
+        where: { did: event.did },
+        update: {},
+        create: { did: event.did, handle: handle }, // handle は取得済み
+      });
 
       // Bookmark の upsert
       await prisma.bookmark.upsert({
@@ -131,6 +168,7 @@ async function init() {
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
           moderation_result: ogpModerationResult,
+          handle: handle,
           indexed_at: new Date(),
         },
         create: {
@@ -141,6 +179,7 @@ async function init() {
           ogp_description: record.ogpDescription,
           ogp_image: record.ogpImage,
           moderation_result: ogpModerationResult,
+          handle: handle,
           created_at: new Date(),
           indexed_at: new Date(),
         },
@@ -170,29 +209,6 @@ async function init() {
       });
 
       // タグの更新
-
-      let isVerify = false;
-
-      try {
-        // URLが正しいかチェック
-        const url = new URL(event.commit.record.subject || '');
-        const domain = url.hostname;
-
-        if (url.pathname === '/' || url.pathname === '') {
-          const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-            params: {
-              actor: event.did,
-            },
-          });
-
-          if (userProfile.ok && (domain == userProfile.data.handle || domain.endsWith('.' + userProfile.data.handle))) {
-            isVerify = true;
-          }
-        }
-      } catch {
-        // URLパースエラー等は無視
-      }
-
       let tagsLocal = (record.tags ?? [])
         .filter((name) => name.toLowerCase() !== "verified"); // まず既存の "verified" は削除
 

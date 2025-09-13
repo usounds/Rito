@@ -28,20 +28,22 @@ export function MyBookmark() {
             <LoginButtonOrUser />
         </Box>
     </>
-    if ((myBookmark?.length === 0 || !myBookmark)) return <>
-        <Box
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-                alignItems: 'center',
-                height: '80vh',
-                gap: '1rem',
-            }}
-        >
-           {messages.mybookmark.empty}
-        </Box>
-    </>;
+    if (!Array.isArray(myBookmark) || myBookmark.length === 0) {
+        return (
+            <Box
+                style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    height: '80vh',
+                    gap: '1rem',
+                }}
+            >
+                {messages.mybookmark.empty}
+            </Box>
+        );
+    }
 
     return (
 
@@ -52,32 +54,20 @@ export function MyBookmark() {
                 cols={{ base: 1, sm: 2, md: 2 }}
                 spacing="md"
             >
-                {myBookmark?.map((b) => {
-                    const comment =
-                        b.comments.find((c) => c.lang === locale) || b.comments[0];
-
-                    return (
-                        <div
-                            key={b.uri}
-                            style={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                height: '100%',
-                            }}
-                        >
-                            <Article
-                                url={b.subject}
-                                title={comment.title}
-                                comment={comment.comment}
-                                tags={b.tags}
-                                image={b.ogp_image}
-                                date={new Date(b.indexed_at)}
-                                atUri={b.uri}
-                                moderations={comment.moderation_result}
-                            />
-                        </div>
-                    );
-                })}
+                {Array.isArray(myBookmark) && myBookmark.map((b) => (
+                    <div key={b.uri}>
+                        <Article
+                            url={b.subject}
+                            title={b.comments[0]?.title ?? ""}
+                            comment={b.comments[0]?.comment ?? ""}
+                            tags={b.tags}
+                            image={b.ogp_image}
+                            date={new Date(b.indexed_at)}
+                            atUri={b.uri}
+                            moderations={b.comments[0]?.moderation_result ?? []}
+                        />
+                    </div>
+                ))}
             </SimpleGrid>
         </Stack>
     );

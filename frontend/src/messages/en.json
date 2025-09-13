@@ -68,8 +68,21 @@
 	"mybookmark": {
 		"latest": "Latest Bookmark",
 		"login": "Please log in to manage your bookmarks",
-		"empty": "Please register your bookmarks",
+		"empty": "Please register your bookmarks"
+	},
+	"search": {
 		"field": {
+			"tag": {
+				"title": "Tag",
+				"placeholder": "検索するタグ"
+			},
+			"user": {
+				"title": "User",
+				"placeholder": "投稿者のハンドル"
+			}
+		},
+		"button": {
+			"search": "Search"
 		}
 	},
 	"moderations": {

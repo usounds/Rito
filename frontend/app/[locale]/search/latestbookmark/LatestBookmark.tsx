@@ -1,77 +1,101 @@
 import { Article } from '@/components/bookmarkcard/Article';
-import type { Bookmark } from '@/type/ApiTypes';
-import { SimpleGrid, Stack, Text } from '@mantine/core';
-import { getTranslations } from "next-intl/server";
-import { Container } from "@mantine/core";
-import classes from './LatestBookmark.module.scss';
 import { prisma } from '@/logic/HandlePrismaClient';
+import { SimpleGrid, Stack } from '@mantine/core';
+import { getTranslations } from "next-intl/server";
+import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 
 type LatestBookmarkProps = {
   params: { locale: string };
+  query?: {
+    sort?: 'created' | 'updated';
+    tag?: string[];       // 複数タグ対応
+    handle?: string[];    // 複数 handle に対応
+    page?: number;
+  };
   t: Awaited<ReturnType<typeof getTranslations>>;
 };
 
-export const revalidate = 300;
-export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
+export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) {
   const locale = params.locale;
+  const page = query?.page ?? 1;
+  const take = 10;
+  const skip = (page - 1) * take;
+
+  // ソートフィールド
+  const orderField = query?.sort === 'created' ? 'created_at' : 'indexed_at';
+
+  // Prisma の where 条件
+  const where: any = {};
+
+  // handle 絞り込み
+  if (query?.handle?.length) {
+    where.handle = { in: query.handle };
+  }
+
+  // タグ絞り込み
+  if (query?.tag?.length) {
+    where.AND = query.tag.map((t) => ({
+      tags: {
+        some: {
+          tag: {
+            name: {
+              equals: t,
+              mode: 'insensitive',
+            },
+          },
+        },
+      },
+    }));
+  }
 
   const bookmarks = await prisma.bookmark.findMany({
-    orderBy: { indexed_at: 'desc' },
-    take: 9,
+    where,
+    orderBy: { [orderField]: 'desc' },
+    take,
+    skip,
     include: {
       comments: true,
       tags: {
-        include: { tag: true } // ← Tag.name を取得
+        include: {
+          tag: true,
+        },
       },
     },
-  });
+  }) 
+
+  const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
   return (
-    <>
-      <Stack py="md">
-        <Text size="sm" className={classes.description}>
-          {t('mybookmark.latest')}
-        </Text>
-      </Stack>
+    <Stack>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+        {normalized.map((b) => {
+          const comment =
+            b.comments?.find(c => c.lang === locale) || b.comments?.[0] ||
+            { title: '', comment: '', moderation_result: [] };
 
-      <Stack>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-          {bookmarks.map((b) => {
-            const comment =
-              b.comments?.find((c) => c.lang === locale) ||
-              b.comments?.[0] ||
-              { title: '', comment: '', moderation_result: [] };
+          const moderationList: string[] = [
+            ...(b.moderation_result || []),
+            ...((!b.ogp_title || !b.ogp_description) ? (comment.moderation_result || []) : []),
+          ];
 
-            const moderationList: string[] = [
-              ...(b.moderation_result
-                ? b.moderation_result.split(',').map(s => s.trim())
-                : []),
-              ...(!b.ogp_description && comment.moderation_result
-                ? Array.isArray(comment.moderation_result)
-                  ? comment.moderation_result
-                  : comment.moderation_result.split(',').map(s => s.trim())
-                : []),
-            ];
+          const displayDate = new Date(b[orderField as 'created_at' | 'indexed_at']);
 
-            return (
-              <div
-                key={b.uri}
-                style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
-              >
-                <Article
-                  url={b.subject}
-                  title={b.ogp_title || comment.title || ''}
-                  comment={b.ogp_description || comment.comment || ''}
-                  tags={b.tags?.map(bt => bt.tag?.name).filter(Boolean) ?? []}
-                  image={b.ogp_image || undefined}
-                  date={new Date(b.indexed_at)}
-                  moderations={moderationList}
-                />
-              </div>
-            );
-          })}
-        </SimpleGrid>
-      </Stack>
-    </>
+          return (
+            <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Article
+                url={b.subject}
+                title={b.ogp_title || comment.title || ''}
+                handle={b.handle}
+                comment={b.ogp_description || comment.comment || ''}
+                tags={b.tags}
+                image={b.ogp_image || undefined}
+                date={displayDate}
+                moderations={moderationList}
+              />
+            </div>
+          );
+        })}
+      </SimpleGrid>
+    </Stack>
   );
 }

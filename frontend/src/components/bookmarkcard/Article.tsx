@@ -196,7 +196,7 @@ export function Article({ url, title, comment, tags, image, date, atUri, moderat
                     }}
                 >
                     <Text fz="xs" c="dimmed">
-                        {messages.mybookmark.field.original.title} : {domain} <TimeAgo date={date} />
+                        {domain} <TimeAgo date={date} />
                     </Text>
                 </Link>
 

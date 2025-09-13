@@ -70,9 +70,6 @@
 		"login": "Please log in to manage your bookmarks",
 		"empty": "Please register your bookmarks",
 		"field": {
-			"original": {
-				"title": "Original"
-			}
 		}
 	},
 	"moderations": {

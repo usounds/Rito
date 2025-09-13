@@ -4,7 +4,7 @@ import { SimpleGrid, Stack, Text } from '@mantine/core';
 import { getTranslations } from "next-intl/server";
 import { Container } from "@mantine/core";
 import classes from './LatestBookmark.module.scss';
-import type { PrismaBookmarkWithRelations } from '@/type/ApiTypes';
+import { prisma } from '@/logic/HandlePrismaClient';
 
 type LatestBookmarkProps = {
   params: { locale: string };
@@ -15,26 +15,16 @@ export const revalidate = 300;
 export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
   const locale = params.locale;
 
-  // API Route から取得
-  const bookmarks: Bookmark[] = [];
-
-  if (process.env.NODE_ENV !== 'production') {
-    // ローカル開発環境では fetch
-    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`);
-    if (res.ok) {
-      bookmarks.push(
-        ...(await res.json()).map((b: any) => ({
-          ...b,
-          moderation_result: b.moderation_result?.split(',') ?? [],
-          comments: b.comments.map((c: any) => ({
-            ...c,
-            moderation_result: c.moderation_result?.split(',') ?? [],
-          })),
-          tags: b.tags.map((t: any) => t.name),
-        }))
-      );
-    }
-  }
+  const bookmarks = await prisma.bookmark.findMany({
+    orderBy: { indexed_at: 'desc' },
+    take: 9,
+    include: {
+      comments: true,
+      tags: {
+        include: { tag: true } // ← Tag.name を取得
+      },
+    },
+  });
 
   return (
     <>
@@ -52,6 +42,17 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
               b.comments?.[0] ||
               { title: '', comment: '', moderation_result: [] };
 
+            const moderationList: string[] = [
+              ...(b.moderation_result
+                ? b.moderation_result.split(',').map(s => s.trim())
+                : []),
+              ...(!b.ogp_description && comment.moderation_result
+                ? Array.isArray(comment.moderation_result)
+                  ? comment.moderation_result
+                  : comment.moderation_result.split(',').map(s => s.trim())
+                : []),
+            ];
+
             return (
               <div
                 key={b.uri}
@@ -59,17 +60,12 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
               >
                 <Article
                   url={b.subject}
-                  title={b.ogp_title || comment.title}
-                  comment={b.ogp_description || comment.comment || ""}
-                  tags={b.tags ?? []}
-                  image={b.ogp_image}
+                  title={b.ogp_title || comment.title || ''}
+                  comment={b.ogp_description || comment.comment || ''}
+                  tags={b.tags?.map(bt => bt.tag?.name).filter(Boolean) ?? []}
+                  image={b.ogp_image || undefined}
                   date={new Date(b.indexed_at)}
-                  moderations={[
-                    ...b.moderation_result,
-                    ...(!b.ogp_description && comment.moderation_result
-                      ? comment.moderation_result
-                      : []),
-                  ]}
+                  moderations={moderationList}
                 />
               </div>
             );

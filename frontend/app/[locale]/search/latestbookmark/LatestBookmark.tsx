@@ -16,20 +16,25 @@ export async function LatestBookmark({ params, t }: LatestBookmarkProps) {
   const locale = params.locale;
 
   // API Route から取得
-  const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`);
-  if (!res.ok) {
-    throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
-  }
+  const bookmarks: Bookmark[] = [];
 
-  const bookmarks: Bookmark[] = (await res.json()).map((b: any) => ({
-    ...b,
-    moderation_result: b.moderation_result?.split(',') ?? [],
-    comments: b.comments.map((c: any) => ({
-      ...c,
-      moderation_result: c.moderation_result?.split(',') ?? [],
-    })),
-    tags: b.tags.map((t: any) => t.name),
-  }));
+  if (process.env.NODE_ENV !== 'production') {
+    // ローカル開発環境では fetch
+    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/getLatestBookmark`);
+    if (res.ok) {
+      bookmarks.push(
+        ...(await res.json()).map((b: any) => ({
+          ...b,
+          moderation_result: b.moderation_result?.split(',') ?? [],
+          comments: b.comments.map((c: any) => ({
+            ...c,
+            moderation_result: c.moderation_result?.split(',') ?? [],
+          })),
+          tags: b.tags.map((t: any) => t.name),
+        }))
+      );
+    }
+  }
 
   return (
     <>

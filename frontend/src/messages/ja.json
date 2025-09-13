@@ -67,8 +67,21 @@
 	"mybookmark": {
 		"latest": "最新のブックマーク",
 		"login": "自分のブックマークを管理するにはログインしてください",
-		"empty": "右下からブックマークを登録してください",
+		"empty": "右下からブックマークを登録してください"
+	},
+	"search":{
 		"field": {
+			"tag":{
+				"title": "タグ",
+				"placeholder": "検索するタグ"
+			},
+			"user":{
+				"title": "ユーザー",
+				"placeholder": "投稿者のハンドル"
+			}
+		},
+		"button": {
+			"search": "検索"
 		}
 	},
 	"moderations": {

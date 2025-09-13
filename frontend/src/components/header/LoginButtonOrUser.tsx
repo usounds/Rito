@@ -9,7 +9,7 @@ import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { BookmarkPlus } from 'lucide-react';
-import { Bookmark } from '@/type/ApiTypes';
+import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 import { useMyBookmark } from "@/state/MyBookmark";
 
 export function LoginButtonOrUser() {
@@ -63,16 +63,17 @@ export function LoginButtonOrUser() {
             setAgent(rpc);
             console.log(`${agent.sub} was successfully resumed session from ${agent.session.info.server.issuer}.`)
 
-            const res = await fetch(`https://api.rito.blue/rpc/get_bookmark?p_did=${encodeURIComponent(activeDid)}`);
+            const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(activeDid)}`);
 
             if (!res.ok) {
                 throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
 
             }
 
-            const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
-            setMyBookmark(data)
+            //const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
+            const data = await res.json();
 
+            setMyBookmark(data); // React 側で tags を string[] として使える
             const userProfile = await rpc.get(`app.bsky.actor.getProfile`, {
                 params: {
                     actor: agent.sub,

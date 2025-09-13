@@ -1,4 +1,4 @@
-// app/components/TimeAgo.tsx
+'use client';
 export default function TimeAgo({ date, locale = 'ja' }: { date: Date; locale?: string }) {
   const now = new Date().getTime();
   const diffMs = now - new Date(date).getTime();

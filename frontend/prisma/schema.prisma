@@ -6,30 +6,43 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
-
 model Bookmark {
-  uri             String          @id                     // ATProto の URI を主キーに
+  uri             String          @id
   did             String
   subject         String
   ogp_title       String?
   ogp_description String?
   ogp_image       String?
-  created_at DateTime @default(now()) @db.Timestamptz
-  indexed_at DateTime @default(now()) @db.Timestamptz
+  created_at      DateTime        @default(now()) @db.Timestamptz
+  indexed_at      DateTime        @default(now()) @db.Timestamptz
   moderation_result String? 
-  comments          Comment[]
-  tags              BookmarkTag[]
+
+  comments        Comment[]
+  tags            BookmarkTag[]
+
+  user UserDidHandle @relation(fields: [did], references: [did], name: "BookmarkUser")
+  handle String? @map("handle") // 物理名 handle
 }
 
 model Post {
-  uri   String   @id
-  handle  String
-  text  String
-  lang  String[]
-  urls  String[] 
+  uri       String   @id
+  did       String  
+  text      String
+  lang      String[]
+  urls      String[]
   indexed_at DateTime @default(now()) @db.Timestamptz
-  
-  moderation_result String? 
+  moderation_result String?
+
+  user UserDidHandle @relation(fields: [did], references: [did], name: "PostUser")
+  handle String? @map("handle") // 物理名 handle
+}
+
+model UserDidHandle {
+  did    String   @id
+  handle String   @default("unknown")
+
+  bookmarks Bookmark[] @relation("BookmarkUser")
+  posts     Post[]     @relation("PostUser")
 }
 
 model Comment {

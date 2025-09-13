@@ -21,8 +21,8 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
     const messages = useMessages();
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
-        { lang: "ja", title: "", comment: "", moderation_result:[] },
-        { lang: "en", title: "", comment: "", moderation_result:[] },
+        { lang: "ja", title: "", comment: "", moderation_result: [] },
+        { lang: "en", title: "", comment: "", moderation_result: [] },
     ]);
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
@@ -47,18 +47,19 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
             if (!aturi) return
             try {
                 const res = await fetch(
-                    `https://api.rito.blue/rpc/get_bookmark_details?p_uri=${encodeURIComponent(aturi)}`
+                    `/xrpc/blue.rito.feed.getBookmark?uri=${encodeURIComponent(aturi)}`
                 );
 
                 if (!res.ok) {
                     throw new Error(`API error: ${res.status}`);
                 }
 
-                const data = await res.json() as Bookmark[]
+                const data = await res.json()
 
                 // API の戻り値は配列 ([]) なので最初の要素を取り出す
                 if (Array.isArray(data) && data.length > 0) {
-                    setTags(data[0].tags);
+                    const tagsWithoutVerified = data[0].tags.filter((t: string) => t !== 'Verified');
+                    setTags(tagsWithoutVerified);
                     setUrl(data[0].subject);
                     // 取得した comments を Comment[] 型で整形
                     const loadedComments: Comment[] = (["ja", "en"] as ("ja" | "en")[]).map((lang) => {
@@ -67,7 +68,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi }) => {
                             lang,
                             title: matched?.title || "",
                             comment: matched?.comment || "",
-                            moderation_result:[]
+                            moderation_result: []
                         };
                     });
 

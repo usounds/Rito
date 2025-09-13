@@ -74,8 +74,8 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
             { title: '', comment: '', moderation_result: [] };
 
           const moderationList: string[] = [
-            ...(b.moderation_result || []),
-            ...((!b.ogp_title || !b.ogp_description) ? (comment.moderation_result || []) : []),
+            ...(b.moderations || []),
+            ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderation_result || []) : []),
           ];
 
           const displayDate = new Date(b[orderField as 'created_at' | 'indexed_at']);
@@ -84,11 +84,11 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
             <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <Article
                 url={b.subject}
-                title={b.ogp_title || comment.title || ''}
+                title={b.ogpTitle || comment.title || ''}
                 handle={b.handle}
-                comment={b.ogp_description || comment.comment || ''}
+                comment={b.ogpDescription || comment.comment || ''}
                 tags={b.tags}
-                image={b.ogp_image || undefined}
+                image={b.ogpImage || undefined}
                 date={displayDate}
                 moderations={moderationList}
               />

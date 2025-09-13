@@ -3,12 +3,12 @@ export interface Bookmark {
   did: string;             // DB に合わせて追加
   handle: string;          // 追加
   subject: string;
-  ogp_title: string | null;
-  ogp_description: string | null;
-  ogp_image: string | null;
-  created_at: string;      // ISO 8601 形式
-  indexed_at: string;      // ISO 8601 形式
-  moderation_result: string[] | null; // DB では string? なので null もあり得る
+  ogpTitle: string | null;
+  ogpDescription: string | null;
+  ogpImage: string | null;
+  createdAt: string;      // ISO 8601 形式
+  indexedAt: string;      // ISO 8601 形式
+  moderations: string[] | null; // DB では string? なので null もあり得る
   comments: Comment[];
   tags: string[];
 }
@@ -26,12 +26,12 @@ export function normalizeBookmarks(raw: any[]): Bookmark[] {
     did: b.did,
     handle: b.handle,
     subject: b.subject,
-    ogp_title: b.ogp_title,
-    ogp_description: b.ogp_description,
-    ogp_image: b.ogp_image,
-    created_at: b.created_at,
-    indexed_at: b.indexed_at,
-    moderation_result: Array.isArray(b.moderation_result)
+    ogpTitle: b.ogp_title,
+    ogpDescription: b.ogp_description,
+    ogpImage: b.ogp_image,
+    createdAt: b.created_at,
+    indexedAt: b.indexed_at,
+    moderations: Array.isArray(b.moderation_result)
       ? b.moderation_result
       : b.moderation_result ? [b.moderation_result] : null,
     comments: b.comments.map((c: any) => ({

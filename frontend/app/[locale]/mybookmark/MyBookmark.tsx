@@ -61,8 +61,8 @@ export function MyBookmark() {
                             title={b.comments[0]?.title ?? ""}
                             comment={b.comments[0]?.comment ?? ""}
                             tags={b.tags}
-                            image={b.ogp_image}
-                            date={new Date(b.indexed_at)}
+                            image={b.ogpImage}
+                            date={new Date(b.indexedAt)}
                             atUri={b.uri}
                             moderations={b.comments[0]?.moderation_result ?? []}
                         />

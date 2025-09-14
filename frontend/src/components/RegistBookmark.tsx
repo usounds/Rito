@@ -11,6 +11,7 @@ import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
+import { Switch } from '@mantine/core';
 
 type RegistBookmarkProps = {
     aturi?: string;

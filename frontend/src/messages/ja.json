@@ -116,7 +116,7 @@
 			},
 			"tag": {
 				"title": "タグ",
-				"placeholder": "ATProto",
+				"placeholder": "ATProtocol",
 				"description": "URLを分類するタグ(10個まで)"
 			},
 			"comment": {

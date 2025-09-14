@@ -117,7 +117,7 @@
 			},
 			"tag": {
 				"title": "Tag",
-				"placeholder": "ATProto",
+				"placeholder": "ATProtocol",
 				"description": "Tags to categorize the URL (up to 10)"
 			},
 			"comment": {

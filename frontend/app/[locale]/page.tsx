@@ -7,6 +7,8 @@ export function generateStaticParams() {
   return routing.locales.map(locale => ({ locale }));
 }
 
+export const revalidate = 600; // 秒単位（600秒 = 10分）
+
 export default async function HomePage({
   params,
 }: {

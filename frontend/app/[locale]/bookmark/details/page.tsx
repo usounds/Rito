@@ -13,6 +13,8 @@ interface PageProps {
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+export const revalidate = 60; // 秒単位（60秒 = 1分）
+
 export default async function DetailsPage({ params, searchParams }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);

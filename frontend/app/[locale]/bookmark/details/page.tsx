@@ -39,48 +39,48 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     })
 
     const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
-    function getDomain(url: string): string | null {
-        if (url.startsWith('https://') || url.startsWith('http://')) {
-            try {
-                const u = new URL(url);
-                return u.hostname; // ドメインのみ返す
-            } catch {
-                return null;
-            }
-        } else if (url.startsWith('at://')) {
-            const result = parseCanonicalResourceUri(url);
-            if (result.ok) {
-                const schemaEntry = nsidSchema.find(entry => entry.nsid === result.value.collection);
-                if (schemaEntry?.schema) {
-                    const newUrl = schemaEntry.schema
-                        .replace('{did}', result.value.repo)
-                        .replace('{rkey}', result.value.rkey);
-                    try {
-                        const u = new URL(newUrl);
-                        return u.hostname;
-                    } catch {
-                        return null;
-                    }
-                }
-            }
-            // フォールバック
-            return `pdsls.dev`;
-        }
 
-        return null;
+    const verifiedBookmarks = normalized.filter((b) =>
+        b.tags.includes("Verified")
+    );
+
+    const otherBookmarks = normalized.filter((b) =>
+        !b.tags.includes("Verified")
+    );
+
+    let displayTitle: string | null = null;
+    let displayComment: string | null = null;
+
+    if (verifiedBookmarks.length > 0) {
+        const v = verifiedBookmarks[0];
+        const comment =
+            v.comments?.find(c => c.lang === locale) ||
+            v.comments?.[0];
+
+        displayTitle = comment?.title || v.ogpTitle;
+        displayComment = comment?.comment || v.ogpDescription;
+    } else if (otherBookmarks.length > 0) {
+        const o = otherBookmarks[0];
+        const comment =
+            o.comments?.find(c => c.lang === locale) ||
+            o.comments?.[0];
+
+        displayTitle = o.ogpTitle || comment?.title 
+        displayComment = o.ogpDescription || comment?.comment 
     }
 
 
     return (
         <Container size="md" mx="auto" my="sx">
             <Stack gap={4}>
-                <Title order={4}>{normalized[0].ogpTitle}</Title>
+                <Title order={4}>{displayTitle}</Title>
                 <Text size="md" component="div"><Markdown
                     components={{
                         p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
                     }}
-                >{normalized[0].ogpDescription}
-                </Markdown></Text>
+                >{displayComment}
+                </Markdown>
+                </Text>
                 <Text size="sm" c="dimmed">
                     <Link
                         href={uri || ''}
@@ -99,7 +99,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
             <Stack my="md">
                 <Timeline bulletSize={20} lineWidth={4} >
-                    {normalized.map((bookmark, idx) => {
+                    {otherBookmarks.map((bookmark, idx) => {
                         const comment =
                             bookmark.comments?.find(c => c.lang === locale) ||
                             bookmark.comments?.[0] ||

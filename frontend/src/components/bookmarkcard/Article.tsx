@@ -19,6 +19,7 @@ import { useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
+import { useRouter } from 'next/navigation';
 import classes from './Article.module.scss';
 
 type ArticleCardProps = {
@@ -39,6 +40,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
+    const router = useRouter();
 
     useEffect(() => {
         const updateSize = () => {
@@ -113,11 +115,18 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 )}
 
 
-                <Text className={classes.title} fw={500} component="a" {...linkProps}>
+                <Text className={classes.title} fw={500} component="a" {...linkProps} onClick={(e) => {
+                    e.preventDefault();       // aタグのデフォルト動作をキャンセル
+                    router.push(`/ja/bookmark/details?uri=${encodeURIComponent(url)}`);
+                }}>
                     {title}
                 </Text>
                 <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                    <Markdown>{comment}</Markdown>
+                    <Markdown
+                        components={{
+                            p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
+                        }}
+                    >{comment}</Markdown>
                 </Text>
 
 
@@ -186,7 +195,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                             title={messages.create.title}
                             centered
                         >
-                            <RegistBookmark aturi={atUri}  onClose={() => setQuickRegistBookmark(false)} />
+                            <RegistBookmark aturi={atUri} onClose={() => setQuickRegistBookmark(false)} />
                         </Modal>
 
 

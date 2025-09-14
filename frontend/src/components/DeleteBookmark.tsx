@@ -66,8 +66,6 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
         <Stack>
 
             {messages.delete.description}
-
-
             <Group justify="right">
                 <Button variant="default" onClick={onClose}>
                     {messages.delete.button.close}

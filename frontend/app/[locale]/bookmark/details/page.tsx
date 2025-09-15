@@ -229,7 +229,9 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     <TabsList>
                         <TabsTab value="bookmarks">{t('detail.rito')}</TabsTab>
                         <TabsTab value="posts">{t('detail.bluesky')}</TabsTab>
-                        <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
+                        {tags.some(tag => tag.toLowerCase().includes('atprotocol'.toLowerCase())) && (
+                            <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
+                        )}
                     </TabsList>
 
                     <TabsPanel value="bookmarks" pt="xs">
@@ -295,7 +297,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     </TabsPanel>
 
                     <TabsPanel value="resolver" pt="xs">
-                        <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri||'')} />
+                        <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri || '')} />
                     </TabsPanel>
                 </Tabs>
             </Stack>

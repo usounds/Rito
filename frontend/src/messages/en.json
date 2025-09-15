@@ -168,10 +168,14 @@
 		"bluesky": "Bluesky",
 		"resolver": "Lexicon",
 		"view": "View moderated content",
+		"field": {
+			"developer": {
+				"title": "Developer Mode"
+			}
+		},
 		"button": {
 			"close": "Close",
-			"new": "New Post",
-			"vote": "Vote"
+			"new": "New Post"
 		},
 		"inform": {
 			"error": "A system error has occurred",

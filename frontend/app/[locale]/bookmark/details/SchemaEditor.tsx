@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Table, Button, Group, Modal } from "@mantine/core";
-import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { RegistSchema } from "@/components/RegistSchema";
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { usePreferenceStore } from "@/state/PreferenceStore";
+import { Button, Modal, Table, Switch, Group } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMessages } from "next-intl";
+import { useEffect, useState } from "react";
 
 interface SchemaEditorProps {
   nsid: string;
@@ -40,8 +41,9 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
   const [selectedNsid, setSelectedNsid] = useState<string | null>(null);
   const [selectedSchema, setSelectedSchema] = useState<string | undefined>(undefined);
   const [isCreate, setIsCreate] = useState(false);
-
   const activeDid = useXrpcAgentStore((state) => state.activeDid);
+  const isDeveloper = usePreferenceStore((state) => state.isDeveloper);
+  const setIsDeveloper = usePreferenceStore((state) => state.setIsDeveloper);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -97,25 +99,36 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
 
   return (
     <>
-      <Table striped highlightOnHover>
-        <Table.Thead>
-          <Table.Tr>
-            <Table.Th>NSID</Table.Th>
-            <Table.Th>Schema</Table.Th>
-            <Table.Th>Count</Table.Th>
-            <Table.Th>Actions</Table.Th>
-          </Table.Tr>
-        </Table.Thead>
-        <Table.Tbody>
-          {data.flatMap((match) => {
-            if (match.owner) {
-              const canEdit = match.owner.did === activeDid;
-              return (
-                <Table.Tr key={`${match.nsid}-owner`}>
-                  <Table.Td>{match.nsid}</Table.Td>
-                  <Table.Td>{match.owner.schema}</Table.Td>
-                  <Table.Td >Owner</Table.Td>
-                  <Table.Td>
+
+      <Group my="sm">
+        <Switch
+          checked={isDeveloper}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+            setIsDeveloper(event.currentTarget.checked)
+          }
+          label={messages.detail.field.developer.title}
+        />
+      </Group>
+      {isDeveloper &&
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>NSID</Table.Th>
+              <Table.Th>Schema</Table.Th>
+              <Table.Th>Count</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {data.flatMap((match) => {
+              if (match.owner) {
+                const canEdit = match.owner.did === activeDid;
+                return (
+                  <Table.Tr key={`${match.nsid}-owner`}>
+                    <Table.Td>{match.nsid}</Table.Td>
+                    <Table.Td>{match.owner.schema}</Table.Td>
+                    <Table.Td >Owner</Table.Td>
+                    <Table.Td>
                       <Button
                         disabled={!canEdit}
                         onClick={() => handleEdit(match.nsid, match.owner!.schema)}
@@ -124,25 +137,25 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                       >
                         Edit
                       </Button>
-                  </Table.Td>
-                </Table.Tr>
-              );
-            }
+                    </Table.Td>
+                  </Table.Tr>
+                );
+              }
 
-            if (match.others?.length > 0) {
-              // schema ごとにグループ化 (reduce)
-              const grouped = match.others.reduce<Record<string, Resolver[]>>((acc, r) => {
-                if (!acc[r.schema]) acc[r.schema] = [];
-                acc[r.schema].push(r);
-                return acc;
-              }, {});
+              if (match.others?.length > 0) {
+                // schema ごとにグループ化 (reduce)
+                const grouped = match.others.reduce<Record<string, Resolver[]>>((acc, r) => {
+                  if (!acc[r.schema]) acc[r.schema] = [];
+                  acc[r.schema].push(r);
+                  return acc;
+                }, {});
 
-              return Object.entries(grouped).map(([schema, resolvers], idx) => (
-                <Table.Tr key={`${match.nsid}-other-${idx}`}>
-                  <Table.Td>{match.nsid}</Table.Td>
-                  <Table.Td>{schema}</Table.Td>
-                  <Table.Td >{resolvers.length}</Table.Td>
-                  <Table.Td>
+                return Object.entries(grouped).map(([schema, resolvers], idx) => (
+                  <Table.Tr key={`${match.nsid}-other-${idx}`}>
+                    <Table.Td>{match.nsid}</Table.Td>
+                    <Table.Td>{schema}</Table.Td>
+                    <Table.Td >{resolvers.length}</Table.Td>
+                    <Table.Td>
                       <Button
                         disabled={!activeDid}
                         onClick={() => handleEdit(match.nsid, schema)}
@@ -151,16 +164,16 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                       >
                         Edit
                       </Button>
-                  </Table.Td>
-                </Table.Tr>
-              ));
-            } else {
-              return (
-                <tr key={`${match.nsid}-no-resolver`}>
-                  <Table.Td>{match.nsid}</Table.Td>
-                  <Table.Td >-</Table.Td>
-                  <Table.Td >0</Table.Td>
-                  <Table.Td>
+                    </Table.Td>
+                  </Table.Tr>
+                ));
+              } else {
+                return (
+                  <tr key={`${match.nsid}-no-resolver`}>
+                    <Table.Td>{match.nsid}</Table.Td>
+                    <Table.Td >-</Table.Td>
+                    <Table.Td >0</Table.Td>
+                    <Table.Td>
                       <Button
                         onClick={() => handleEdit(match.nsid)}
                         variant="outline"
@@ -168,13 +181,14 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                       >
                         Edit
                       </Button>
-                  </Table.Td>
-                </tr>
-              );
-            }
-          })}
-        </Table.Tbody>
-      </Table>
+                    </Table.Td>
+                  </tr>
+                );
+              }
+            })}
+          </Table.Tbody>
+        </Table>
+      }
 
       <Modal
         opened={opened}

@@ -158,5 +158,22 @@
 			"error": "システムエラーが発生しました",
 			"success": "登録しました"
 		}
+	},
+	"detail": {
+		"more": "もっと見る",
+		"less": "閉じる",
+		"rito": "リト",
+		"bluesky": "Bluesky",
+		"resolver": "リゾルバ",
+		"view": "モデレーションされた文章を見る",
+		"button": {
+			"close": "閉じる",
+			"new": "投稿",
+			"vote": "投票"
+		},
+		"inform": {
+			"error": "システムエラーが発生しました",
+			"success": "登録しました"
+		}
 	}
 }

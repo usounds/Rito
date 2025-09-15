@@ -154,10 +154,27 @@
 		"button": {
 			"close": "Close",
 			"delete": "Delete"
+		},
+		"inform": {
+			"error": "System Error occured",
+			"success": "Delete operation successed"
 		}
 	},
-	"inform": {
-		"error": "System Error occured",
-		"success": "Delete operation successed"
+	"detail": {
+		"more": "More",
+		"less": "Less",
+		"rito": "Rito",
+		"bluesky": "Bluesky",
+		"resolver": "Resolver",
+		"view": "View moderated content",
+		"button": {
+			"close": "Close",
+			"new": "New Post",
+			"vote": "Vote"
+		},
+		"inform": {
+			"error": "A system error has occurred",
+			"success": "Successfully registered"
+		}
 	}
 }

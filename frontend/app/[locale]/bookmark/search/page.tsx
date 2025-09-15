@@ -11,26 +11,37 @@ export function generateStaticParams() {
 }
 
 type PageProps = {
-  params: { locale: string; page: string };
-  searchParams: Record<string, string | string[] | undefined>;
+  params: Promise<{ locale: string; page: string }>; // Promiseに変更
+  searchParams: Promise<Record<string, string | string[] | undefined>>; // これもPromiseに変更
 };
 
-export default async function BookmarksPage({ params, searchParams }: PageProps) {
-  const { locale, page } = params;
+export default async function BookmarksPage(props: PageProps) {
+  // paramsとsearchParamsをawaitで取得
+  const params = await props.params;
+  const searchParams = await props.searchParams;
+  
+  const locale = params.locale;
+  const page = params.page;
 
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   const tag = searchParams.tag
-    ? searchParams.tag.toString().split(',').map(t => t.trim()).filter(Boolean)
+    ? (Array.isArray(searchParams.tag) ? searchParams.tag : searchParams.tag.split(','))
+        .map(t => t.trim())
+        .filter(Boolean)
     : undefined;
 
   const handle = searchParams.handle
-    ? searchParams.handle.toString().split(',').map(h => h.trim()).filter(Boolean)
+    ? (Array.isArray(searchParams.handle) ? searchParams.handle : searchParams.handle.split(','))
+        .map(h => h.trim())
+        .filter(Boolean)
     : undefined;
 
+  const sort = searchParams.sort as 'created' | 'updated' | undefined;
+
   const query = {
-    sort: searchParams.sort as 'created' | 'updated' | undefined,
+    sort,
     tag,
     handle,
     page: parseInt(page, 10) || 1,
@@ -38,7 +49,6 @@ export default async function BookmarksPage({ params, searchParams }: PageProps)
 
   return (
     <Container size="md" mx="auto" my="sx">
-      {/* SearchForm はクライアントコンポーネントなので props で URL 情報を渡す */}
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
       <LatestBookmark params={{ locale }} t={t} query={query} />
     </Container>

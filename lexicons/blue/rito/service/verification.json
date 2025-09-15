@@ -1,32 +1,21 @@
 {
   "lexicon": 1,
-  "id": "blue.rito.service.verification",
+  "id": "blue.rito.service.schema",
   "defs": {
     "main": {
       "type": "record",
-      "description": "Verificated reference for Owner Bookmarks.",
-      "key": "any",
+      "description": "This record defines the schema associated with a specific NSID.",
+      "key": "nsid",
       "record": {
         "type": "object",
         "required": [
-          "uri",
-          "subject",
-          "createdAt"
+          "schema"
         ],
         "properties": {
-          "uri": {
+          "schema": {
             "type": "string",
             "format": "uri",
-            "description": "Verificated URI."
-          },
-          "subject": {
-            "type": "ref",
-            "ref": "blue.rito.feed.bookmark#main",
-            "description": "Original record reference."
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "datetime"
+            "description": "The AppView URL for the NSID. For example, if the NSID is uk.skyblur.post, the URL should be https://skyblur.uk/post/{did}/{rkey}"
           }
         }
       }

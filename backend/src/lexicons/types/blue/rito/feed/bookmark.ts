@@ -36,8 +36,8 @@ const _mainSchema = /*#__PURE__*/ v.record(
       /*#__PURE__*/ v.constrain(
         /*#__PURE__*/ v.array(
           /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.string(), [
-            /*#__PURE__*/ v.stringLength(1, 200),
-            /*#__PURE__*/ v.stringGraphemes(1, 20),
+            /*#__PURE__*/ v.stringLength(1, 250),
+            /*#__PURE__*/ v.stringGraphemes(1, 25),
           ]),
         ),
         [/*#__PURE__*/ v.arrayLength(0, 10)],

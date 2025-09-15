@@ -34,7 +34,11 @@
 			}
 		},
 		"termofuse": "Terms of Use",
-		"privacypolicy": "Privacy Policy"
+		"privacypolicy": "Privacy Policy",
+		"menu": "Menu",
+		"items": {
+			"logout": "Logout"
+		}
 	},
 	"login": {
 		"title": "Login",
@@ -61,9 +65,6 @@
 			"multibyte": "Only single-byte characters are allowed",
 			"invalidhandle": "Invalid handle"
 		}
-	},
-	"callback": {
-		"description": "Authentication in progress"
 	},
 	"mybookmark": {
 		"latest": "Latest Bookmark",
@@ -165,7 +166,7 @@
 		"less": "Less",
 		"rito": "Rito",
 		"bluesky": "Bluesky",
-		"resolver": "Resolver",
+		"resolver": "Lexicon",
 		"view": "View moderated content",
 		"button": {
 			"close": "Close",
@@ -175,6 +176,27 @@
 		"inform": {
 			"error": "A system error has occurred",
 			"success": "Successfully registered"
+		}
+	},
+	"editschema": {
+		"title": "Change Schema",
+		"button": {
+			"close": "Close",
+			"regist": "Regist"
+		},
+		"inform": {
+			"error": "A system error has occurred",
+			"success": "Regist successfully"
+		},
+		"field": {
+			"schema": {
+				"title": "Schema",
+				"placeholder": "https://skyblur.uk/post/{did}/{rkey}",
+				"description": "You can use {did} and {rkey}"
+			},
+			"invalid": {
+				"title": "No AppView URL exists for this NSID"
+			}
 		}
 	}
 }

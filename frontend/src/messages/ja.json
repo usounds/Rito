@@ -34,7 +34,11 @@
 			}
 		},
 		"termofuse": "利用規約",
-		"privacypolicy": "プライバシーポリシー"
+		"privacypolicy": "プライバシーポリシー",
+		"menu": "メニュー",
+		"items": {
+			"logout": "ログアウト"
+		}
 	},
 	"login": {
 		"title": "ログイン",
@@ -60,9 +64,6 @@
 			"multibyte": "シングルバイト文字のみ使用できます",
 			"invalidhandle": "無効なハンドルです"
 		}
-	},
-	"callback": {
-		"description": "認証中です"
 	},
 	"mybookmark": {
 		"latest": "最新のブックマーク",
@@ -164,7 +165,7 @@
 		"less": "閉じる",
 		"rito": "リト",
 		"bluesky": "Bluesky",
-		"resolver": "リゾルバ",
+		"resolver": "Lexicon",
 		"view": "モデレーションされた文章を見る",
 		"button": {
 			"close": "閉じる",
@@ -174,6 +175,27 @@
 		"inform": {
 			"error": "システムエラーが発生しました",
 			"success": "登録しました"
+		}
+	},
+	"editschema": {
+		"title": "スキーマ変更",
+		"button": {
+			"close": "閉じる",
+			"regist": "登録"
+		},
+		"inform": {
+			"error": "システムエラーが発生しました",
+			"success": "登録しました"
+		},
+		"field": {
+			"schema": {
+				"title": "スキーマ",
+				"placeholder": "https://skyblur.uk/post/{did}/{rkey}",
+				"description": "{did}と{rkey}が使えます"
+			},
+			"invalid": {
+				"title": "このNSIDに対応するAppViewのURLは存在しない"
+			}
 		}
 	}
 }

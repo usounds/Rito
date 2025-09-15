@@ -1,4 +1,5 @@
 import TimeAgo from "@/components/TimeAgo";
+import { SchemaEditor } from "./SchemaEditor";
 import { BlurReveal } from "@/components/BlurReveal"
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
@@ -9,6 +10,8 @@ import Markdown from 'react-markdown';
 import { Spoiler } from '@mantine/core';
 import { Tabs, TabsList, TabsTab, TabsPanel } from '@mantine/core';
 import { cookies } from "next/headers";
+import { TagBadge } from '@/components/TagBadge';
+import publicSuffixList from '@/data/publicSuffixList.json';
 
 interface PageProps {
     params: { locale: string };
@@ -22,6 +25,43 @@ interface PostData {
     indexedAt: Date;        // Post の indexed_at
     handle: string | null;  // Post の handle
 }
+
+const getNsid = (url: string) => {
+    try {
+        const host = new URL(url).hostname;
+        const parts = host.split(".");
+        const len = parts.length;
+
+        // Public Suffix List にマッチする最長サフィックスを探す
+        let suffixIndex = len;
+        for (let i = 0; i < len; i++) {
+            const candidate = parts.slice(i).join(".");
+            if (publicSuffixList.includes(candidate)) {
+                suffixIndex = i;
+                break;
+            }
+        }
+
+        if (suffixIndex === 0) return host; // 見つからなければそのまま
+
+        // 直前の部分を含める → 2階層 or 3階層に
+        const domainParts = parts.slice(Math.max(0, suffixIndex - 1));
+
+        // ドット区切りを逆順にする（TLDを先頭に）
+        return domainParts.reverse().join(".");
+    } catch {
+        return url;
+    }
+};
+
+const getDomain = (url: string) => {
+    try {
+        const host = new URL(url).hostname;
+        return host;
+    } catch {
+        return url;
+    }
+};
 
 export const revalidate = 60; // 秒単位（60秒 = 1分）
 
@@ -53,6 +93,8 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     })
 
     const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
+
+    const tags: string[] = normalized.flatMap(b => b.tags || []);
 
     const verifiedBookmarks = normalized.filter((b) =>
         b.tags.includes("Verified")
@@ -160,6 +202,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         </Spoiler>
                     </Text>
                 </BlurReveal>
+
                 <Text size="sm" c="dimmed">
                     <Link
                         href={uri || ''}
@@ -174,6 +217,11 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         {uri}
                     </Link>
                 </Text>
+                {tags &&
+                    <Stack my='xs'>
+                        <TagBadge tags={tags} />
+                    </Stack>
+                }
             </Stack>
 
             <Stack my="md">
@@ -181,6 +229,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     <TabsList>
                         <TabsTab value="bookmarks">{t('detail.rito')}</TabsTab>
                         <TabsTab value="posts">{t('detail.bluesky')}</TabsTab>
+                        <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
                     </TabsList>
 
                     <TabsPanel value="bookmarks" pt="xs">
@@ -243,6 +292,10 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                 ))}
                             </Timeline>
                         </Stack>
+                    </TabsPanel>
+
+                    <TabsPanel value="resolver" pt="xs">
+                        <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri||'')} />
                     </TabsPanel>
                 </Tabs>
             </Stack>

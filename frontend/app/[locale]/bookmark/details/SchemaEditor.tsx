@@ -1,5 +1,5 @@
 "use client";
-import { RegistSchema } from "@/components/RegistSchema";
+import { RegistSchema } from "./RegistSchema";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
 import { Button, Modal, Table, Switch, Group } from "@mantine/core";
@@ -130,12 +130,12 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                     <Table.Td >Owner</Table.Td>
                     <Table.Td>
                       <Button
-                        disabled={!canEdit}
+                        disabled={(!canEdit && !activeDid)}
                         onClick={() => handleEdit(match.nsid, match.owner!.schema)}
                         variant="outline"
                         size="xs"
                       >
-                        Edit
+                        {messages.editschema.button.regist}
                       </Button>
                     </Table.Td>
                   </Table.Tr>
@@ -162,7 +162,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                         variant="outline"
                         size="xs"
                       >
-                        Edit
+                        {messages.editschema.button.regist}
                       </Button>
                     </Table.Td>
                   </Table.Tr>
@@ -175,11 +175,12 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                     <Table.Td >0</Table.Td>
                     <Table.Td>
                       <Button
+                       disabled={!activeDid}
                         onClick={() => handleEdit(match.nsid)}
                         variant="outline"
                         size="xs"
                       >
-                        Edit
+                        {messages.editschema.button.regist}
                       </Button>
                     </Table.Td>
                   </tr>

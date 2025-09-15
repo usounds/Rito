@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
     response_type: "code",
     client_id: CLIENT_ID,
     redirect_uri: REDIRECT_URI,
-    scope: "atproto transition:generic",
+    scope: "atproto repo:blue.rito.feed.bookmark repo:blue.rito.service.schema repo:app.bsky.feed.post",
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",

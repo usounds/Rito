@@ -4,13 +4,12 @@ import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
-import { useLocale, useMessages } from 'next-intl';
+import { useMessages } from 'next-intl';
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const messages = useMessages();
-    const locale = useLocale();
 
     //未ログイン
     if (!activeDid) return <>

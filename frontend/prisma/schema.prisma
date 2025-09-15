@@ -25,16 +25,26 @@ model Bookmark {
 }
 
 model Post {
-  uri       String   @id
-  did       String  
-  text      String
-  lang      String[]
-  urls      String[]
-  indexed_at DateTime @default(now()) @db.Timestamptz
+  uri               String   @id
+  did               String
+  text              String
+  lang              String[]
+  indexed_at        DateTime @default(now()) @db.Timestamptz
   moderation_result String?
 
-  user UserDidHandle @relation(fields: [did], references: [did], name: "PostUser")
-  handle String? @map("handle") // 物理名 handle
+  user   UserDidHandle @relation(fields: [did], references: [did], name: "PostUser")
+  handle String?       @map("handle")
+
+  uris   PostUri[]     @relation("PostUris") // 1対多
+}
+
+model PostUri {
+  id     Int    @id @default(autoincrement())
+  post   Post   @relation(fields: [postUri], references: [uri], name: "PostUris")
+  postUri String
+  uri    String
+
+  @@index([postUri]) // 検索用インデックス
 }
 
 model UserDidHandle {

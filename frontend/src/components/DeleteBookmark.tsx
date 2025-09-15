@@ -15,12 +15,12 @@ type DeleteBookmarkProps = {
 
 export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }) => {
     const messages = useMessages();
-    const client = useXrpcAgentStore(state => state.client);
+    const thisClient = useXrpcAgentStore(state => state.thisClient);
     const [loading, setLoading] = useState(false);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
 
     const handleDelete = async () => {
-        if (!client) return
+        if (!thisClient) return
         if (!aturi) return;
         const parse = parseCanonicalResourceUri(aturi);
         if (!parse.ok) return;
@@ -29,7 +29,7 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
 
         setLoading(true);
         try {
-            await client.post('com.atproto.repo.applyWrites', {
+            await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: repo,
                     writes: [

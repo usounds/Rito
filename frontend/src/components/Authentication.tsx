@@ -1,9 +1,7 @@
 "use client";
 import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
-import { getClientMetadata } from '@/logic/HandleOauth';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import type { Did } from '@atcute/lexicons';
-import { AuthorizationServerMetadata, configureOAuth, IdentityMetadata } from '@atcute/oauth-browser-client';
 import {
   Anchor,
   Button,

@@ -69,7 +69,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
         <Group justify="center" gap="md" mt="md">
           <Button
             component={Link}
-            href={`/${locale}/mybookmark`}
+            href={`/${locale}/my/bookmark`}
             leftSection={<SquareArrowOutUpRight size={14} />}
             variant="default"
           >
@@ -77,7 +77,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           </Button>
           <Button
             component={Link}
-            href={`/${locale}/search`}
+            href={`/${locale}/bookmark/search`}
             leftSection={<FolderSearch size={14}
             />} variant="default">
             {t('button.search')}

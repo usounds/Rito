@@ -1,12 +1,10 @@
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import { Container, Title, Text, Stack, Timeline, TimelineItem } from "@mantine/core";
-import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
-import { prisma } from '@/logic/HandlePrismaClient';
-import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
-import { nsidSchema } from '@/nsid/mapping';
 import TimeAgo from "@/components/TimeAgo";
-import Markdown from 'react-markdown';
+import { prisma } from '@/logic/HandlePrismaClient';
+import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
+import { Container, Stack, Text, Timeline, TimelineItem, Title } from "@mantine/core";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import Link from 'next/link';
+import Markdown from 'react-markdown';
 
 interface PageProps {
     params: { locale: string };
@@ -73,7 +71,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
 
     return (
-        <Container size="md" mx="auto" my="sx">
+        <Container size="md" mx="auto" my="sm">
             <Stack gap={4}>
                 <Title order={4}>{displayTitle}</Title>
                 <Text size="md" component="div"><Markdown

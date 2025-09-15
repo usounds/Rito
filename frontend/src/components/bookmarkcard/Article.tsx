@@ -1,6 +1,7 @@
 "use client"
 import { RegistBookmark } from '@/components/RegistBookmark';
 import { DeleteBookmark } from '@/components/DeleteBookmark';
+import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
@@ -130,26 +131,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 </Text>
 
 
-                {tags.length > 0 && (
-                    <Group mb="xs" gap={3}>
-                        {tags.map((tag, idx) => (
-                            <Badge
-                                key={idx}
-                                variant="light"
-                                color={tag === 'Verified' ? 'orange' : 'blue'}
-                                styles={{ root: { textTransform: 'none' } }}
-                            >
-                                {tag === 'Verified' ? (
-                                    <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                        <BadgeCheck size={12} /> {tag}
-                                    </span>
-                                ) : (
-                                    <span style={{ display: 'flex', alignItems: 'center' }}>{tag}</span>
-                                )}
-                            </Badge>
-                        ))}
-                    </Group>
-                )}
+                <TagBadge tags={tags} />
 
             </Box>
             <Group mb="xs" gap={4}>

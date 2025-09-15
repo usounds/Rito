@@ -1,6 +1,6 @@
 import { routing } from "@/i18n/routing";
 import { FeaturesGrid } from "@/components/features/Features";
-import { LatestBookmark } from "./search/latestbookmark/LatestBookmark";
+import { LatestBookmark } from "./bookmark/search/latestbookmark/LatestBookmark";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export function generateStaticParams() {

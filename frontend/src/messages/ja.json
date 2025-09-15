@@ -167,10 +167,14 @@
 		"bluesky": "Bluesky",
 		"resolver": "Lexicon",
 		"view": "モデレーションされた文章を見る",
+		"field": {
+			"developer": {
+				"title": "開発者モード"
+			}
+		},
 		"button": {
 			"close": "閉じる",
-			"new": "投稿",
-			"vote": "投票"
+			"new": "投稿"
 		},
 		"inform": {
 			"error": "システムエラーが発生しました",

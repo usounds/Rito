@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
-import { Switch } from '@mantine/core';
 
 type RegistBookmarkProps = {
     aturi?: string;

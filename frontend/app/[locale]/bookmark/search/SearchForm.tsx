@@ -26,7 +26,7 @@ export function SearchForm({ locale, defaultTags, defaultHandles }: SearchFormPr
         if (tags.length) params.set('tag', tags.join(','));        // tag=foo,bar
         if (handles.length) params.set('handle', handles.join(',')); // handle=rito.blue,usounds.work
 
-        router.push(`/${locale}/search?${params.toString()}`);
+        router.push(`/${locale}/bookmark/search?${params.toString()}`);
         setIsLoading(false);
     };
 

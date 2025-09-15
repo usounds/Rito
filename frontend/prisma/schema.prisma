@@ -63,7 +63,7 @@ model Comment {
   comment      String?
 
   bookmark          Bookmark @relation(fields: [bookmark_uri], references: [uri], onDelete: Cascade)
-  moderation_result String?  // "spam", "adult", "safe" など
+  moderation_result String?  
   
   @@index([bookmark_uri])  // インデックス追加
   @@unique([bookmark_uri, lang], name: "bookmark_uri_lang") 
@@ -98,7 +98,8 @@ model Resolver {
   did      String
   schema   String
   verified Boolean
-
+  indexed_at      DateTime        @default(now()) @db.Timestamptz
+  
   @@id([nsid, did])
   @@map("resolver") // PostgreSQL のテーブル名
 }

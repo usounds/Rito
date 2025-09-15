@@ -135,9 +135,9 @@ export function Authentication(props: PaperProps) {
         autoClose: true,
         icon: <X />
       });
-      // ここで通知や UI 処理
-    } finally {
       setIsLoading(false);
+    } finally {
+      //なにもしない
     }
 
   }

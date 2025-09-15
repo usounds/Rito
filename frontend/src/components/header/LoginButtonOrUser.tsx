@@ -4,11 +4,11 @@ import { RegistBookmark } from '@/components/RegistBookmark';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark } from '@/type/ApiTypes';
-import { Affix, Avatar, Button, Modal } from "@mantine/core";
-import { BookmarkPlus } from 'lucide-react';
-import { useLocale, useMessages } from 'next-intl';
-import { useEffect, useState } from 'react';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
+import { Affix, Avatar, Button, Menu, Modal } from "@mantine/core";
+import { BookmarkPlus, LogOut } from 'lucide-react';
+import { useMessages } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -22,7 +22,6 @@ export function LoginButtonOrUser() {
     const isNeedReload = useMyBookmark(state => state.isNeedReload);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
     const messages = useMessages();
-    const locale = useLocale();
     const isLoggedIn = !!activeDid;
     const [modalSize, setModalSize] = useState('70%')
 
@@ -105,12 +104,40 @@ export function LoginButtonOrUser() {
         return () => clearTimeout(timer);
     }, [isNeedReload, activeDid]);
 
+    const handleLogout = async () => {
+        try {
+            // API を叩く
+            const res = await fetch("/api/oauth/revoke", { method: "GET" });
+            const data = await res.json();
+
+            if (res.ok && data.ok) {
+                // ログアウト成功 → フロント側でリダイレクト
+            } else {
+                console.error("Logout failed:", data);
+            }
+
+            setActiveDid(null)
+            setUserProf(null)
+        } catch (err) {
+            console.error("Logout error:", err);
+        }
+    };
+
     return (
         <>
             {isLoggedIn && userProf ? (
                 // ログイン済みの場合に表示する要素
                 <>
-                    <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} />
+                    <Menu shadow="md" width={200}>
+                        <Menu.Target>
+                            <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} size={26} />
+                        </Menu.Target>
+
+                        <Menu.Dropdown>
+                            <Menu.Label>{messages.header.menu}</Menu.Label>
+                            <Menu.Item leftSection={<LogOut size={14} />} color="red" onClick={handleLogout}>{messages.header.items.logout}</Menu.Item>
+                        </Menu.Dropdown>
+                    </Menu>
                     <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
                         <Button
                             onClick={() => setQuickRegistBookmark(true)}

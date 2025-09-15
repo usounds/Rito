@@ -257,101 +257,101 @@ async function init() {
   }
 
 
-async function upsertPost(
-  event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>
-) {
-  const record = event.commit.record as any;
-  const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+  async function upsertPost(
+    event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>
+  ) {
+    const record = event.commit.record as any;
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
 
-  try {
-    // facets と embed からリンク抽出
-    const links: string[] = [];
+    try {
+      // facets と embed からリンク抽出
+      const links: string[] = [];
 
-    if (record.facets) {
-      for (const facet of record.facets) {
-        if (facet.features) {
-          for (const feature of facet.features) {
-            if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) {
-              links.push(feature.uri);
+      if (record.facets) {
+        for (const facet of record.facets) {
+          if (facet.features) {
+            for (const feature of facet.features) {
+              if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) {
+                links.push(feature.uri);
+              }
             }
           }
         }
       }
-    }
 
-    if (record.embed?.$type === 'app.bsky.embed.external' && record.embed.external?.uri) {
-      links.push(record.embed.external.uri);
-    }
+      if (record.embed?.$type === 'app.bsky.embed.external' && record.embed.external?.uri) {
+        links.push(record.embed.external.uri);
+      }
 
-    // 重複排除
-    const uniqueLinks = Array.from(new Set(links));
-    if (uniqueLinks.length === 0) return;
+      // 重複排除
+      const uniqueLinks = Array.from(new Set(links));
+      if (uniqueLinks.length === 0) return;
 
-    // Bookmark チェック
-    const matchingBookmarks = await prisma.bookmark.findMany({
-      where: { subject: { in: uniqueLinks } },
-    });
-    if (matchingBookmarks.length === 0) return;
-
-    // UserDidHandle upsert
-    let handle = 'no handle';
-    try {
-      const userProfile = await publicAgent.get('app.bsky.actor.getProfile', { params: { actor: event.did } });
-      if (userProfile.ok) handle = userProfile.data.handle;
-    } catch (err) {
-      logger.error(`Error fetching profile for ${event.did}: ${err}`);
-    }
-
-    await prisma.userDidHandle.upsert({
-      where: { did: event.did },
-      update: { handle },
-      create: { did: event.did, handle },
-    });
-
-    // Post の moderation チェック
-    const postTexts = record.text ? [record.text] : [];
-    const postFlaggedCategories = await checkModeration(postTexts);
-    const postModerationResult = postFlaggedCategories.length > 0 ? postFlaggedCategories.join(',') : null;
-
-    // 既存 PostUri 削除
-    await prisma.postUri.deleteMany({ where: { postUri: aturi } });
-
-    // Post upsert
-    await prisma.post.upsert({
-      where: { uri: aturi },
-      update: {
-        handle,
-        text: record.text || '',
-        lang: record.langs || [],
-        moderation_result: postModerationResult,
-        indexed_at: new Date(),
-      },
-      create: {
-        uri: aturi,
-        did: event.did,
-        handle,
-        text: record.text || '',
-        lang: record.langs || [],
-        moderation_result: postModerationResult,
-        indexed_at: new Date(),
-      },
-    });
-
-    // PostUri 作成
-    if (uniqueLinks.length > 0) {
-      await prisma.postUri.createMany({
-        data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
-        skipDuplicates: true, // 重複防止
+      // Bookmark チェック
+      const matchingBookmarks = await prisma.bookmark.findMany({
+        where: { subject: { in: uniqueLinks } },
       });
-    }
+      if (matchingBookmarks.length === 0) return;
 
-    logger.info(
-      `Upserted post: ${aturi}, handle: ${handle}, uris: ${uniqueLinks.join(', ')}, moderation: ${postModerationResult}`
-    );
-  } catch (err) {
-    logger.error(`Error in upsertPost for ${aturi}: ${err}`);
+      // UserDidHandle upsert
+      let handle = 'no handle';
+      try {
+        const userProfile = await publicAgent.get('app.bsky.actor.getProfile', { params: { actor: event.did } });
+        if (userProfile.ok) handle = userProfile.data.handle;
+      } catch (err) {
+        logger.error(`Error fetching profile for ${event.did}: ${err}`);
+      }
+
+      await prisma.userDidHandle.upsert({
+        where: { did: event.did },
+        update: { handle },
+        create: { did: event.did, handle },
+      });
+
+      // Post の moderation チェック
+      const postTexts = record.text ? [record.text] : [];
+      const postFlaggedCategories = await checkModeration(postTexts);
+      const postModerationResult = postFlaggedCategories.length > 0 ? postFlaggedCategories.join(',') : null;
+
+      // 既存 PostUri 削除
+      await prisma.postUri.deleteMany({ where: { postUri: aturi } });
+
+      // Post upsert
+      await prisma.post.upsert({
+        where: { uri: aturi },
+        update: {
+          handle,
+          text: record.text || '',
+          lang: record.langs || [],
+          moderation_result: postModerationResult,
+          indexed_at: new Date(),
+        },
+        create: {
+          uri: aturi,
+          did: event.did,
+          handle,
+          text: record.text || '',
+          lang: record.langs || [],
+          moderation_result: postModerationResult,
+          indexed_at: new Date(),
+        },
+      });
+
+      // PostUri 作成
+      if (uniqueLinks.length > 0) {
+        await prisma.postUri.createMany({
+          data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
+          skipDuplicates: true, // 重複防止
+        });
+      }
+
+      logger.info(
+        `Upserted post: ${aturi}, handle: ${handle}, uris: ${uniqueLinks.join(', ')}, moderation: ${postModerationResult}`
+      );
+    } catch (err) {
+      logger.error(`Error in upsertPost for ${aturi}: ${err}`);
+    }
   }
-}
 
 
   // イベント登録
@@ -360,6 +360,63 @@ async function upsertPost(
 
   jetstream.onCreate(POST_COLLECTION, upsertPost);
   jetstream.onUpdate(POST_COLLECTION, upsertPost);
+
+  jetstream.onCreate(SERVICE, upsertResolver);
+  jetstream.onUpdate(SERVICE, upsertResolver);
+
+  async function upsertResolver(
+    event: CommitCreateEvent<typeof SERVICE> | CommitUpdateEvent<typeof SERVICE>
+  ) {
+
+    const record = event.commit.record as any;
+    const nsid = event.commit.rkey;
+    const did = event.did;
+    const schema = record.schema || '';
+    let verified = false;
+    let handle = '';
+
+    if (!nsid || !did) {
+      logger.warn(`Missing nsid or did in resolver event: ${JSON.stringify(record)}`);
+      return;
+    }
+
+    try {
+      // ユーザープロフィール取得
+      const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
+        params: { actor: did },
+      });
+
+      if (userProfile.ok) {
+        handle = userProfile.data.handle;
+
+        // handle を逆順にする
+        // 例: skyblur.uk → uk.skyblur
+        const reversedHandle = handle.split('.').reverse().join('.');
+
+        // NSID が reversedHandle で始まるかチェック
+        if (nsid.startsWith(reversedHandle)) {
+          verified = true;
+        }
+      }
+    } catch (err) {
+      logger.error(`Error fetching profile for ${did}: ${err}`);
+    }
+
+    try {
+      await prisma.resolver.upsert({
+        where: { nsid_did: { nsid, did } },
+        update: { schema, verified, indexed_at:  new Date() },
+        create: { nsid, did, schema, verified, indexed_at:  new Date() },
+      });
+
+      logger.info(
+        `Upserted resolver: nsid=${nsid}, did=${did}, handle=${handle}, verified=${verified}`
+      );
+    } catch (err) {
+      logger.error(`Error in upsertResolver for nsid=${nsid}, did=${did}: ${err}`);
+    }
+  }
+
 
   jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) => {
     cursor = event.time_us.toString();
@@ -375,29 +432,47 @@ async function upsertPost(
     }
   });
 
-jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
-  cursor = event.time_us.toString();
-  const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+  jetstream.onDelete(SERVICE, async (event: CommitDeleteEvent<typeof SERVICE>) => {
+    const nsid = event.commit.rkey;
+    const did = event.did;
 
-  try {
-    // 1. Post に紐づく PostUri を先に削除
-    const deletedUris = await prisma.postUri.deleteMany({
-      where: { postUri: aturi }, // PostUri.postUri が外部キー
-    });
-    
-    // 2. Post を削除
-    const deletedPosts = await prisma.post.deleteMany({
-      where: { uri: aturi },
-    });
-    if (deletedPosts.count > 0) {
-      logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
-    } else {
-      //logger.info(`No post found for deletion: ${aturi}`);
+    try {
+      const result = await prisma.resolver.deleteMany({
+        where: { nsid, did },
+      });
+
+      if (result.count > 0) {
+        logger.info(`Deleted resolver: nsid=${nsid}, did=${did} (${result.count} records)`);
+      }
+    } catch (err) {
+      logger.error(`Error in onDelete resolver: ${err}`);
     }
-  } catch (err) {
-    logger.error(`Error in onDelete post for ${aturi}: ${err}`);
-  }
-});
+  });
+
+
+  jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
+    cursor = event.time_us.toString();
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+
+    try {
+      // 1. Post に紐づく PostUri を先に削除
+      const deletedUris = await prisma.postUri.deleteMany({
+        where: { postUri: aturi }, // PostUri.postUri が外部キー
+      });
+
+      // 2. Post を削除
+      const deletedPosts = await prisma.post.deleteMany({
+        where: { uri: aturi },
+      });
+      if (deletedPosts.count > 0) {
+        logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
+      } else {
+        //logger.info(`No post found for deletion: ${aturi}`);
+      }
+    } catch (err) {
+      logger.error(`Error in onDelete post for ${aturi}: ${err}`);
+    }
+  });
 
 
   jetstream.on('close', () => {

@@ -28,7 +28,7 @@ async function generateDPoPProof(
   method: string,
   url: string,
   dpopJwk: ParsedDPoPKey,
-  access_token:string,
+  access_token: string,
   dpopNonce?: string,
 ) {
   // 秘密鍵インポート
@@ -38,16 +38,16 @@ async function generateDPoPProof(
   const { d, ...publicJwk } = dpopJwk;
 
   // URL 正規化（末尾スラッシュを削除）
-const normalizedUrl = url; // そのまま
+  const normalizedUrl = url; // そのまま
 
-const payload: Record<string, any> = {
-  htm: method.toUpperCase(),
-  htu: normalizedUrl,
-  iat: Math.floor(Date.now() / 1000),
-  jti: crypto.randomUUID(),
-  ath: createHash('sha256').update(access_token).digest('base64url'),
-  ...(dpopNonce ? { nonce: dpopNonce } : {}),
-};
+  const payload: Record<string, any> = {
+    htm: method.toUpperCase(),
+    htu: normalizedUrl,
+    iat: Math.floor(Date.now() / 1000),
+    jti: crypto.randomUUID(),
+    ath: createHash('sha256').update(access_token).digest('base64url'),
+    ...(dpopNonce ? { nonce: dpopNonce } : {}),
+  };
   return await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: "ES256", typ: "dpop+jwt", jwk: publicJwk })
     .sign(key);
@@ -84,28 +84,23 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
 
     // 初回 DPoP proof 生成
-    console.log("DPoP proof htu URL:", xrpcUrl);
-    
-    let dpopProof = await generateDPoPProof("POST", xrpcUrl, session.dpop_jwk, session.access_token,undefined);
-    console.log("Access token:", session.access_token);
+    let dpopProof = await generateDPoPProof("POST", xrpcUrl, session.dpop_jwk, session.access_token, undefined);
 
-let headers = {
-  Authorization: `DPoP ${session.access_token}`, // ← Bearer → DPoP
-  DPoP: dpopProof,
-  "Content-Type": "application/json",
-};
+    let headers = {
+      Authorization: `DPoP ${session.access_token}`, // ← Bearer → DPoP
+      DPoP: dpopProof,
+      "Content-Type": "application/json",
+    };
 
     let pdsRes = await fetch(xrpcUrl, { method: "POST", headers, body: JSON.stringify(body) });
-        console.log(await pdsRes.json())
 
     // 401 + dpop-nonce が返ってきた場合は nonce 再送
     if (pdsRes.status === 401) {
       const nonce = pdsRes.headers.get("dpop-nonce");
       if (nonce) {
-        dpopProof = await generateDPoPProof("POST", xrpcUrl, session.dpop_jwk,session.access_token,nonce);
+        dpopProof = await generateDPoPProof("POST", xrpcUrl, session.dpop_jwk, session.access_token, nonce);
         headers.DPoP = dpopProof;
         pdsRes = await fetch(xrpcUrl, { method: "POST", headers, body: JSON.stringify(body) });
-        console.log(await pdsRes.json())
       }
     }
 

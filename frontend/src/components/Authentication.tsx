@@ -1,8 +1,9 @@
 "use client";
 import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
 import { getClientMetadata } from '@/logic/HandleOauth';
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import type { Did } from '@atcute/lexicons';
-import { AuthorizationServerMetadata, configureOAuth, createAuthorizationUrl, IdentityMetadata, resolveFromIdentity } from '@atcute/oauth-browser-client';
+import { AuthorizationServerMetadata, configureOAuth, IdentityMetadata } from '@atcute/oauth-browser-client';
 import {
   Anchor,
   Button,
@@ -14,13 +15,15 @@ import {
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
+import { X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from "react";
-import { X } from 'lucide-react';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [checked, setChecked] = useState(false);
+  const handle = useXrpcAgentStore(state => state.handle);
+  const setHandle = useXrpcAgentStore(state => state.setHandle);
   const messages = useMessages();
   const locale = useLocale();
 
@@ -30,7 +33,7 @@ export function Authentication(props: PaperProps) {
 
   const form = useForm({
     initialValues: {
-      handle: '',
+      handle: handle || '',
     },
 
     validate: {
@@ -51,15 +54,9 @@ export function Authentication(props: PaperProps) {
 
   async function handleSubmit(values: typeof form.values) {
     console.log('handleSubmit')
-    const serverMetadata = getClientMetadata();
-    configureOAuth({
-      metadata: {
-        client_id: serverMetadata.client_id || '',
-        redirect_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/callback`,
-      },
-    });
+    setIsLoading(true);
 
-    let identity: IdentityMetadata, metadata: AuthorizationServerMetadata, did: Did | null = null;
+    let did: Did | null = null;
 
     notifications.show({
       id: 'login-process',
@@ -97,13 +94,7 @@ export function Authentication(props: PaperProps) {
         }
       }
 
-      // DIDからDid DocumentとPDSのOAuth Metadataを取得
-      const resolved = await resolveFromIdentity(did);
-      identity = resolved.identity
-      metadata = resolved.metadata
-
-      // rawはhandleに上書き
-      identity.raw = values.handle
+      setHandle(values.handle)
 
     } catch (e) {
       // 想定外の例外キャッチ
@@ -121,17 +112,7 @@ export function Authentication(props: PaperProps) {
       return;
     }
 
-
-    let host;
-    if (identity.pds.host.endsWith('.bsky.network')) {
-      host = 'bsky.social'
-    } else {
-      host = identity.pds.host
-    }
-
-    const message = messages.login.redirect.replace("{1}", host)
-    window.localStorage.setItem('oauth.handle', values.handle)
-    window.localStorage.setItem('oauth.redirecturl', window.location.href);
+    const message = messages.login.redirect
 
     notifications.update({
       id: 'login-process',
@@ -142,43 +123,24 @@ export function Authentication(props: PaperProps) {
       autoClose: false
     });
 
-    let authUrl;
     try {
-      authUrl = await createAuthorizationUrl({
-        metadata: metadata,
-        identity: identity,
-        scope:  "atproto repo:blue.rito.feed.bookmark?action=create&action=update&action=delete rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
-      });
+
+      window.location.href = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(window.location.href)}`;
+
     } catch (e) {
-      console.error('createAuthorizationUrl error:', e);
-      notifications.clean()
-      notifications.show({
+      notifications.update({
+        id: 'login-process',
         title: 'Error',
-        message: 'Failed to create authorization URL',
+        message: 'Unexpected Error:' + e,
         color: 'red',
+        loading: false,
+        autoClose: true,
         icon: <X />
       });
+      // ここで通知や UI 処理
+    } finally {
       setIsLoading(false);
-      return;
     }
-
-    // recommended to wait for the browser to persist local storage before proceeding
-    await sleep(200);
-
-    // redirect the user to sign in and authorize the app
-    window.location.assign(authUrl);
-
-    // if this is on an async function, ideally the function should never ever resolve.
-    // the only way it should resolve at this point is if the user aborted the authorization
-    // by returning back to this page (thanks to back-forward page caching)
-    await new Promise((_resolve, reject) => {
-      const listener = () => {
-        reject(new Error(`user aborted the login request`));
-      };
-
-      window.addEventListener('pageshow', listener, { once: true });
-
-    })
 
   }
 

@@ -75,11 +75,11 @@ export default function Header() {
 
           <Group h="100%" gap={0} visibleFrom="sm" className={classes.center}>
 
-            <Link href={`/${locale}/mybookmark`} className={classes.link}>
+            <Link href={`/${locale}/my/bookmark`} className={classes.link}>
               {messages.header.bookmark}
             </Link>
 
-            <Link href={`/${locale}/search`} className={classes.link}>
+            <Link href={`/${locale}/bookmark/search`} className={classes.link}>
               {messages.header.browse}
             </Link>
             <a href="#" className={classes.link}>
@@ -114,10 +114,10 @@ export default function Header() {
           <Divider my="sm" />
 
           <Stack pl="md" gap={1}>
-            <Link href={`/${locale}/mybookmark`} className={classes.link} onClick={closeDrawer}>
+            <Link href={`/${locale}/my/bookmark`} className={classes.link} onClick={closeDrawer}>
               {messages.header.bookmark}
             </Link>
-            <Link href={`/${locale}/search`} className={classes.link} onClick={closeDrawer}>
+            <Link href={`/${locale}/bookmark/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}
             </Link>
             <a href="#" className={classes.link}>

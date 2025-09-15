@@ -42,7 +42,7 @@
 		"handle": "Handle",
 		"create": "Create a Bluesky account",
 		"didresolve": "Resolving DID",
-		"redirect": "Redirecting to {1}",
+		"redirect": "Redirecting to Authorize page",
 		"field": {
 			"handle": {
 				"title": "Handle",
@@ -156,8 +156,8 @@
 			"delete": "Delete"
 		}
 	},
-		"inform": {
-			"error": "System Error occured",
-			"success": "Delete operation successed"
-		}
+	"inform": {
+		"error": "System Error occured",
+		"success": "Delete operation successed"
+	}
 }

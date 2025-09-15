@@ -56,6 +56,7 @@ model Comment {
   moderation_result String?  // "spam", "adult", "safe" など
   
   @@index([bookmark_uri])  // インデックス追加
+  @@unique([bookmark_uri, lang], name: "bookmark_uri_lang") 
 }
 
 model Tag {
@@ -90,4 +91,14 @@ model Resolver {
 
   @@id([nsid, did])
   @@map("resolver") // PostgreSQL のテーブル名
+}
+
+model OAuthState {
+  state         String   @id
+  code_verifier String
+  redirect_uri  String
+  return_to     String?   // 任意で戻るページを保存できるように
+  created_at    DateTime @default(now()) @db.Timestamptz
+
+  @@map("OAuthState") // PostgreSQL 上のテーブル名を変更
 }

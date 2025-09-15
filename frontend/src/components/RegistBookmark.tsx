@@ -11,6 +11,7 @@ import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
+import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { Switch } from '@mantine/core';
 
 type RegistBookmarkProps = {
@@ -38,10 +39,9 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
     const [rkey, setRkey] = useState<string | null>(null);
     const [schema, setSchema] = useState<string | null>(null);
-    const client = useXrpcAgentStore(state => state.client);
-    const oauthUserAgent = useXrpcAgentStore(state => state.oauthUserAgent);
-    const identities = useXrpcAgentStore(state => state.identities);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
+    const thisClient = useXrpcAgentStore(state => state.thisClient);
+    const userProf = useXrpcAgentStore(state => state.userProf);
     const locale = useLocale();
     const [activeTab, setActiveTab] = useState<string | null>(locale);
 
@@ -127,15 +127,16 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
         setUrlError(null);
         setSchema(null);
 
+        if(!userProf) return
+
         try {
             // URLが正しいかチェック
             const url = new URL(value)
             const domain = url.hostname
-            const identify = identities.find(identity => identity.did === oauthUserAgent?.sub)
+            const handle = userProf.handle
 
             if (url.pathname === '/' || url.pathname === '') {
-                if (identify && (domain == identify.handle || domain.endsWith('.' + identify.handle))) {
-                    console.log('認証できる')
+                if ((domain == handle || domain.endsWith('.' + handle))) {
                     setIsVerify(true)
                 }
             }
@@ -327,14 +328,14 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
 
         }
 
-        if (!client || !oauthUserAgent) {
+        if (!activeDid ) {
             return
         }
 
         try {
-            const ret = await client.post('com.atproto.repo.applyWrites', {
+            const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
-                    repo: oauthUserAgent.sub,
+                    repo: activeDid as ActorIdentifier,
                     writes: writes
                 },
             });
@@ -416,7 +417,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
                     description={messages.create.field.tag.description}
                     placeholder={messages.create.field.tag.placeholder}
                     maxTags={10}
-                    maxLength={20}
+                    maxLength={25}
                     leftSection={<Tag size={16} />}
                     clearable
                     styles={{ input: { fontSize: 16, }, }} />

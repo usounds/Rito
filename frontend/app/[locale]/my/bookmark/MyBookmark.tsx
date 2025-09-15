@@ -7,13 +7,13 @@ import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 
 export function MyBookmark() {
-    const client = useXrpcAgentStore(state => state.client);
+    const activeDid = useXrpcAgentStore(state => state.activeDid);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const messages = useMessages();
     const locale = useLocale();
 
     //未ログイン
-    if (!client) return <>
+    if (!activeDid) return <>
         <Box
             style={{
                 display: 'flex',

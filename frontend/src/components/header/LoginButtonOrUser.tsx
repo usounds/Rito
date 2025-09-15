@@ -11,23 +11,22 @@ import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { BookmarkPlus } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { ActorIdentifier } from '@atcute/lexicons/syntax';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
     const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
-    const client = useXrpcAgentStore(state => state.client);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
-    const setOauthUserAgent = useXrpcAgentStore(state => state.setOauthUserAgent);
-    const setAgent = useXrpcAgentStore(state => state.setAgent);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const userProf = useXrpcAgentStore(state => state.userProf);
+    const publicAgent = useXrpcAgentStore(state => state.publicAgent);
     const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const isNeedReload = useMyBookmark(state => state.isNeedReload);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
     const messages = useMessages();
     const locale = useLocale();
-    const isLoggedIn = !!client;
+    const isLoggedIn = !!activeDid;
     const [modalSize, setModalSize] = useState('70%')
 
     useEffect(() => {
@@ -45,53 +44,42 @@ export function LoginButtonOrUser() {
     }, [])
 
     useEffect(() => {
-        if (activeDid === null || client != null) {
-            return
-        }
 
         (async () => {
-            const serverMetadata = getClientMetadata();
-            configureOAuth({
-                metadata: {
-                    client_id: serverMetadata.client_id || '',
-                    redirect_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/callback`,
-                },
-            });
-            const session = await getSession(activeDid as `did:${string}:${string}`, { allowStale: true });
+            try {
+                // まず /api/me から activeDid を取得
+                const meRes = await fetch("/api/me");
+                if (!meRes.ok) {
+                    console.warn("Not authenticated yet");
+                    return;
+                }
+                const meData = await meRes.json();
+                const did = meData.did as ActorIdentifier;
+                console.log(`${did} was successfully resumed session.`);
+                if (!did) return;
 
-            const agent = new OAuthUserAgent(session);
-            setOauthUserAgent(agent);
-            const rpc = new Client({ handler: agent });
-            setAgent(rpc);
-            console.log(`${agent.sub} was successfully resumed session from ${agent.session.info.server.issuer}.`)
+                setActiveDid(did);
 
-            const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(activeDid)}`);
 
-            if (!res.ok) {
-                throw new Error(`Failed to fetch bookmarks: ${res.statusText}`);
+                // ブックマーク取得
+                const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(did)}`);
+                if (res.ok) {
+                    const data: Bookmark[] = await res.json();
+                    setMyBookmark(data);
+                }
 
+                // ユーザープロフィール取得
+                const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+                    params: { actor: did },
+                });
+                if (userProfile.ok) setUserProf(userProfile.data);
+
+            } catch (err) {
+                console.error("Error initializing user session:", err);
+                setActiveDid(null);
             }
-
-            //const data: Bookmark[] = await res.json(); // 型を Bookmark[] と指定
-            const data = await res.json();
-
-            setMyBookmark(data); // React 側で tags を string[] として使える
-            const userProfile = await rpc.get(`app.bsky.actor.getProfile`, {
-                params: {
-                    actor: agent.sub,
-                },
-            })
-            if (!userProfile.ok) {
-                setAgent(null)
-                setActiveDid(null)
-                return
-
-            }
-            setUserProf(userProfile.data);
-
-
         })();
-    }, [activeDid, client]);
+    }, []);
 
     useEffect(() => {
         if (!isNeedReload || !activeDid) return;
@@ -143,7 +131,7 @@ export function LoginButtonOrUser() {
                         title={messages.create.title}
                         centered
                     >
-                        <RegistBookmark onClose={() => setQuickRegistBookmark(false)}  />
+                        <RegistBookmark onClose={() => setQuickRegistBookmark(false)} />
                     </Modal>
                 </>
 

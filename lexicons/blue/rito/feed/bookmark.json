@@ -58,14 +58,14 @@
           },
           "tags": {
             "type": "array",
-            "description": "Tags describing the uri's description (max 10 tags, 20 charactors)",
+            "description": "Tags describing the uri's description (max 10 tags, 25 charactors)",
             "maxLength": 10,
             "items": {
               "type": "string",
               "minGraphemes": 1,
-              "maxGraphemes": 20,
+              "maxGraphemes": 25,
               "minLength": 1,
-              "maxLength": 200
+              "maxLength": 250
             }
           },
           "ogpTitle": {

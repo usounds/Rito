@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
 
     // トークンをクッキーに保存してリダイレクト
-    const res = NextResponse.redirect(returnTo);
+    const res = NextResponse.redirect(returnTo||'');
     res.cookies.set("access_token", tokenData.access_token, {
       httpOnly: true,
       path: "/",

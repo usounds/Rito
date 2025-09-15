@@ -1,12 +1,9 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
 import { RegistBookmark } from '@/components/RegistBookmark';
-import { getClientMetadata } from '@/logic/HandleOauth';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark } from '@/type/ApiTypes';
-import { Client } from '@atcute/client';
-import { OAuthUserAgent, configureOAuth, getSession } from '@atcute/oauth-browser-client';
 import { Affix, Avatar, Button, Modal } from "@mantine/core";
 import { BookmarkPlus } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
@@ -59,7 +56,6 @@ export function LoginButtonOrUser() {
                 if (!did) return;
 
                 setActiveDid(did);
-
 
                 // ブックマーク取得
                 const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(did)}`);

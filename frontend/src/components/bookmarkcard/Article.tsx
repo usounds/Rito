@@ -1,6 +1,6 @@
 "use client"
-import { RegistBookmark } from '@/components/RegistBookmark';
 import { DeleteBookmark } from '@/components/DeleteBookmark';
+import { RegistBookmark } from '@/components/RegistBookmark';
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
@@ -15,12 +15,12 @@ import {
     Modal,
     Text
 } from '@mantine/core';
-import { BadgeCheck, SquarePen, Trash2 } from 'lucide-react';
-import { useMessages } from 'next-intl';
+import { SquarePen, Trash2 } from 'lucide-react';
+import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
-import { useRouter } from 'next/navigation';
 import classes from './Article.module.scss';
 
 type ArticleCardProps = {
@@ -42,6 +42,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
     const router = useRouter();
+        const locale = useLocale();
 
     useEffect(() => {
         const updateSize = () => {
@@ -118,7 +119,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
                 <Text className={classes.title} fw={500} component="a" {...linkProps} onClick={(e) => {
                     e.preventDefault();       // aタグのデフォルト動作をキャンセル
-                    router.push(`/ja/bookmark/details?uri=${encodeURIComponent(url)}`);
+                    router.push(`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`);
                 }}>
                     {title}
                 </Text>

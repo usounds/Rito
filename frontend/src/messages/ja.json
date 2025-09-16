@@ -179,6 +179,9 @@
 		"inform": {
 			"error": "システムエラーが発生しました",
 			"success": "登録しました"
+		},
+		"error": {
+			"uriRequired": "URIは必須です"
 		}
 	},
 	"editschema": {
@@ -192,6 +195,11 @@
 			"success": "登録しました"
 		},
 		"field": {
+			"nsid": {
+				"title": "NSID",
+				"placeholder": "uk.skyblur.post",
+				"description": "NSIDを指定します"
+			},
 			"schema": {
 				"title": "スキーマ",
 				"placeholder": "https://skyblur.uk/post/{did}/{rkey}",

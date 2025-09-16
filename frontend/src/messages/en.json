@@ -180,6 +180,9 @@
 		"inform": {
 			"error": "A system error has occurred",
 			"success": "Successfully registered"
+		},
+		"error": {
+			"uriRequired": "URI is required"
 		}
 	},
 	"editschema": {
@@ -193,6 +196,11 @@
 			"success": "Regist successfully"
 		},
 		"field": {
+			"nsid": {
+				"title": "NSID",
+				"placeholder": "uk.skyblur.post",
+				"description": "Set NSID"
+			},
 			"schema": {
 				"title": "Schema",
 				"placeholder": "https://skyblur.uk/post/{did}/{rkey}",

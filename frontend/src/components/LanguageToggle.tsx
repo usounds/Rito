@@ -1,21 +1,25 @@
 "use client";
 
-import { ActionIcon } from '@mantine/core';
+import { ActionIcon } from "@mantine/core";
 import React from "react";
-import { Languages } from 'lucide-react';
-import { useRouter, usePathname } from 'next/navigation';
+import { Languages } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 
 const LanguageToggle: React.FC = () => {
   const router = useRouter();
-  const pathname = usePathname(); // 現在のパスを取得
+  const pathname = usePathname(); // 現在のパス
 
   const toggleLocale = () => {
-    // ここで切り替えたい言語を決定
-    const newLocale = pathname.startsWith('/ja') ? 'en' : 'ja';
-    
-    // 現在のパスのロケール部分を置換して遷移
+    const newLocale = pathname.startsWith("/ja") ? "en" : "ja";
+
+    // /ja or /en を置換
     const newPath = pathname.replace(/^\/(ja|en)/, `/${newLocale}`);
-    router.replace(newPath);
+
+    // クエリとハッシュを取得（CSR限定）
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const hash = typeof window !== "undefined" ? window.location.hash : "";
+
+    router.replace(`${newPath}${search}${hash}`);
   };
 
   return (

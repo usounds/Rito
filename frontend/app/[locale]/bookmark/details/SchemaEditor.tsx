@@ -61,12 +61,11 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
         const resolversJson: Resolver[] = await resolverRes.json();
 
         const merged: MergedData[] = ufoJson.matches.map((match) => {
-          const related = resolversJson.filter((r) => r.nsid.startsWith(match.nsid)) || [];
+          const related = resolversJson.filter((r) => r.nsid === match.nsid) || [];
           const owner = related.find((r) => r.verified);
           const others = related.filter((r) => !r.verified) || [];
           return { ...match, owner, others };
         });
-
         setData(merged);
       } catch (e: any) {
         setError(e.message);
@@ -143,22 +142,27 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
               }
 
               if (match.others?.length > 0) {
-                // schema ごとにグループ化 (reduce)
                 const grouped = match.others.reduce<Record<string, Resolver[]>>((acc, r) => {
                   if (!acc[r.schema]) acc[r.schema] = [];
                   acc[r.schema].push(r);
                   return acc;
                 }, {});
 
-                return Object.entries(grouped).map(([schema, resolvers], idx) => (
-                  <Table.Tr key={`${match.nsid}-other-${idx}`}>
+                // resolvers.length が最大のものを探す
+                const [maxSchema, maxResolvers] = Object.entries(grouped).reduce(
+                  (max, current) => (current[1].length > max[1].length ? current : max),
+                  ["", [] as Resolver[]]
+                );
+
+                return (
+                  <Table.Tr key={`${match.nsid}-other`}>
                     <Table.Td>{match.nsid}</Table.Td>
-                    <Table.Td>{schema}</Table.Td>
-                    <Table.Td >{resolvers.length}</Table.Td>
+                    <Table.Td>{maxSchema}</Table.Td>
+                    <Table.Td>{maxResolvers.length}</Table.Td>
                     <Table.Td>
                       <Button
                         disabled={!activeDid}
-                        onClick={() => handleEdit(match.nsid, schema)}
+                        onClick={() => handleEdit(match.nsid, maxSchema)}
                         variant="outline"
                         size="xs"
                       >
@@ -166,7 +170,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                       </Button>
                     </Table.Td>
                   </Table.Tr>
-                ));
+                );
               } else {
                 return (
                   <tr key={`${match.nsid}-no-resolver`}>
@@ -175,7 +179,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                     <Table.Td >0</Table.Td>
                     <Table.Td>
                       <Button
-                       disabled={!activeDid}
+                        disabled={!activeDid}
                         onClick={() => handleEdit(match.nsid)}
                         variant="outline"
                         size="xs"

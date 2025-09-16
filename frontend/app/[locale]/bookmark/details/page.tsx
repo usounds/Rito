@@ -76,7 +76,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     // searchParams を await してから使う
     const search = await searchParams;
     const uri = typeof search.uri === "string" ? search.uri : undefined;
-    if(!uri) return <>{t('detail.error.uriRequired')}</>
+    if (!uri) return <>{t('detail.error.uriRequired')}</>
 
     const bookmarks = await prisma.bookmark.findMany({
         where: {
@@ -237,6 +237,10 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
                     <TabsPanel value="bookmarks" pt="xs">
                         <Stack my="md">
+
+                            {otherBookmarks.length === 0 &&
+                                <Text>{t('detail.nocomment')}</Text>
+                            }
                             <Timeline bulletSize={20} lineWidth={4}>
                                 {otherBookmarks.map((bookmark, idx) => {
                                     const comment =
@@ -257,23 +261,35 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                                 p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
                                                             }}
                                                         >
-                                                            {comment.comment || 'No description available'}
+                                                            {comment.comment || t('detail.nocomment')}
                                                         </Markdown>
                                                     </Spoiler>
                                                 </BlurReveal>
                                             </Text>
                                             <Text c="dimmed" size="sm">
-                                                {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
+                                                <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} style={{
+                                                    textDecoration: 'none',
+                                                    color: 'inherit',
+                                                    wordBreak: 'break-all',   // 単語途中でも改行
+                                                    overflowWrap: 'anywhere', // 長いURLを折り返す
+                                                }} >
+                                                    {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
+
+                                                </Link>
                                             </Text>
                                         </TimelineItem>
                                     );
                                 })}
+
                             </Timeline>
                         </Stack>
                     </TabsPanel>
 
                     <TabsPanel value="posts" pt="xs">
                         <Stack my="md">
+                            {postDataArray.length === 0 &&
+                                <Text>{t('detail.nocomment')}</Text>
+                            }
                             <Timeline bulletSize={20} lineWidth={4}>
                                 {postDataArray.map((post, idx) => (
                                     <TimelineItem key={idx}>
@@ -289,7 +305,15 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                             </Spoiler>
                                         </Text>
                                         <Text c="dimmed" size="sm">
-                                            {"by @" + post.handle} <TimeAgo date={post.indexedAt} />
+                                            <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
+                                                textDecoration: 'none',
+                                                color: 'inherit',
+                                                wordBreak: 'break-all',   // 単語途中でも改行
+                                                overflowWrap: 'anywhere', // 長いURLを折り返す
+                                            }}>
+                                                {"by @" + post.handle}
+                                            </Link>
+                                            <TimeAgo date={post.indexedAt} />
                                         </Text>
                                     </TimelineItem>
                                 ))}

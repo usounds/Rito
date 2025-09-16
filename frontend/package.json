@@ -12,7 +12,6 @@
     "lex-gen": "npx lex-cli generate -c ./lex.config.js",
     "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/blocklist.json",
     "update:publicsuffix": "curl -s https://publicsuffix.org/list/public_suffix_list.dat | grep -vE '(^//|^$)' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/publicSuffixList.json"
-
   },
   "dependencies": {
     "@atcute/bluesky": "^3.2.1",
@@ -23,7 +22,7 @@
     "@mantine/form": "^8.2.8",
     "@mantine/hooks": "^8.2.7",
     "@mantine/notifications": "^8.2.8",
-    "@prisma/client": "^6.16.1",
+    "@prisma/client": "^6.16.2",
     "@tabler/icons-react": "^3.34.1",
     "jose": "^6.1.0",
     "lucide-react": "^0.542.0",
@@ -34,6 +33,7 @@
     "react-dom": "19.1.0",
     "react-markdown": "^10.1.0",
     "sass": "^1.91.0",
+    "swr": "^2.3.6",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
-    "prisma": "^6.16.1",
+    "prisma": "^6.16.2",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

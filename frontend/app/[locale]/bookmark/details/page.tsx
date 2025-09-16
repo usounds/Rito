@@ -76,6 +76,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     // searchParams を await してから使う
     const search = await searchParams;
     const uri = typeof search.uri === "string" ? search.uri : undefined;
+    if(!uri) return <>{t('detail.error.uriRequired')}</>
 
     const bookmarks = await prisma.bookmark.findMany({
         where: {

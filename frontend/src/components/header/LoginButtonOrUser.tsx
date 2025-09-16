@@ -100,7 +100,7 @@ export function LoginButtonOrUser() {
             } catch (err) {
                 console.error("Reload failed:", err);
             }
-        }, 2000);
+        }, 4000);
 
         return () => clearTimeout(timer);
     }, [isNeedReload, activeDid]);

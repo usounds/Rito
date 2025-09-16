@@ -364,10 +364,30 @@ async function init() {
   jetstream.onCreate(SERVICE, upsertResolver);
   jetstream.onUpdate(SERVICE, upsertResolver);
 
+  // TXT レコード取得関数
+  const fetchTxtRecords = async (subDomain: string): Promise<string | null> => {
+    try {
+      const response = await fetch(`https://dns.google/resolve?name=${subDomain}&type=TXT`);
+      const data = await response.json();
+      if (!data.Answer || data.Answer.length === 0) return null;
+
+      const txtData = data.Answer.map((a: any) => a.data)
+        .join("")
+        .replace(/^"|"$/g, "")
+        .replace(/"/g, "");
+
+      const didMatch = txtData.match(/did:[\w:.]+/);
+      return didMatch ? didMatch[0] : null;
+    } catch (error) {
+      logger.error(`TXTレコードの取得に失敗しました (${subDomain}): ${error instanceof Error ? error.message : String(error)}`);
+      return null;
+    }
+  };
+
+
   async function upsertResolver(
     event: CommitCreateEvent<typeof SERVICE> | CommitUpdateEvent<typeof SERVICE>
   ) {
-
     const record = event.commit.record as any;
     const nsid = event.commit.rkey;
     const did = event.did;
@@ -380,8 +400,20 @@ async function init() {
       return;
     }
 
+
+    // verified がまだ false なら DNS TXT レコードもチェック
+    const parts = nsid.split('.').reverse(); // uk.skyblur.post -> ['post', 'skyblur', 'uk']
+    const subDomain = `_lexicon.${parts.slice(1).join('.')}`;
+    const foundDid = await fetchTxtRecords(subDomain);
+
+    if (foundDid && foundDid === did) {
+      verified = true;
+      logger.info(`Verified via DNS TXT: ${subDomain} -> ${foundDid}`);
+    }
+
     try {
-      // ユーザープロフィール取得
+
+      // まずユーザープロフィールから handle を取得
       const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
         params: { actor: did },
       });
@@ -389,12 +421,9 @@ async function init() {
       if (userProfile.ok) {
         handle = userProfile.data.handle;
 
-        // handle を逆順にする
-        // 例: skyblur.uk → uk.skyblur
         const reversedHandle = handle.split('.').reverse().join('.');
-
-        // NSID が reversedHandle で始まるかチェック
-        if (nsid.startsWith(reversedHandle)) {
+        if (! verified && nsid.startsWith(reversedHandle)) {
+          logger.info(`Verified via Profile: ${did} -> ${reversedHandle}`);
           verified = true;
         }
       }
@@ -402,20 +431,22 @@ async function init() {
       logger.error(`Error fetching profile for ${did}: ${err}`);
     }
 
+
     try {
       await prisma.resolver.upsert({
         where: { nsid_did: { nsid, did } },
-        update: { schema, verified, indexed_at:  new Date() },
-        create: { nsid, did, schema, verified, indexed_at:  new Date() },
+        update: { schema, verified, indexed_at: new Date() },
+        create: { nsid, did, schema, verified, indexed_at: new Date() },
       });
 
       logger.info(
-        `Upserted resolver: nsid=${nsid}, did=${did}, handle=${handle}, verified=${verified}`
+        `Upserted resolver: nsid=${nsid}, ${did}, handle=${handle}, verified=${verified}`
       );
     } catch (err) {
       logger.error(`Error in upsertResolver for nsid=${nsid}, did=${did}: ${err}`);
     }
   }
+
 
 
   jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) => {

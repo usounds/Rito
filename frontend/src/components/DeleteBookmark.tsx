@@ -17,6 +17,7 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
     const messages = useMessages();
     const thisClient = useXrpcAgentStore(state => state.thisClient);
     const [loading, setLoading] = useState(false);
+    const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
 
     const handleDelete = async () => {
@@ -41,6 +42,9 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
                     ],
                 },
             });
+
+            const prevBookmarks = useMyBookmark.getState().myBookmark;
+            setMyBookmark(prevBookmarks.filter(b => b.uri !== aturi));
 
             notifications.show({
                 title: 'Success',

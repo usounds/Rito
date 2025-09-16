@@ -40,6 +40,7 @@ export function LoginButtonOrUser() {
     }, [])
 
     useEffect(() => {
+        if(activeDid) return
 
         (async () => {
             try {
@@ -99,7 +100,7 @@ export function LoginButtonOrUser() {
             } catch (err) {
                 console.error("Reload failed:", err);
             }
-        }, 1500);
+        }, 2000);
 
         return () => clearTimeout(timer);
     }, [isNeedReload, activeDid]);

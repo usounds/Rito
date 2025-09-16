@@ -168,6 +168,8 @@
 		"bluesky": "Bluesky",
 		"resolver": "Lexicon",
 		"view": "View moderated content",
+		"nocomment": "No comment",
+		"needlogin": "You need to log in to view comments",
 		"field": {
 			"developer": {
 				"title": "Developer Mode"
@@ -189,11 +191,13 @@
 		"title": "Change Schema",
 		"button": {
 			"close": "Close",
-			"regist": "Regist"
+			"regist": "Edit",
+			"delete": "Delete your settings"
 		},
 		"inform": {
 			"error": "A system error has occurred",
-			"success": "Regist successfully"
+			"success": "Regist successfully",
+			"successDelete": "Delete successfully"
 		},
 		"field": {
 			"nsid": {
@@ -209,6 +213,9 @@
 			"invalid": {
 				"title": "No AppView URL exists for this NSID"
 			}
+		},
+		"error": {
+			"schemaRequired": "Either rkey or did is required"
 		}
 	}
 }

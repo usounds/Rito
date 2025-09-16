@@ -42,7 +42,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
     const router = useRouter();
-        const locale = useLocale();
+    const locale = useLocale();
 
     useEffect(() => {
         const updateSize = () => {
@@ -193,20 +193,30 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         </Modal>
                     </>
                 )}
-                <Link
-                    href={localUrl || ''}
-                    target="_blank"
-                    style={{
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        wordBreak: 'break-all',   // 単語途中でも改行
-                        overflowWrap: 'anywhere', // 長いURLを折り返す
-                    }}
-                >
-                    <Text fz="xs" c="dimmed">
-                        {domain} {handle ? "by @" + handle : ""} <TimeAgo date={date} />
-                    </Text>
-                </Link>
+                <Text fz="xs" c="dimmed">
+                    <Link
+                        href={localUrl || ''}
+                        target="_blank"
+                        style={{
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            wordBreak: 'break-all',   // 単語途中でも改行
+                            overflowWrap: 'anywhere', // 長いURLを折り返す
+                        }}
+                    >
+                        {domain + ' '}
+                    </Link>
+                    <Link href={`/${locale}/profile/${encodeURIComponent(handle||'')}`} 
+                        style={{
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            wordBreak: 'break-all',   // 単語途中でも改行
+                            overflowWrap: 'anywhere', // 長いURLを折り返す
+                        }}>
+                    {handle ? "by @" + handle + ' ' : ""} 
+                    </Link>
+                    <TimeAgo date={date} />
+                </Text>
 
             </Group>
         </Card>

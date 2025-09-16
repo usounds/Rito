@@ -167,6 +167,8 @@
 		"bluesky": "Bluesky",
 		"resolver": "Lexicon",
 		"view": "モデレーションされた文章を見る",
+		"nocomment": "コメントはありません",
+		"needlogin": "コメントを参照するにはログインが必要です",
 		"field": {
 			"developer": {
 				"title": "開発者モード"
@@ -188,11 +190,13 @@
 		"title": "スキーマ変更",
 		"button": {
 			"close": "閉じる",
-			"regist": "登録"
+			"regist": "変更",
+			"delete": "あなたの登録値を削除"
 		},
 		"inform": {
 			"error": "システムエラーが発生しました",
-			"success": "登録しました"
+			"success": "登録しました",
+			"successDelete": "削除しました"
 		},
 		"field": {
 			"nsid": {
@@ -208,6 +212,9 @@
 			"invalid": {
 				"title": "このNSIDに対応するAppViewのURLは存在しない"
 			}
+		},
+		"error": {
+			"schemaRequired": "rkeyかdidは必須です"
 		}
 	}
 }

@@ -64,7 +64,7 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
   })
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
-  
+
   return (
     <Stack>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
@@ -88,15 +88,16 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
             <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <Article
                 url={b.subject}
-                title={b.ogpTitle || comment.title || ''}
+                title={query?.handle?.length ? (comment.title || '') : (b.ogpTitle || comment.title || '')}
                 handle={b.handle}
-                comment={b.ogpDescription || comment.comment || ''}
+                comment={query?.handle?.length ? (comment.comment || '') : (b.ogpDescription || comment.comment || '')}
                 tags={b.tags}
                 image={b.ogpImage || undefined}
                 date={displayDate}
                 moderations={moderationList}
               />
             </div>
+
           );
         })}
       </SimpleGrid>

@@ -26,7 +26,9 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
     const [schemaValue, setSchemaValue] = useState(
         !schema || schema === "-" ? `https://${domain}/` : schema
     );
-    const [checked, setChecked] = useState(schema === "invalid:schema");
+    const [nsidValue, setNsidValue] = useState(nsid);
+    const [checked, setChecked] = useState(schema === "missing:schema");
+    const [schemaError, setSchemaError] = useState('');
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const isChecked = event.currentTarget.checked;
@@ -34,7 +36,7 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
 
         if (isChecked) {
             // スイッチがオンなら schemaValue をデフォルトに戻す
-            setSchemaValue(`invalid:schema`);
+            setSchemaValue(`missing:schema`);
         } else {
             setSchemaValue(`https://${domain}/`)
         }
@@ -42,6 +44,11 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
 
     const handleEdit = async () => {
         if (!thisClient) return;
+
+        if (!checked && !schemaValue.includes('did') && !schemaValue.includes('rkey')) {
+            setSchemaError(messages.editschema.error.schemaRequired)
+            return
+        }
 
         setLoading(true);
 
@@ -55,18 +62,18 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
             writes.push({
                 $type: "com.atproto.repo.applyWrites#create" as const,
                 collection: "blue.rito.service.schema" as `${string}.${string}.${string}`,
-                rkey: nsid,
+                rkey: nsidValue,
                 value: obj as Record<string, unknown>,
             });
 
         } else {
+
             writes.push({
                 $type: "com.atproto.repo.applyWrites#update" as const,
                 collection: "blue.rito.service.schema" as `${string}.${string}.${string}`,
-                rkey: nsid,
+                rkey: nsidValue,
                 value: obj as Record<string, unknown>,
             });
-
         }
 
         try {
@@ -91,6 +98,54 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
 
             }
 
+
+        } catch {
+
+            notifications.show({
+                title: 'Error',
+                message: messages.editschema.inform.error,
+                color: 'red',
+                icon: <X />
+            });
+
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        setLoading(true);
+
+        const writes = []
+        writes.push({
+            $type: "com.atproto.repo.applyWrites#delete" as const,
+            collection: "blue.rito.service.schema" as `${string}.${string}.${string}`,
+            rkey: nsidValue
+        });
+
+        try {
+            const ret = await thisClient.post('com.atproto.repo.applyWrites', {
+                input: {
+                    repo: activeDid as ActorIdentifier,
+                    writes: writes
+                },
+            });
+
+            if (ret.ok) {
+
+                notifications.show({
+                    title: 'Success',
+                    message: messages.editschema.inform.successDelete,
+                    color: 'teal',
+                    icon: <Check />
+                });
+                onClose();
+                setLoading(false);
+                return
+
+            }
+
+
         } catch {
 
             notifications.show({
@@ -107,12 +162,21 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
 
     return (
         <Stack>
+
+            <TextInput
+                placeholder={messages.editschema.field.nsid.placeholder}
+                label={messages.editschema.field.nsid.title}
+                description={messages.editschema.field.nsid.description}
+                value={nsidValue}
+                onChange={(e) => setNsidValue(e.currentTarget.value)}
+            />
             {!checked &&
                 <TextInput
                     placeholder={messages.editschema.field.schema.placeholder}
                     label={messages.editschema.field.schema.title}
                     description={messages.editschema.field.schema.description}
                     value={schemaValue}
+                    error={schemaError}
                     onChange={(e) => setSchemaValue(e.currentTarget.value)}
                 />
             }
@@ -125,8 +189,14 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
                 <Button variant="default" onClick={onClose}>
                     {messages.editschema.button.close}
                 </Button>
+                {!isCreate &&
+                    <Button color="red" onClick={handleDelete}
+                        loading={loading}
+                        leftSection={<Trash size={16} />}>
+                        {messages.editschema.button.delete}
+                    </Button>
+                }
                 <Button
-                    leftSection={<Pencil size={16} />}
                     loading={loading}
                     onClick={handleEdit}
                 >

@@ -5,8 +5,6 @@ const AIP_BASE = process.env.OIDC_PROVIDER!;
 const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const REDIRECT_URI = `${process.env.NEXT_PUBLIC_URL}/api/oauth/callback`;
 
-console.log(REDIRECT_URI)
-
 // URLセーフな Base64
 function base64URLEncode(str: Buffer) {
   return str.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

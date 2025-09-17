@@ -2,7 +2,7 @@
 import { RegistSchema } from "./RegistSchema";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
-import { Button, Modal, Table, Switch, Group } from "@mantine/core";
+import { Button, Modal, Table, Switch, Group, Text } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMessages } from "next-intl";
 import { useEffect, useState } from "react";
@@ -92,9 +92,9 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
     open();
   };
 
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
-  if (data.length === 0) return <p>No matches found</p>;
+  if (loading) return  <Group my="sm"><Text c="dimmed">Loading...</Text></Group>;
+  if (error) return <Group my="sm"><Text c="dimmed">Error: {error}</Text></Group>;
+  if (data.length === 0) return <Group my="sm"><Text c="dimmed">No matches found</Text></Group>;
 
   return (
     <>

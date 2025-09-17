@@ -130,6 +130,7 @@
 		"button": {
 			"regist": "Register",
 			"delete": "Delete",
+			"close": "Close",
 			"ogp": "Fetch Title and Comment"
 		},
 		"tab": {

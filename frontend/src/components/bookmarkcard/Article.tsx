@@ -117,11 +117,16 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 )}
 
 
-                <Text className={classes.title} fw={500} component="a" {...linkProps} onClick={(e) => {
-                    e.preventDefault();       // aタグのデフォルト動作をキャンセル
-                    router.push(`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`);
-                }}>
+                <Text fw={500} >
+                    <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}  
+                        style={{
+                            textDecoration: 'none',
+                            color: 'inherit',
+                            wordBreak: 'break-all',   // 単語途中でも改行
+                            overflowWrap: 'anywhere', // 長いURLを折り返す
+                        }}>
                     {title}
+                    </Link>
                 </Text>
                 <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
                     <Markdown

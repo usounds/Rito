@@ -4,10 +4,12 @@ import { ActionIcon } from "@mantine/core";
 import React from "react";
 import { Languages } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTopLoader } from 'nextjs-toploader';
 
 const LanguageToggle: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname(); // 現在のパス
+  const loader = useTopLoader();
 
   const toggleLocale = () => {
     const newLocale = pathname.startsWith("/ja") ? "en" : "ja";
@@ -18,7 +20,7 @@ const LanguageToggle: React.FC = () => {
     // クエリとハッシュを取得（CSR限定）
     const search = typeof window !== "undefined" ? window.location.search : "";
     const hash = typeof window !== "undefined" ? window.location.hash : "";
-
+    loader.start()
     router.replace(`${newPath}${search}${hash}`);
   };
 

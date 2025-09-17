@@ -126,7 +126,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
         setUrlError(null);
         setSchema(null);
 
-        if(!userProf) return
+        if (!userProf) return
 
         try {
             // URLが正しいかチェック
@@ -327,7 +327,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
 
         }
 
-        if (!activeDid ) {
+        if (!activeDid) {
             return
         }
 
@@ -477,6 +477,9 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
                 </Tabs>
 
                 <Group justify="right">
+                    <Button variant="default" onClick={onClose}>
+                        {messages.create.button.close}
+                    </Button>
                     <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
                 </Group>
             </Stack >

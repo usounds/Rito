@@ -239,7 +239,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         <Stack my="md">
 
                             {otherBookmarks.length === 0 &&
-                                <Text>{t('detail.nocomment')}</Text>
+                                <Text c="dimmed">{t('detail.nocomment')}</Text>
                             }
                             <Timeline bulletSize={20} lineWidth={4}>
                                 {otherBookmarks.map((bookmark, idx) => {
@@ -288,7 +288,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     <TabsPanel value="posts" pt="xs">
                         <Stack my="md">
                             {postDataArray.length === 0 &&
-                                <Text>{t('detail.nocomment')}</Text>
+                                <Text c="dimmed">{t('detail.nocomment')}</Text>
                             }
                             <Timeline bulletSize={20} lineWidth={4}>
                                 {postDataArray.map((post, idx) => (

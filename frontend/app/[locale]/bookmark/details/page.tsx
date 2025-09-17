@@ -13,6 +13,15 @@ import { cookies } from "next/headers";
 import { TagBadge } from '@/components/TagBadge';
 import publicSuffixList from '@/data/publicSuffixList.json';
 import Breadcrumbs from "@/components/Breadcrumbs"
+import { ModerationBadges } from "@/components/ModerationBadges";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+    robots: {
+        index: false,
+        follow: false,
+    },
+};
 
 interface PageProps {
     params: { locale: string };
@@ -117,9 +126,18 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
             v.comments?.[0];
 
         if (comment) {
+            // comment を優先して displayTitle / displayComment をセット
             displayTitle = comment.title || v.ogpTitle || "";
             displayComment = comment.comment || v.ogpDescription || "";
-            moderations = comment.moderations ?? [];
+
+            const commentModerations = comment.moderations ?? [];
+            const vModerations = v.moderations ?? [];
+
+            // comment が不足して OGP で補った場合は両方合算
+            moderations =
+                (displayTitle === comment.title && displayComment === comment.comment)
+                    ? commentModerations
+                    : Array.from(new Set([...vModerations, ...commentModerations]));
         } else {
             displayTitle = v.ogpTitle || "";
             displayComment = v.ogpDescription || "";
@@ -132,15 +150,26 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
             o.comments?.[0];
 
         if (comment) {
+            // displayTitle / displayComment の優先順：OGP -> comment
             displayTitle = o.ogpTitle || comment.title || "";
             displayComment = o.ogpDescription || comment.comment || "";
-            moderations = comment.moderations ?? [];
+
+            // moderations の合算
+            const commentModerations = comment.moderations ?? [];
+            const oModerations = o.moderations ?? [];
+            // display が OGP 由来なら oModerations のみ、comment 由来なら両方
+            moderations =
+                displayTitle === o.ogpTitle && displayComment === o.ogpDescription
+                    ? oModerations
+                    : Array.from(new Set([...oModerations, ...commentModerations]));
         } else {
             displayTitle = o.ogpTitle || "";
             displayComment = o.ogpDescription || "";
             moderations = o.moderations ?? [];
         }
     }
+
+    console.log(JSON.stringify(otherBookmarks))
 
     //投稿
     // 指定した URL から Post と PostUri 情報を取得
@@ -187,7 +216,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     return (
         <>
             <Container size="md" mx="auto">
-            <Breadcrumbs items={[{ label: t("header.details") }, { label: displayTitle || '' }]} />
+                <Breadcrumbs items={[{ label: t("header.bookmarkMenu") }, { label: t("header.details") }]} />
                 <Stack gap={4}>
                     <BlurReveal
                         moderated={moderations.length > 0}
@@ -224,6 +253,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     {tags &&
                         <Stack my='xs'>
                             <TagBadge tags={tags} />
+                            <ModerationBadges moderations={moderations} />
                         </Stack>
                     }
                 </Stack>
@@ -269,6 +299,8 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                         </Spoiler>
                                                     </BlurReveal>
                                                 </Text>
+
+                                                <ModerationBadges moderations={comment.moderations} />
                                                 <Text c="dimmed" size="sm">
                                                     <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} style={{
                                                         textDecoration: 'none',

@@ -3,6 +3,8 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack, Container } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };
@@ -10,6 +12,7 @@ type ProfileBookmarkProps = {
 
 const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
   const { locale, did } = params;
+  const t = await getTranslations({ locale });
   const take = 10;
   const skip = 0;
 
@@ -42,7 +45,9 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
   return (
-    <Container size="md" mx="auto" my="sx">
+    <Container size="md" mx="auto" >
+
+              <Breadcrumbs items={[{ label:t("header.profile") },{label:decodedDid}]} />
       <Stack>
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {normalized.map((b) => {

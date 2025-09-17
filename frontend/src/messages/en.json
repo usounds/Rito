@@ -35,6 +35,8 @@
 		},
 		"termofuse": "Terms of Use",
 		"privacypolicy": "Privacy Policy",
+		"details": "Details",
+		"profile": "Profile",
 		"menu": "Menu",
 		"items": {
 			"logout": "Logout"

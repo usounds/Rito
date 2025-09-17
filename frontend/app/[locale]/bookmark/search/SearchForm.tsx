@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useTopLoader } from 'nextjs-toploader';
 
 type SearchFormProps = {
   locale: string;
@@ -17,6 +18,7 @@ export function SearchForm({ locale, defaultTags = [], defaultHandles = [] }: Se
   const [isLoading, setIsLoading] = useState(false);
   const messages = useMessages();
   const router = useRouter();
+  const loader = useTopLoader();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +27,8 @@ export function SearchForm({ locale, defaultTags = [], defaultHandles = [] }: Se
     const params = new URLSearchParams();
     if (tags.length) params.set('tag', tags.join(','));
     if (handles.length) params.set('handle', handles.join(','));
+
+     loader.start()
 
     // props で受け取った locale を使う
     router.push(`/${locale}/bookmark/search?${params.toString()}`);

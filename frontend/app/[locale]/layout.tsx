@@ -67,7 +67,10 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <MantineProvider>
             <Notifications position="top-right" zIndex={1000} />
-            <NextTopLoader />
+            <NextTopLoader
+              showSpinner={false}
+              template='<div class="bar" role="bar"></div>' // スピナーを削除したテンプレート
+            />
             <Header />
             {children}
           </MantineProvider>

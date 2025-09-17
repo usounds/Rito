@@ -1,4 +1,6 @@
 "use client"
+import { BlurReveal } from "@/components/BlurReveal";
+import { ModerationBadges } from "@/components/ModerationBadges";
 import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { RegistBookmark } from '@/components/RegistBookmark';
 import { TagBadge } from '@/components/TagBadge';
@@ -18,7 +20,6 @@ import {
 import { SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import classes from './Article.module.scss';
@@ -41,7 +42,6 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
-    const router = useRouter();
     const locale = useLocale();
 
     useEffect(() => {
@@ -105,54 +105,37 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
             }
 
             <Box style={{ position: 'relative' }} onClick={() => setIsClicked(!isClicked)}>
-                {(moderations.length > 0 && !isClicked) && (
-                    <Box
-                        style={{
-                            position: 'absolute',
-                            inset: 0,
-                            backdropFilter: 'blur(4px)',
-                            zIndex: 10,
-                        }}
-                    />
-                )}
 
+                <BlurReveal
+                    moderated={moderations.length > 0}
+                    blurAmount={6}
+                    overlayText={messages.detail.view}
+                >
 
-                <Text fw={500} >
-                    <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}  
-                        style={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            wordBreak: 'break-all',   // 単語途中でも改行
-                            overflowWrap: 'anywhere', // 長いURLを折り返す
-                        }}>
-                    {title}
-                    </Link>
-                </Text>
-                <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                    <Markdown
-                        components={{
-                            p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
-                        }}
-                    >{comment}</Markdown>
-                </Text>
+                    <Text fw={500} >
+                        <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                            style={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                wordBreak: 'break-all',   // 単語途中でも改行
+                                overflowWrap: 'anywhere', // 長いURLを折り返す
+                            }}>
+                            {title}
+                        </Link>
+                    </Text>
+                    <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                        <Markdown
+                            components={{
+                                p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
+                            }}
+                        >{comment}</Markdown>
+                    </Text>
 
-
-                <TagBadge tags={tags} />
+                    <TagBadge tags={tags} />
+                </BlurReveal>
 
             </Box>
-            <Group mb="xs" gap={4}>
-                {moderations.map((mod, idx) => (
-                    <Badge
-                        key={idx}
-                        color="gray"
-                        variant="outline"
-                        styles={{ root: { textTransform: 'none' } }}
-                    >
-                        {messages?.moderations?.[mod] ?? mod}
-                        {/* messages に翻訳があればそれを表示、なければ生の値 */}
-                    </Badge>
-                ))}
-            </Group>
+                <ModerationBadges moderations={moderations}  />
 
             <Group className={classes.footer} gap='xs'>
 
@@ -211,14 +194,14 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     >
                         {domain + ' '}
                     </Link>
-                    <Link href={`/${locale}/profile/${encodeURIComponent(handle||'')}`} 
+                    <Link href={`/${locale}/profile/${encodeURIComponent(handle || '')}`}
                         style={{
                             textDecoration: 'none',
                             color: 'inherit',
                             wordBreak: 'break-all',   // 単語途中でも改行
                             overflowWrap: 'anywhere', // 長いURLを折り返す
                         }}>
-                    {handle ? "by @" + handle + ' ' : ""} 
+                        {handle ? "by @" + handle + ' ' : ""}
                     </Link>
                     <TimeAgo date={date} />
                 </Text>

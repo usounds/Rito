@@ -88,9 +88,9 @@ export async function LatestBookmark({ params, query, t }: LatestBookmarkProps) 
             <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               <Article
                 url={b.subject}
-                title={query?.handle?.length ? (comment.title || '') : (b.ogpTitle || comment.title || '')}
+                title={ (b.ogpTitle || comment.title || '')}
                 handle={b.handle}
-                comment={query?.handle?.length ? (comment.comment || '') : (b.ogpDescription || comment.comment || '')}
+                comment={ (b.ogpDescription || comment.comment || '')}
                 tags={b.tags}
                 image={b.ogpImage || undefined}
                 date={displayDate}

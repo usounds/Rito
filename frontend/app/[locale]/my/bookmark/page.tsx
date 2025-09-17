@@ -3,6 +3,14 @@ import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MyBookmark } from './MyBookmark';
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export function generateStaticParams() {
   return routing.locales.map(locale => ({ locale }));

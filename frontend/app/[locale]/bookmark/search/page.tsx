@@ -4,6 +4,14 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Container } from "@mantine/core";
 import { SearchForm } from './SearchForm';
 import Breadcrumbs from "@/components/Breadcrumbs";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export function generateStaticParams() {
   return routing.locales.flatMap(locale =>
@@ -50,7 +58,7 @@ export default async function BookmarksPage(props: PageProps) {
 
   return (
     <Container size="md" mx="auto" my="sx">
-      <Breadcrumbs items={[{ label: t("header.browse") }]} />
+      <Breadcrumbs items={[{ label: t("header.bookmarkMenu") },{ label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
       <LatestBookmark params={{ locale }} t={t} query={query} />
     </Container>

@@ -28,6 +28,7 @@
     "lucide-react": "^0.542.0",
     "next": "15.5.2",
     "next-intl": "^4.3.5",
+    "nextjs-toploader": "^3.9.17",
     "open-graph-scraper": "^6.10.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",

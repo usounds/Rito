@@ -8,7 +8,7 @@ import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/header/Header";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-
+import NextTopLoader from 'nextjs-toploader';
 
 export async function generateMetadata({
   params,
@@ -67,11 +67,12 @@ export default async function RootLayout({
         <NextIntlClientProvider messages={messages}>
           <MantineProvider>
             <Notifications position="top-right" zIndex={1000} />
+            <NextTopLoader />
             <Header />
             {children}
-        </MantineProvider>
-      </NextIntlClientProvider>
-    </body>
+          </MantineProvider>
+        </NextIntlClientProvider>
+      </body>
     </html >
   );
 }

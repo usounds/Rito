@@ -32,7 +32,6 @@ export function BlurReveal({
           style={{
             position: "absolute",
             inset: 0,
-            background: "rgba(255,255,255,0.3)", // 半透明オーバーレイ
             backdropFilter: `blur(${blurAmount}px)`,
             WebkitBackdropFilter: `blur(${blurAmount}px)`,
             zIndex: 10,

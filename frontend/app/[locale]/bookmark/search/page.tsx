@@ -3,6 +3,7 @@ import { routing } from "@/i18n/routing";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Container } from "@mantine/core";
 import { SearchForm } from './SearchForm';
+import Breadcrumbs from "@/components/Breadcrumbs";
 
 export function generateStaticParams() {
   return routing.locales.flatMap(locale =>
@@ -19,7 +20,7 @@ export default async function BookmarksPage(props: PageProps) {
   // paramsとsearchParamsをawaitで取得
   const params = await props.params;
   const searchParams = await props.searchParams;
-  
+
   const locale = params.locale;
   const page = params.page;
 
@@ -28,14 +29,14 @@ export default async function BookmarksPage(props: PageProps) {
 
   const tag = searchParams.tag
     ? (Array.isArray(searchParams.tag) ? searchParams.tag : searchParams.tag.split(','))
-        .map(t => t.trim())
-        .filter(Boolean)
+      .map(t => t.trim())
+      .filter(Boolean)
     : undefined;
 
   const handle = searchParams.handle
     ? (Array.isArray(searchParams.handle) ? searchParams.handle : searchParams.handle.split(','))
-        .map(h => h.trim())
-        .filter(Boolean)
+      .map(h => h.trim())
+      .filter(Boolean)
     : undefined;
 
   const sort = searchParams.sort as 'created' | 'updated' | undefined;
@@ -49,6 +50,7 @@ export default async function BookmarksPage(props: PageProps) {
 
   return (
     <Container size="md" mx="auto" my="sx">
+      <Breadcrumbs items={[{ label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
       <LatestBookmark params={{ locale }} t={t} query={query} />
     </Container>

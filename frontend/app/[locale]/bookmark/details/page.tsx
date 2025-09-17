@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTab, TabsPanel } from '@mantine/core';
 import { cookies } from "next/headers";
 import { TagBadge } from '@/components/TagBadge';
 import publicSuffixList from '@/data/publicSuffixList.json';
+import Breadcrumbs from "@/components/Breadcrumbs"
 
 interface PageProps {
     params: { locale: string };
@@ -184,148 +185,151 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     }
 
     return (
-        <Container size="md" mx="auto" my="sm">
-            <Stack gap={4}>
-                <BlurReveal
-                    moderated={moderations.length > 0}
-                    blurAmount={6}
-                    overlayText={t('detail.view')}
-                >
-                    <Title order={4}>{displayTitle}</Title>
-                    <Text size="md" component="div">
-                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')} >
-                            <Markdown
-                                components={{
-                                    p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
-                                }}
-                            >{displayComment}
-                            </Markdown>
-                        </Spoiler>
-                    </Text>
-                </BlurReveal>
-
-                <Text size="sm" c="dimmed">
-                    <Link
-                        href={uri || ''}
-                        target="_blank"
-                        style={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            wordBreak: 'break-all',   // 単語途中でも改行
-                            overflowWrap: 'anywhere', // 長いURLを折り返す
-                        }}
+        <>
+            <Container size="md" mx="auto">
+            <Breadcrumbs items={[{ label: t("header.details") }, { label: displayTitle || '' }]} />
+                <Stack gap={4}>
+                    <BlurReveal
+                        moderated={moderations.length > 0}
+                        blurAmount={6}
+                        overlayText={t('detail.view')}
                     >
-                        {uri}
-                    </Link>
-                </Text>
-                {tags &&
-                    <Stack my='xs'>
-                        <TagBadge tags={tags} />
-                    </Stack>
-                }
-            </Stack>
+                        <Title order={4}>{displayTitle}</Title>
+                        <Text size="md" component="div">
+                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')} >
+                                <Markdown
+                                    components={{
+                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
+                                    }}
+                                >{displayComment}
+                                </Markdown>
+                            </Spoiler>
+                        </Text>
+                    </BlurReveal>
 
-            <Stack my="md">
-                <Tabs defaultValue="bookmarks" keepMounted={false}>
-                    <TabsList>
-                        <TabsTab value="bookmarks">{t('detail.rito')}</TabsTab>
-                        <TabsTab value="posts">{t('detail.bluesky')}</TabsTab>
-                        {tags.some(tag => tag.toLowerCase().includes('atprotocol'.toLowerCase())) && (
-                            <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
-                        )}
-                    </TabsList>
+                    <Text size="sm" c="dimmed">
+                        <Link
+                            href={uri || ''}
+                            target="_blank"
+                            style={{
+                                textDecoration: 'none',
+                                color: 'inherit',
+                                wordBreak: 'break-all',   // 単語途中でも改行
+                                overflowWrap: 'anywhere', // 長いURLを折り返す
+                            }}
+                        >
+                            {uri}
+                        </Link>
+                    </Text>
+                    {tags &&
+                        <Stack my='xs'>
+                            <TagBadge tags={tags} />
+                        </Stack>
+                    }
+                </Stack>
 
-                    <TabsPanel value="bookmarks" pt="xs">
-                        <Stack my="md">
+                <Stack my="md">
+                    <Tabs defaultValue="bookmarks" keepMounted={false}>
+                        <TabsList>
+                            <TabsTab value="bookmarks">{t('detail.rito')}</TabsTab>
+                            <TabsTab value="posts">{t('detail.bluesky')}</TabsTab>
+                            {tags.some(tag => tag.toLowerCase().includes('atprotocol'.toLowerCase())) && (
+                                <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
+                            )}
+                        </TabsList>
 
-                            {otherBookmarks.length === 0 &&
-                                <Text c="dimmed">{t('detail.nocomment')}</Text>
-                            }
-                            <Timeline bulletSize={20} lineWidth={4}>
-                                {otherBookmarks.map((bookmark, idx) => {
-                                    const comment =
-                                        bookmark.comments?.find((c) => c.lang === locale) ||
-                                        bookmark.comments?.[0] ||
-                                        { title: '', comment: '', moderation_result: [] };
-                                    return (
+                        <TabsPanel value="bookmarks" pt="xs">
+                            <Stack my="md">
+
+                                {otherBookmarks.length === 0 &&
+                                    <Text c="dimmed">{t('detail.nocomment')}</Text>
+                                }
+                                <Timeline bulletSize={20} lineWidth={4}>
+                                    {otherBookmarks.map((bookmark, idx) => {
+                                        const comment =
+                                            bookmark.comments?.find((c) => c.lang === locale) ||
+                                            bookmark.comments?.[0] ||
+                                            { title: '', comment: '', moderation_result: [] };
+                                        return (
+                                            <TimelineItem key={idx}>
+                                                <Text component="div" c="dimmed">
+                                                    <BlurReveal
+                                                        moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
+                                                        blurAmount={6}
+                                                        overlayText={t('detail.view')}
+                                                    >
+                                                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                            <Markdown
+                                                                components={{
+                                                                    p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
+                                                                }}
+                                                            >
+                                                                {comment.comment || t('detail.nocomment')}
+                                                            </Markdown>
+                                                        </Spoiler>
+                                                    </BlurReveal>
+                                                </Text>
+                                                <Text c="dimmed" size="sm">
+                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} style={{
+                                                        textDecoration: 'none',
+                                                        color: 'inherit',
+                                                        wordBreak: 'break-all',   // 単語途中でも改行
+                                                        overflowWrap: 'anywhere', // 長いURLを折り返す
+                                                    }} >
+                                                        {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
+
+                                                    </Link>
+                                                </Text>
+                                            </TimelineItem>
+                                        );
+                                    })}
+
+                                </Timeline>
+                            </Stack>
+                        </TabsPanel>
+
+                        <TabsPanel value="posts" pt="xs">
+                            <Stack my="md">
+                                {postDataArray.length === 0 &&
+                                    <Text c="dimmed">{t('detail.nocomment')}</Text>
+                                }
+                                <Timeline bulletSize={20} lineWidth={4}>
+                                    {postDataArray.map((post, idx) => (
                                         <TimelineItem key={idx}>
                                             <Text component="div" c="dimmed">
-                                                <BlurReveal
-                                                    moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
-                                                    blurAmount={6}
-                                                    overlayText={t('detail.view')}
-                                                >
-                                                    <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                        <Markdown
-                                                            components={{
-                                                                p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                            }}
-                                                        >
-                                                            {comment.comment || t('detail.nocomment')}
-                                                        </Markdown>
-                                                    </Spoiler>
-                                                </BlurReveal>
+                                                <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                    <Markdown
+                                                        components={{
+                                                            p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
+                                                        }}
+                                                    >
+                                                        {post.text || 'No description available'}
+                                                    </Markdown>
+                                                </Spoiler>
                                             </Text>
                                             <Text c="dimmed" size="sm">
-                                                <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} style={{
+                                                <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
                                                     textDecoration: 'none',
                                                     color: 'inherit',
                                                     wordBreak: 'break-all',   // 単語途中でも改行
                                                     overflowWrap: 'anywhere', // 長いURLを折り返す
-                                                }} >
-                                                    {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
-
+                                                }}>
+                                                    {"by @" + post.handle}
                                                 </Link>
+                                                <TimeAgo date={post.indexedAt} />
                                             </Text>
                                         </TimelineItem>
-                                    );
-                                })}
+                                    ))}
+                                </Timeline>
+                            </Stack>
+                        </TabsPanel>
 
-                            </Timeline>
-                        </Stack>
-                    </TabsPanel>
-
-                    <TabsPanel value="posts" pt="xs">
-                        <Stack my="md">
-                            {postDataArray.length === 0 &&
-                                <Text c="dimmed">{t('detail.nocomment')}</Text>
-                            }
-                            <Timeline bulletSize={20} lineWidth={4}>
-                                {postDataArray.map((post, idx) => (
-                                    <TimelineItem key={idx}>
-                                        <Text component="div" c="dimmed">
-                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                <Markdown
-                                                    components={{
-                                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                    }}
-                                                >
-                                                    {post.text || 'No description available'}
-                                                </Markdown>
-                                            </Spoiler>
-                                        </Text>
-                                        <Text c="dimmed" size="sm">
-                                            <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
-                                                textDecoration: 'none',
-                                                color: 'inherit',
-                                                wordBreak: 'break-all',   // 単語途中でも改行
-                                                overflowWrap: 'anywhere', // 長いURLを折り返す
-                                            }}>
-                                                {"by @" + post.handle}
-                                            </Link>
-                                            <TimeAgo date={post.indexedAt} />
-                                        </Text>
-                                    </TimelineItem>
-                                ))}
-                            </Timeline>
-                        </Stack>
-                    </TabsPanel>
-
-                    <TabsPanel value="resolver" pt="xs">
-                        <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri || '')} />
-                    </TabsPanel>
-                </Tabs>
-            </Stack>
-        </Container>
+                        <TabsPanel value="resolver" pt="xs">
+                            <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri || '')} />
+                        </TabsPanel>
+                    </Tabs>
+                </Stack>
+            </Container>
+        </>
     );
 }

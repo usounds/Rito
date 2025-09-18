@@ -107,12 +107,28 @@ export async function POST(req: NextRequest) {
     let data: any;
     try { data = await pdsRes.json(); } catch { data = { error: "Failed to parse response" }; }
 
-    return NextResponse.json({
+
+
+        const response = NextResponse.json({
       success: pdsRes.ok,
       status: pdsRes.status,
       data,
       error: pdsRes.ok ? undefined : "XRPC call failed",
     }, { status: pdsRes.status });
+
+
+    if (updatedCookies) {
+      updatedCookies.forEach((c) =>
+        response.cookies.set(c.key, c.value, {
+          httpOnly: true,
+          path: "/",
+          sameSite: "lax",
+          maxAge: c.maxAge,
+        })
+      );
+    }
+
+    return response
 
   } catch (err: any) {
     return NextResponse.json({ success: false, error: `Internal server error: ${err.message || err}` }, { status: 500 });

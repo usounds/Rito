@@ -48,6 +48,7 @@ export function LoginButtonOrUser() {
                 const meRes = await fetch("/api/me");
                 if (!meRes.ok) {
                     console.warn("Not authenticated yet");
+                    setActiveDid(null);
                     return;
                 }
                 const meData = await meRes.json();

@@ -1,4 +1,4 @@
-import { Badge } from '@mantine/core';
+import { Badge, Group } from '@mantine/core';
 import { useTranslations } from 'next-intl';
 
 interface ModerationBadgesProps {
@@ -6,10 +6,14 @@ interface ModerationBadgesProps {
 }
 
 export const ModerationBadges: React.FC<ModerationBadgesProps> = ({ moderations }) => {
-  const t = useTranslations('moderations'); // messages.message に対応
+  const t = useTranslations('moderations');
+
+  if (!moderations || moderations.length === 0) {
+    return null;
+  }
 
   return (
-    <>
+    <Group my='xs'>
       {moderations.map((mod) => (
         <Badge
           key={mod}
@@ -20,6 +24,6 @@ export const ModerationBadges: React.FC<ModerationBadgesProps> = ({ moderations 
           {t(mod)}
         </Badge>
       ))}
-    </>
+    </Group>
   );
 };

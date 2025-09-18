@@ -1,17 +1,17 @@
 // frontend/app/[locale]/profile/[did]/page.tsx
 import { Article } from '@/components/bookmarkcard/Article';
-import { prisma } from '@/logic/HandlePrismaClient';
-import { SimpleGrid, Stack, Container } from '@mantine/core';
-import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { prisma } from '@/logic/HandlePrismaClient';
+import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
+import { Container, SimpleGrid, Stack } from '@mantine/core';
+import { getTranslations } from "next-intl/server";
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };
 };
 
 const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
-  const { locale, did } = params;
+  const { locale, did } = await params; 
   const t = await getTranslations({ locale });
   const take = 10;
   const skip = 0;

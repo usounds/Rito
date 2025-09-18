@@ -2,7 +2,7 @@
 import { RegistSchema } from "./RegistSchema";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
-import { Button, Modal, Table, Switch, Group, Text } from "@mantine/core";
+import { Button, Modal, Table, Switch, Group, Text, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMessages } from "next-intl";
 import { useEffect, useState } from "react";
@@ -92,7 +92,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
     open();
   };
 
-  if (loading) return  <Group my="sm"><Text c="dimmed">Loading...</Text></Group>;
+  if (loading) return <Group my="sm"><Text c="dimmed">Loading...</Text></Group>;
   if (error) return <Group my="sm"><Text c="dimmed">Error: {error}</Text></Group>;
   if (data.length === 0) return <Group my="sm"><Text c="dimmed">No matches found</Text></Group>;
 
@@ -109,90 +109,92 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
         />
       </Group>
       {isDeveloper &&
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>NSID</Table.Th>
-              <Table.Th>Schema</Table.Th>
-              <Table.Th>Count</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {data.flatMap((match) => {
-              if (match.owner) {
-                const canEdit = match.owner.did === activeDid;
-                return (
-                  <Table.Tr key={`${match.nsid}-owner`}>
-                    <Table.Td>{match.nsid}</Table.Td>
-                    <Table.Td>{match.owner.schema}</Table.Td>
-                    <Table.Td >Owner</Table.Td>
-                    <Table.Td>
-                      <Button
-                        disabled={(!canEdit && !activeDid)}
-                        onClick={() => handleEdit(match.nsid, match.owner!.schema)}
-                        variant="outline"
-                        size="xs"
-                      >
-                        {messages.editschema.button.regist}
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              }
+        <ScrollArea w="100%" type="auto" offsetScrollbars>
+          <Table striped highlightOnHover>
+            <Table.Thead>
+              <Table.Tr>
+                <Table.Th>NSID</Table.Th>
+                <Table.Th>Schema</Table.Th>
+                <Table.Th>Count</Table.Th>
+                <Table.Th>Actions</Table.Th>
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {data.flatMap((match) => {
+                if (match.owner) {
+                  const canEdit = match.owner.did === activeDid;
+                  return (
+                    <Table.Tr key={`${match.nsid}-owner`}>
+                      <Table.Td>{match.nsid}</Table.Td>
+                      <Table.Td>{match.owner.schema}</Table.Td>
+                      <Table.Td >Owner</Table.Td>
+                      <Table.Td>
+                        <Button
+                          disabled={(!canEdit && !activeDid)}
+                          onClick={() => handleEdit(match.nsid, match.owner!.schema)}
+                          variant="outline"
+                          size="xs"
+                        >
+                          {messages.editschema.button.regist}
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                }
 
-              if (match.others?.length > 0) {
-                const grouped = match.others.reduce<Record<string, Resolver[]>>((acc, r) => {
-                  if (!acc[r.schema]) acc[r.schema] = [];
-                  acc[r.schema].push(r);
-                  return acc;
-                }, {});
+                if (match.others?.length > 0) {
+                  const grouped = match.others.reduce<Record<string, Resolver[]>>((acc, r) => {
+                    if (!acc[r.schema]) acc[r.schema] = [];
+                    acc[r.schema].push(r);
+                    return acc;
+                  }, {});
 
-                // resolvers.length が最大のものを探す
-                const [maxSchema, maxResolvers] = Object.entries(grouped).reduce(
-                  (max, current) => (current[1].length > max[1].length ? current : max),
-                  ["", [] as Resolver[]]
-                );
+                  // resolvers.length が最大のものを探す
+                  const [maxSchema, maxResolvers] = Object.entries(grouped).reduce(
+                    (max, current) => (current[1].length > max[1].length ? current : max),
+                    ["", [] as Resolver[]]
+                  );
 
-                return (
-                  <Table.Tr key={`${match.nsid}-other`}>
-                    <Table.Td>{match.nsid}</Table.Td>
-                    <Table.Td>{maxSchema}</Table.Td>
-                    <Table.Td>{maxResolvers.length}</Table.Td>
-                    <Table.Td>
-                      <Button
-                        disabled={!activeDid}
-                        onClick={() => handleEdit(match.nsid, maxSchema)}
-                        variant="outline"
-                        size="xs"
-                      >
-                        {messages.editschema.button.regist}
-                      </Button>
-                    </Table.Td>
-                  </Table.Tr>
-                );
-              } else {
-                return (
-                  <tr key={`${match.nsid}-no-resolver`}>
-                    <Table.Td>{match.nsid}</Table.Td>
-                    <Table.Td >-</Table.Td>
-                    <Table.Td >0</Table.Td>
-                    <Table.Td>
-                      <Button
-                        disabled={!activeDid}
-                        onClick={() => handleEdit(match.nsid)}
-                        variant="outline"
-                        size="xs"
-                      >
-                        {messages.editschema.button.regist}
-                      </Button>
-                    </Table.Td>
-                  </tr>
-                );
-              }
-            })}
-          </Table.Tbody>
-        </Table>
+                  return (
+                    <Table.Tr key={`${match.nsid}-other`}>
+                      <Table.Td>{match.nsid}</Table.Td>
+                      <Table.Td>{maxSchema}</Table.Td>
+                      <Table.Td>{maxResolvers.length}</Table.Td>
+                      <Table.Td>
+                        <Button
+                          disabled={!activeDid}
+                          onClick={() => handleEdit(match.nsid, maxSchema)}
+                          variant="outline"
+                          size="xs"
+                        >
+                          {messages.editschema.button.regist}
+                        </Button>
+                      </Table.Td>
+                    </Table.Tr>
+                  );
+                } else {
+                  return (
+                    <tr key={`${match.nsid}-no-resolver`}>
+                      <Table.Td>{match.nsid}</Table.Td>
+                      <Table.Td >-</Table.Td>
+                      <Table.Td >0</Table.Td>
+                      <Table.Td>
+                        <Button
+                          disabled={!activeDid}
+                          onClick={() => handleEdit(match.nsid)}
+                          variant="outline"
+                          size="xs"
+                        >
+                          {messages.editschema.button.regist}
+                        </Button>
+                      </Table.Td>
+                    </tr>
+                  );
+                }
+              })}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
       }
 
       <Modal

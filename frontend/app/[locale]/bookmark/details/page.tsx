@@ -302,7 +302,9 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
                                                 <ModerationBadges moderations={comment.moderations} />
                                                 <Text c="dimmed" size="sm">
-                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} style={{
+                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} 
+                                                    prefetch={false}
+                                                    style={{
                                                         textDecoration: 'none',
                                                         color: 'inherit',
                                                         wordBreak: 'break-all',   // 単語途中でも改行

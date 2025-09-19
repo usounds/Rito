@@ -1,0 +1,65 @@
+{
+  "lexicon": 1,
+  "id": "blue.rito.service.getSchema",
+  "defs": {
+    "langs": {
+      "type": "object",
+      "required": ["lang", "title", "moderation"],
+      "properties": {
+        "lang": { "type": "string" },
+        "title": { "type": "string" },
+        "comment": { "type": "string" },
+        "moderation": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "main": {
+      "type": "procedure",
+      "description": "Get Bookmark by NSID, including schema, OGP, tags, moderation, and comments.",
+      "input": {
+        "encoding": "application/json",
+        "schema": {
+          "type": "object",
+          "required": ["nsid"],
+          "properties": {
+            "nsid": { "type": "string" }
+          }
+        }
+      },
+      "output": {
+        "encoding": "application/json",
+        "description": "Returns the Bookmark data for the given NSID.",
+        "schema": {
+          "type": "object",
+          "required": ["nsid", "schema", "moderations", "comments", "verified"],
+          "properties": {
+            "nsid": { "type": "string" },
+            "schema": { "type": "string" },
+            "ogpTitle": { "type": "string" },
+            "ogpDescription": { "type": "string" },
+            "ogpImage": { "type": "string" },
+            "tags": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "moderations": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "comments": {
+              "type": "array",
+              "description": "Comments with titles, content, and moderation in multiple languages.",
+              "items": {
+                "type": "ref",
+                "ref": "blue.rito.service.getSchema#langs"
+              }
+            },
+            "verified": { "type": "boolean" }
+          }
+        }
+      }
+    }
+  }
+}

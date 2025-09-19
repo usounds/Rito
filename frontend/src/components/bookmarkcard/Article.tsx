@@ -23,6 +23,8 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import classes from './Article.module.scss';
+import { useTranslations } from "next-intl";
+
 
 type ArticleCardProps = {
     url: string;
@@ -112,7 +114,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     overlayText={messages.detail.view}
                 >
 
-                    <Text fw={500} >
+                    <Text fw={500} c="inherit" >
                         <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
                             style={{
                                 textDecoration: 'none',

@@ -23,7 +23,9 @@ const _mainSchema = /*#__PURE__*/ v.procedure("blue.rito.service.getSchema", {
     type: "lex",
     schema: /*#__PURE__*/ v.object({
       get comments() {
-        return /*#__PURE__*/ v.array(langsSchema);
+        return /*#__PURE__*/ v.constrain(/*#__PURE__*/ v.array(langsSchema), [
+          /*#__PURE__*/ v.arrayLength(1),
+        ]);
       },
       moderations: /*#__PURE__*/ v.array(/*#__PURE__*/ v.string()),
       nsid: /*#__PURE__*/ v.string(),

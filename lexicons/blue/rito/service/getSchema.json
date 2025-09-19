@@ -94,6 +94,7 @@
                         },
                         "comments": {
                             "type": "array",
+                            "minLength": 1,
                             "description": "Comments with titles, content, and moderation in multiple languages.",
                             "items": {
                                 "type": "ref",

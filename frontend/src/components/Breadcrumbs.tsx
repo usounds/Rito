@@ -1,4 +1,5 @@
 import { Breadcrumbs as MantineBreadcrumbs, Anchor,Stack } from "@mantine/core";
+import { useTranslations,useLocale } from "next-intl";
 
 interface Crumb {
   label: string;
@@ -10,14 +11,17 @@ interface BreadcrumbsProps {
 }
 
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+  const t = useTranslations(); // messages.breadcrumbs.home などに対応
+
+    const locale = useLocale();
   const crumbs = [
-    { label: "Home"}, // 先頭固定
+    { label: t("header.home"), href: `/${locale}`}, // 先頭固定
     ...items,
   ];
 
   const elements = crumbs.map((item, idx) =>
     item.href ? (
-      <Anchor href={item.href} key={idx}>
+      <Anchor href={item.href} key={idx} c="inherit" >
         {item.label}
       </Anchor>
     ) : (

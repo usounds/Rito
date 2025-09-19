@@ -72,7 +72,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
 
                 // 念の為サーバーの最新値を
                 const res = await fetch(
-                    `/xrpc/blue.rito.feed.getBookmark?uri=${encodeURIComponent(aturi)}`
+                    `/xrpc/blue.rito.feed.getBookmarsk?uri=${encodeURIComponent(aturi)}`
                 );
 
                 if (!res.ok) {

@@ -1,65 +1,112 @@
 {
-  "lexicon": 1,
-  "id": "blue.rito.service.getSchema",
-  "defs": {
-    "langs": {
-      "type": "object",
-      "required": ["lang", "title", "moderation"],
-      "properties": {
-        "lang": { "type": "string" },
-        "title": { "type": "string" },
-        "comment": { "type": "string" },
-        "moderation": {
-          "type": "array",
-          "items": { "type": "string" }
-        }
-      }
-    },
-    "main": {
-      "type": "procedure",
-      "description": "Get Bookmark by NSID, including schema, OGP, tags, moderation, and comments.",
-      "input": {
-        "encoding": "application/json",
-        "schema": {
-          "type": "object",
-          "required": ["nsid"],
-          "properties": {
-            "nsid": { "type": "string" }
-          }
-        }
-      },
-      "output": {
-        "encoding": "application/json",
-        "description": "Returns the Bookmark data for the given NSID.",
-        "schema": {
-          "type": "object",
-          "required": ["nsid", "schema", "moderations", "comments", "verified"],
-          "properties": {
-            "nsid": { "type": "string" },
-            "schema": { "type": "string" },
-            "ogpTitle": { "type": "string" },
-            "ogpDescription": { "type": "string" },
-            "ogpImage": { "type": "string" },
-            "tags": {
-              "type": "array",
-              "items": { "type": "string" }
+    "lexicon": 1,
+    "id": "blue.rito.service.getSchema",
+    "defs": {
+        "langs": {
+            "type": "object",
+            "required": [
+                "lang",
+                "title",
+                "moderation"
+            ],
+            "properties": {
+                "lang": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "comment": {
+                    "type": "string"
+                },
+                "moderation": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "main": {
+            "type": "procedure",
+            "description": "Get Bookmark by NSID, including schema, OGP, tags, moderation, and comments.",
+            "input": {
+                "encoding": "application/json",
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "nsid"
+                    ],
+                    "properties": {
+                        "nsid": {
+                            "type": "string"
+                        }
+                    }
+                }
             },
-            "moderations": {
-              "type": "array",
-              "items": { "type": "string" }
-            },
-            "comments": {
-              "type": "array",
-              "description": "Comments with titles, content, and moderation in multiple languages.",
-              "items": {
-                "type": "ref",
-                "ref": "blue.rito.service.getSchema#langs"
-              }
-            },
-            "verified": { "type": "boolean" }
-          }
+            "output": {
+                "encoding": "application/json",
+                "description": "Returns the Bookmark data for the given NSID.",
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "nsid",
+                        "schema",
+                        "moderations",
+                        "comments",
+                        "verified"
+                    ],
+                    "properties": {
+                        "nsid": {
+                            "type": "string",
+                            "description": "Namespace ID of the service or application (e.g., 'uk.skyblur.post')."
+                        },
+                        "schema": {
+                            "type": "string",
+                            "description": "The schema URL pattern associated with this NSID (e.g., 'https://skyblur.uk/post/{did}/{rkey}')."
+                        },
+                        "ogpTitle": {
+                            "type": "string",
+                            "description": "The Open Graph Protocol (OGP) title for the bookmark."
+                        },
+                        "ogpDescription": {
+                            "type": "string",
+                            "description": "The Open Graph Protocol (OGP) description for the bookmark."
+                        },
+                        "ogpImage": {
+                            "type": "string",
+                            "format": "uri",
+                            "description": "The Open Graph Protocol (OGP) image URL for the bookmark."
+                        },
+                        "tags": {
+                            "type": "array",
+                            "description": "This field contains tags. If registered by the owner, it may include 'Verified'.",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "moderations": {
+                            "type": "array",
+                            "description": "Moderation result for OGP title and description",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "comments": {
+                            "type": "array",
+                            "description": "Comments with titles, content, and moderation in multiple languages.",
+                            "items": {
+                                "type": "ref",
+                                "ref": "blue.rito.service.getSchema#langs"
+                            }
+                        },
+                        "verified": {
+                            "type": "boolean",
+                            "description": "If this comment registed by owner, this field should be true."
+                        }
+                    }
+                }
+            }
         }
-      }
     }
-  }
 }

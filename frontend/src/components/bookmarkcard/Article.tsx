@@ -197,6 +197,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         {domain + ' '}
                     </Link>
                     <Link href={`/${locale}/profile/${encodeURIComponent(handle || '')}`}
+                    prefetch={false}
                         style={{
                             textDecoration: 'none',
                             color: 'inherit',

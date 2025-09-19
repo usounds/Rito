@@ -31,7 +31,7 @@ interface PageProps {
 interface PostData {
     uri: string;            // PostUri の uri
     text: string;           // Post の text
-    moderation: string[];   // Post の moderation_result をカンマ区切りで配列化
+    moderations: string[];   // Post の moderation_result をカンマ区切りで配列化
     indexedAt: Date;        // Post の indexed_at
     handle: string | null;  // Post の handle
 }
@@ -204,7 +204,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                 postDataArray = [{
                     uri: firstUri,
                     text: post.text,
-                    moderation: post.moderation_result ? post.moderation_result.split(',') : [],
+                    moderations: post.moderation_result ? post.moderation_result.split(',') : [],
                     indexedAt: post.indexed_at,
                     handle: post.handle,
                 }];
@@ -302,14 +302,14 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
                                                 <ModerationBadges moderations={comment.moderations} />
                                                 <Text c="dimmed" size="sm">
-                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} 
-                                                    prefetch={false}
-                                                    style={{
-                                                        textDecoration: 'none',
-                                                        color: 'inherit',
-                                                        wordBreak: 'break-all',   // 単語途中でも改行
-                                                        overflowWrap: 'anywhere', // 長いURLを折り返す
-                                                    }} >
+                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`}
+                                                        prefetch={false}
+                                                        style={{
+                                                            textDecoration: 'none',
+                                                            color: 'inherit',
+                                                            wordBreak: 'break-all',   // 単語途中でも改行
+                                                            overflowWrap: 'anywhere', // 長いURLを折り返す
+                                                        }} >
                                                         {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
 
                                                     </Link>
@@ -331,16 +331,24 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                     {postDataArray.map((post, idx) => (
                                         <TimelineItem key={idx}>
                                             <Text component="div" c="dimmed">
-                                                <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                    <Markdown
-                                                        components={{
-                                                            p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                        }}
-                                                    >
-                                                        {post.text || 'No description available'}
-                                                    </Markdown>
-                                                </Spoiler>
+                                                <BlurReveal
+                                                    moderated={Array.isArray(post.moderations) && post.moderations.length > 0}
+                                                    blurAmount={6}
+                                                    overlayText={t('detail.view')}
+                                                >
+                                                    <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                        <Markdown
+                                                            components={{
+                                                                p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
+                                                            }}
+                                                        >
+                                                            {post.text || 'No description available'}
+                                                        </Markdown>
+                                                    </Spoiler>
+                                                </BlurReveal>
                                             </Text>
+
+                                            <ModerationBadges moderations={post.moderations} />
                                             <Text c="dimmed" size="sm">
                                                 <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
                                                     textDecoration: 'none',

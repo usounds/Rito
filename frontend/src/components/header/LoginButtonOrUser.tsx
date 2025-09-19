@@ -59,7 +59,7 @@ export function LoginButtonOrUser() {
                 setActiveDid(did);
 
                 // ブックマーク取得
-                const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(did)}`);
+                const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmarks?actor=${encodeURIComponent(did)}`);
                 if (res.ok) {
                     const data: Bookmark[] = await res.json();
                     setMyBookmark(data);

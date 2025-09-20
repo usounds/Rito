@@ -221,10 +221,22 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
                 setOgpImage(data.result?.ogImage?.[0]?.url || '')
             } else {
                 console.log('Failed to fetch OGP data');
-                setUrlError(messages.create.error.invalidurl);
+                notifications.show({
+                    title: 'Error',
+                    message: messages.create.error.cannotgetogp,
+                    color: 'red',
+                    icon: <X />
+                });
+
             }
         } catch {
-            setUrlError(messages.create.error.invalidurl);
+                notifications.show({
+                    title: 'Error',
+                    message: messages.create.error.cannotgetogp,
+                    color: 'red',
+                    icon: <X />
+                });
+
         }
 
         setIsFetchOGP(false);
@@ -259,8 +271,6 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
             }
 
         }
-        const lang = locale as 'ja' | 'en'
-
         let ogpTitleLocal = ogpTitle
         let ogpDescriptionLocal = ogpDescription
         let ogpImageLocal = ogpImage

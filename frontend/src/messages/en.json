@@ -153,7 +153,8 @@
 			"titleMandatory": "Title is required",
 			"blockUrl": "This URL cannot be bookmarked",
 			"unknownError": "Failed to regist",
-			"duplicate": "This URL is already registered"
+			"duplicate": "This URL is already registered",
+			"cannotgetogp": "Could not retrieve the title from the site"
 		}
 	},
 	"delete": {

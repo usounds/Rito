@@ -202,6 +202,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
         onClose={close}
         title={messages.editschema.title}
         size="lg"
+        closeOnClickOutside={false} 
         centered
       >
         {selectedNsid && (

@@ -24,6 +24,7 @@
   → [プライバシーポリシー](https://openai.com/policies/row-privacy-policy/)
 - UFOs（Lexicon 情報取得のため）  
   ※ Thank you [fig](https://bsky.app/profile/bad-example.com), developer of [microcosm](https://bsky.app/profile/microcosm.blue)
+  
 ## 5. 情報の管理方法
 - OAuth の認証情報は専用サーバーで暗号化して管理され、1年以内に破棄または更新されます。
 - ブックマークやスキーマは PDS に公開されている情報を利用するため、保存期間は定めません。

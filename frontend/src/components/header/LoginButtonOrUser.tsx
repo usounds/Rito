@@ -154,6 +154,7 @@ export function LoginButtonOrUser() {
                         onClose={() => setQuickRegistBookmark(false)}
                         size={modalSize}
                         title={messages.create.title}
+                        closeOnClickOutside={false} 
                         centered
                     >
                         <RegistBookmark onClose={() => setQuickRegistBookmark(false)} />
@@ -171,6 +172,7 @@ export function LoginButtonOrUser() {
                         onClose={() => setLoginOpened(false)}
                         size="md"
                         title={messages.login.titleDescription}
+                        closeOnClickOutside={false} 
                         centered
                     >
                         <Authentication />

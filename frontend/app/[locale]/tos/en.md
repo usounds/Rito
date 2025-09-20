@@ -11,6 +11,10 @@
 ## Moderation
 - All content posted on this site is subject to moderation using OpenAI’s **omni-moderation-latest** model.  
 - This model is not used for training purposes.  
+- The service may only be used to create bookmarks that enhance or promote bookmarked URLs.  
+- It may **not** be used to attack specific individuals or to target particular URLs maliciously.  
+- Posting URLs to pornographic content is strictly prohibited.  
+- To enforce these rules, all submitted content is subject to moderation.  [Reference](https://openai.com/index/upgrading-the-moderation-api-with-our-new-multimodal-moderation-model/)
 
 ## Responsibility of Contributors
 - Contributors are fully responsible for the content they post.  

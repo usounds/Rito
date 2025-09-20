@@ -6,6 +6,7 @@ import { RegistBookmark } from '@/components/RegistBookmark';
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
+import { useRouter } from 'next/navigation';
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
     ActionIcon,
@@ -44,6 +45,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
     const locale = useLocale();
+    const router = useRouter();
 
     useEffect(() => {
         const updateSize = () => {
@@ -136,21 +138,18 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 </BlurReveal>
 
             </Box>
-                <ModerationBadges moderations={moderations}  />
+            <ModerationBadges moderations={moderations} />
 
             <Group className={classes.footer} gap='xs'>
 
                 {/* 右上固定の atUri エリア */}
                 {atUri && (
                     <>
-                        <ActionIcon
-                            variant="transparent"
-                            color="gray"
-                            aria-label="Edit"
-                            onClick={() => setQuickRegistBookmark(true)}
-                        >
-                            <SquarePen size={16} />
-                        </ActionIcon>
+                        <Link href={`/${locale}/bookmark/regist?aturi=${encodeURIComponent(atUri)}`}>
+                            <ActionIcon variant="transparent" color="gray" aria-label="Edit">
+                                <SquarePen size={16} />
+                            </ActionIcon>
+                        </Link>
                         <ActionIcon
                             variant="transparent"
                             color="red"
@@ -196,7 +195,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         {domain + ' '}
                     </Link>
                     <Link href={`/${locale}/profile/${encodeURIComponent(handle || '')}`}
-                    prefetch={false}
+                        prefetch={false}
                         style={{
                             textDecoration: 'none',
                             color: 'inherit',

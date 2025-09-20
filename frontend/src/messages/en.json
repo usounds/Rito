@@ -136,7 +136,7 @@
 		"button": {
 			"regist": "Register",
 			"delete": "Delete",
-			"close": "Close",
+			"close": "Back",
 			"ogp": "Fetch Title"
 		},
 		"tab": {

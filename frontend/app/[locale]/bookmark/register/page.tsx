@@ -47,7 +47,6 @@ export default function RegistBookmarkPage() {
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [activeTab, setActiveTab] = useState<string | null>(locale);
 
-
     useEffect(() => {
         const fetchBookmark = async () => {
             if (!aturi) return
@@ -523,9 +522,6 @@ export default function RegistBookmarkPage() {
                 </Tabs>
 
                 <Group justify="right">
-                    <Button variant="default" onClick={() => router.back()}>
-                        {messages.create.button.close}
-                    </Button>
                     <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
                 </Group>
             </Stack >

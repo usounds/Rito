@@ -3,15 +3,35 @@ import { Article } from '@/components/bookmarkcard/Article';
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
-import { Container, SimpleGrid, Stack } from '@mantine/core';
+import { Container, SimpleGrid, Stack, Text } from '@mantine/core';
 import { getTranslations } from "next-intl/server";
+import type { Metadata } from 'next';
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };
 };
 
+
+export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
+  const { locale, did } = params;
+
+  // 翻訳を取得
+  const t = await getTranslations({ locale });
+
+  // 親ページの metadata をそのままコピーする場合
+  // ここでは必要な部分だけ上書き
+  return {
+    openGraph: {
+      title: t('profile.title'),           // og:title
+      description: t('profile.description', { 0: did }), // og:description
+      url: `https://rito.blue/${locale}/profile/${did}`,  // og:url
+      type: 'website',
+    },
+  };
+}
+
 const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
-  const { locale, did } = await params; 
+  const { locale, did } = await params;
   const t = await getTranslations({ locale });
   const take = 10;
   const skip = 0;
@@ -46,9 +66,9 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
 
   return (
     <Container size="md" mx="auto" >
-
-              <Breadcrumbs items={[{ label:t("header.profile") },{label:decodedDid}]} />
+      <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
       <Stack>
+        {normalized.length===0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {normalized.map((b) => {
             const comment =

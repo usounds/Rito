@@ -119,6 +119,28 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
         fetchBookmark();
     }, [aturi]);
 
+    function isValidTangledUrl(url: string, userProfHandle: string): boolean {
+        try {
+            const u = new URL(url);
+
+            // ドメインが tangled.org であることを確認
+            if (u.hostname !== "tangled.org") return false;
+
+            // パスを分解
+            const parts = u.pathname.split("/").filter(Boolean);
+
+            // 最低でも2要素必要（例: ["@rito.blue", "skeet.el"]）
+            if (parts.length < 2) return false;
+
+            // 1個目が @handle であることを確認
+            if (parts[0] !== `@${userProfHandle}`) return false;
+
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     const handleUrlChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const value = e.target.value;
         setUrl(value);
@@ -134,11 +156,15 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
             const domain = url.hostname
             const handle = userProf.handle
 
+
             if (url.pathname === '/' || url.pathname === '') {
                 if ((domain == handle || domain.endsWith('.' + handle))) {
                     setIsVerify(true)
                 }
+            } else if (isValidTangledUrl(value, handle)) {
+                setIsVerify(true)
             }
+
         } catch {
             if (isResourceUri(value)) {
                 const result = parseCanonicalResourceUri(value);

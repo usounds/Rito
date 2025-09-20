@@ -2,7 +2,6 @@
 import { BlurReveal } from "@/components/BlurReveal";
 import { ModerationBadges } from "@/components/ModerationBadges";
 import { DeleteBookmark } from '@/components/DeleteBookmark';
-import { RegistBookmark } from '@/components/RegistBookmark';
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
@@ -40,7 +39,6 @@ type ArticleCardProps = {
 
 export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
     const messages = useMessages();
-    const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
@@ -158,17 +156,6 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         >
                             <Trash2 size={16} />
                         </ActionIcon>
-
-                        <Modal
-                            opened={quickRegistBookmark}
-                            onClose={() => setQuickRegistBookmark(false)}
-                            size={modalSize}
-                            title={messages.create.title}
-                            centered
-                        >
-                            <RegistBookmark aturi={atUri} onClose={() => setQuickRegistBookmark(false)} />
-                        </Modal>
-
 
                         <Modal
                             opened={deleteBookmark}

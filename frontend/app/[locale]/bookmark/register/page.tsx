@@ -335,7 +335,6 @@ export default function RegistBookmarkPage() {
             });
         } else {
 
-
             try {
                 const result = await fetch(`/xrpc/blue.rito.feed.getBookmarkBySubject?subject=${encodeURIComponent(url)}&did=${encodeURIComponent(activeDid)}`, {
                     method: 'GET',

@@ -152,7 +152,8 @@
 			"titleMandatory": "タイトルは必須です",
 			"blockUrl": "このURLはブックマークできません",
 			"unknownError": "投稿に失敗しました",
-			"duplicate": "同じURLが登録済みです"
+			"duplicate": "同じURLが登録済みです",
+			"cannotgetogp": "サイトからタイトルが取得できませんでした"
 		}
 	},
 	"delete": {

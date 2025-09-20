@@ -56,7 +56,7 @@
 				"placeholder": "alice.bsky.social"
 			},
 			"agree": {
-				"title": "Agree to the Terms of Service and Privacy Policy"
+        "title": "Agree to "
 			}
 		},
 		"button": {
@@ -142,7 +142,7 @@
 		},
 		"inform": {
 			"canverify": "You can register a verified comment for this URL",
-			"success": "登録しました"
+			"success": "Regist successfully"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",

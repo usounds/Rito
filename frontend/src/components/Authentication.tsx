@@ -9,13 +9,14 @@ import {
   PaperProps,
   Stack,
   Switch,
-  TextInput
+  TextInput,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from "react";
+import Link from 'next/link';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -122,8 +123,9 @@ export function Authentication(props: PaperProps) {
     });
 
     try {
-
-      window.location.href = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(window.location.href)}`;
+      const returnTo = window.location.href;
+      const url = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
+      window.location.href = url;
 
     } catch (e) {
       notifications.update({
@@ -142,14 +144,43 @@ export function Authentication(props: PaperProps) {
 
   }
 
+  const linkStyle = {
+    color: 'inherit',     // 親のテキスト色を引き継ぐ
+  };
+
+  const tosLink = (
+    <Link
+      href={`/${locale}/tos`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={linkStyle}
+    >
+      {messages.header.termofuse}
+    </Link>
+  );
+
+  const privacyLink = (
+    <Link
+      href={`/${locale}/privacy`}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={linkStyle}
+    >
+      {messages.header.privacypolicy}
+    </Link>
+  );
 
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack>
         <Switch
           checked={checked}
-          label={messages.login.field.agree.title}
           onChange={(event) => setChecked(event.currentTarget.checked)}
+          label={
+            <>
+              {messages.login.field.agree.title} {tosLink} {privacyLink}
+            </>
+          }
         />
 
         <TextInput

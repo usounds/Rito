@@ -135,7 +135,7 @@
 		"button": {
 			"regist": "登録",
 			"delete": "削除",
-			"close": "閉じる",
+			"close": "戻る",
 			"ogp": "タイトルを取得"
 		},
 		"tab": {

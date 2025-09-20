@@ -1,6 +1,6 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
-import { RegistBookmark } from '@/components/RegistBookmark';
+import { useLocale } from 'next-intl';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark } from '@/type/ApiTypes';
@@ -9,10 +9,10 @@ import { Affix, Avatar, Button, Menu, Modal } from "@mantine/core";
 import { BookmarkPlus, LogOut } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
-    const [quickRegistBookmark, setQuickRegistBookmark] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
@@ -24,6 +24,19 @@ export function LoginButtonOrUser() {
     const messages = useMessages();
     const isLoggedIn = !!activeDid;
     const [modalSize, setModalSize] = useState('70%')
+    const router = useRouter();
+    const locale = useLocale();
+    const pathname = usePathname(); // 現在のパスを取得
+    const [isRegist, setIsRegist] = useState(true)
+
+    useEffect(() => {
+        // /regist が含まれていたら非表示
+        if (pathname?.includes('/regist')) {
+            setIsRegist(false); // 非表示にする場合は false
+        } else {
+            setIsRegist(true);
+        }
+    }, [pathname]); // pathname が変わると実行
 
     useEffect(() => {
         const updateSize = () => {
@@ -40,7 +53,7 @@ export function LoginButtonOrUser() {
     }, [])
 
     useEffect(() => {
-        if(activeDid) return
+        if (activeDid) return
 
         (async () => {
             try {
@@ -140,25 +153,17 @@ export function LoginButtonOrUser() {
                             <Menu.Item leftSection={<LogOut size={14} />} color="red" onClick={handleLogout}>{messages.header.items.logout}</Menu.Item>
                         </Menu.Dropdown>
                     </Menu>
-                    <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
-                        <Button
-                            onClick={() => setQuickRegistBookmark(true)}
-                            leftSection={<BookmarkPlus size={16} />}
-                        >
-                            {messages.create.title}
-                        </Button>
-                    </Affix>
+                    {isRegist &&
+                        <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
+                            <Button
+                                onClick={() => router.push(`/${locale}/bookmark/regist`)}
+                                leftSection={<BookmarkPlus size={16} />}
+                            >
+                                {messages.create.title}
+                            </Button>
+                        </Affix>
+                    }
 
-                    <Modal
-                        opened={quickRegistBookmark}
-                        onClose={() => setQuickRegistBookmark(false)}
-                        size={modalSize}
-                        title={messages.create.title}
-                        closeOnClickOutside={false} 
-                        centered
-                    >
-                        <RegistBookmark onClose={() => setQuickRegistBookmark(false)} />
-                    </Modal>
                 </>
 
             ) : (
@@ -172,7 +177,7 @@ export function LoginButtonOrUser() {
                         onClose={() => setLoginOpened(false)}
                         size="md"
                         title={messages.login.titleDescription}
-                        closeOnClickOutside={false} 
+                        closeOnClickOutside={false}
                         centered
                     >
                         <Authentication />

@@ -31,7 +31,7 @@ export function LoginButtonOrUser() {
 
     useEffect(() => {
         // /regist が含まれていたら非表示
-        if (pathname?.includes('/regist')) {
+        if (pathname?.includes('/register')) {
             setIsRegist(false); // 非表示にする場合は false
         } else {
             setIsRegist(true);
@@ -156,7 +156,7 @@ export function LoginButtonOrUser() {
                     {isRegist &&
                         <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
                             <Button
-                                onClick={() => router.push(`/${locale}/bookmark/regist`)}
+                                onClick={() => router.push(`/${locale}/bookmark/register`)}
                                 leftSection={<BookmarkPlus size={16} />}
                             >
                                 {messages.create.title}

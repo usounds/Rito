@@ -51,11 +51,11 @@
 		"redirect": "認可ページに遷移します",
 		"field": {
 			"handle": {
-				"title": "ログイン",
+				"title": "ハンドル",
 				"placeholder": "alice.bsky.social"
 			},
 			"agree": {
-				"title": "利用規約とプライバシーポリシーに同意する"
+        "title": "右の内容に合意する"
 			}
 		},
 		"button": {

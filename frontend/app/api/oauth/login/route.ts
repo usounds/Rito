@@ -18,6 +18,7 @@ async function sha256(buffer: string) {
 export async function GET(req: NextRequest) {
   const handle = req.nextUrl.searchParams.get("handle") || "";
   const returnTo = req.nextUrl.searchParams.get("returnTo") || "/";
+  const locale = req.nextUrl.searchParams.get("locale") || "ja"; // デフォルトは ja
 
   // PKCE code_verifier と state を生成
   const codeVerifier = crypto.randomUUID();
@@ -44,8 +45,12 @@ export async function GET(req: NextRequest) {
     state,
     code_challenge: codeChallenge,
     code_challenge_method: "S256",
+    policy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/tos`,
+    privacy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/privacy`,
     ...(handle && { login_hint: handle }),
   });
+
+  console.log(authParams)
 
   const authUrl = `${AIP_BASE}/oauth/authorize?${authParams.toString()}`;
   return NextResponse.redirect(authUrl);

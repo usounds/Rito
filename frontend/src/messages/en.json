@@ -221,5 +221,12 @@
 		"error": {
 			"schemaRequired": "Either rkey or did is required"
 		}
+	},
+	"profile": {
+		"title": "Profile",
+		"description": "{0}'s bookmarks",
+		"inform": {
+			"nobookmark": "No bookmarks have been added"
+		}
 	}
 }

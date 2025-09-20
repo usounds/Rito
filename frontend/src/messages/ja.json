@@ -220,5 +220,12 @@
 		"error": {
 			"schemaRequired": "rkeyかdidは必須です"
 		}
+	},
+	"profile": {
+		"title": "プロフィール",
+		"description": "{0}さんのブックマーク",
+		"inform": {
+			"nobookmark": "ブックマークは登録されていません"
+		}
 	}
 }

@@ -84,7 +84,7 @@ export function LoginButtonOrUser() {
         const timer = setTimeout(async () => {
             try {
                 const res = await fetch(
-                    `/xrpc/blue.rito.feed.getActorBookmark?actor=${encodeURIComponent(
+                    `/xrpc/blue.rito.feed.getActorBookmarks?actor=${encodeURIComponent(
                         activeDid
                     )}`
                 );

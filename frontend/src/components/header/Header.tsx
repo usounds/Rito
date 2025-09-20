@@ -82,12 +82,12 @@ export default function Header() {
             <Link href={`/${locale}/bookmark/search`} className={classes.link}>
               {messages.header.browse}
             </Link>
-            <a href="#" className={classes.link}>
+            <Link href={`/${locale}/tos`} className={classes.link}>
               {messages.header.termofuse}
-            </a>
-            <a href="#" className={classes.link}>
+            </Link>
+            <Link href={`/${locale}/privacy`} className={classes.link}>
               {messages.header.privacypolicy}
-            </a>
+            </Link>
           </Group>
 
           <Group visibleFrom="sm">
@@ -120,12 +120,12 @@ export default function Header() {
             <Link href={`/${locale}/bookmark/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}
             </Link>
-            <a href="#" className={classes.link}>
+            <Link href={`/${locale}/tos`} className={classes.link}>
               {messages.header.termofuse}
-            </a>
-            <a href="#" className={classes.link}>
+            </Link>
+            <Link href={`/${locale}/privacy`} className={classes.link}>
               {messages.header.privacypolicy}
-            </a>
+            </Link>
           </Stack>
 
 

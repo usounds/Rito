@@ -169,13 +169,12 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
         }
     }
 
-    console.log(JSON.stringify(otherBookmarks))
-
     //投稿
     // 指定した URL から Post と PostUri 情報を取得
-    let postDataArray: PostData[] = []
+    let postDataArray: PostData[] = [];
+
     if (isLoggedIn) {
-        const postUriRecord = await prisma.postUri.findFirst({
+        const postUriRecords = await prisma.postUri.findMany({
             where: {
                 uri: {
                     equals: uri,
@@ -185,32 +184,30 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
             include: {
                 post: {
                     include: {
-                        uris: true, // ここで Post.uris を include
+                        uris: true,
                     },
+                },
+            },
+            orderBy: {
+                post: {
+                    indexed_at: 'desc', // ここで Post.indexed_at で降順
                 },
             },
         });
 
-        if (!postUriRecord || !postUriRecord.post) {
-            // console.log("Post not found for this URL");
-        } else {
-            const post = postUriRecord.post;
-
-            // PostData[] 作成
-            if (!post) {
-                //const postDataArray: PostData[] = [];
-            } else {
+        postDataArray = postUriRecords
+            .filter(r => r.post) // post が存在するものだけ
+            .map(r => {
+                const post = r.post!;
                 const firstUri = post.uris[0]?.uri || ''; // 先頭の URL
-                postDataArray = [{
+                return {
                     uri: firstUri,
                     text: post.text,
                     moderations: post.moderation_result ? post.moderation_result.split(',') : [],
                     indexedAt: post.indexed_at,
                     handle: post.handle,
-                }];
-
-            }
-        }
+                } as PostData;
+            });
     }
 
     return (
@@ -310,9 +307,10 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                             wordBreak: 'break-all',   // 単語途中でも改行
                                                             overflowWrap: 'anywhere', // 長いURLを折り返す
                                                         }} >
-                                                        {"by @" + bookmark.handle} <TimeAgo date={bookmark.indexedAt} />
+                                                        {"by @" + bookmark.handle + " "}
 
                                                     </Link>
+                                                    <TimeAgo date={bookmark.indexedAt} />
                                                 </Text>
                                             </TimelineItem>
                                         );
@@ -324,45 +322,54 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
                         <TabsPanel value="posts" pt="xs">
                             <Stack my="md">
-                                {postDataArray.length === 0 &&
-                                    <Text c="dimmed">{t('detail.nocomment')}</Text>
-                                }
-                                <Timeline bulletSize={20} lineWidth={4}>
-                                    {postDataArray.map((post, idx) => (
-                                        <TimelineItem key={idx}>
-                                            <Text component="div" c="dimmed">
-                                                <BlurReveal
-                                                    moderated={Array.isArray(post.moderations) && post.moderations.length > 0}
-                                                    blurAmount={6}
-                                                    overlayText={t('detail.view')}
-                                                >
-                                                    <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                        <Markdown
-                                                            components={{
-                                                                p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                            }}
-                                                        >
-                                                            {post.text || 'No description available'}
-                                                        </Markdown>
-                                                    </Spoiler>
-                                                </BlurReveal>
-                                            </Text>
 
-                                            <ModerationBadges moderations={post.moderations} />
-                                            <Text c="dimmed" size="sm">
-                                                <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
-                                                    textDecoration: 'none',
-                                                    color: 'inherit',
-                                                    wordBreak: 'break-all',   // 単語途中でも改行
-                                                    overflowWrap: 'anywhere', // 長いURLを折り返す
-                                                }}>
-                                                    {"by @" + post.handle}
-                                                </Link>
-                                                <TimeAgo date={post.indexedAt} />
-                                            </Text>
-                                        </TimelineItem>
-                                    ))}
-                                </Timeline>
+                                {!isLoggedIn &&
+                                    <Text c="dimmed">{t('detail.needlogin')}</Text>
+                                }
+
+                                {isLoggedIn &&
+                                    <>
+                                        {postDataArray.length === 0 &&
+                                            <Text c="dimmed">{t('detail.nocomment')}</Text>
+                                        }
+                                        <Timeline bulletSize={20} lineWidth={4}>
+                                            {postDataArray.map((post, idx) => (
+                                                <TimelineItem key={idx}>
+                                                    <Text component="div" c="dimmed">
+                                                        <BlurReveal
+                                                            moderated={Array.isArray(post.moderations) && post.moderations.length > 0}
+                                                            blurAmount={6}
+                                                            overlayText={t('detail.view')}
+                                                        >
+                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                                <Markdown
+                                                                    components={{
+                                                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
+                                                                    }}
+                                                                >
+                                                                    {post.text || 'No description available'}
+                                                                </Markdown>
+                                                            </Spoiler>
+                                                        </BlurReveal>
+                                                    </Text>
+
+                                                    <ModerationBadges moderations={post.moderations} />
+                                                    <Text c="dimmed" size="sm">
+                                                        <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
+                                                            textDecoration: 'none',
+                                                            color: 'inherit',
+                                                            wordBreak: 'break-all',   // 単語途中でも改行
+                                                            overflowWrap: 'anywhere', // 長いURLを折り返す
+                                                        }}>
+                                                            {"by @" + post.handle + " "}
+                                                        </Link>
+                                                        <TimeAgo date={post.indexedAt} />
+                                                    </Text>
+                                                </TimelineItem>
+                                            ))}
+                                        </Timeline>
+                                    </>
+                                }
                             </Stack>
                         </TabsPanel>
 

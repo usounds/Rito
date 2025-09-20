@@ -20,8 +20,8 @@ export function generateStaticParams() {
 }
 
 type PageProps = {
-  params: Promise<{ locale: string; page: string }>; // Promiseに変更
-  searchParams: Promise<Record<string, string | string[] | undefined>>; // これもPromiseに変更
+  params: Promise<{ locale: string; page: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 export default async function BookmarksPage(props: PageProps) {
@@ -35,12 +35,14 @@ export default async function BookmarksPage(props: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
+  // タグ
   const tag = searchParams.tag
     ? (Array.isArray(searchParams.tag) ? searchParams.tag : searchParams.tag.split(','))
       .map(t => t.trim())
       .filter(Boolean)
     : undefined;
 
+  // ハンドル
   const handle = searchParams.handle
     ? (Array.isArray(searchParams.handle) ? searchParams.handle : searchParams.handle.split(','))
       .map(h => h.trim())
@@ -49,18 +51,25 @@ export default async function BookmarksPage(props: PageProps) {
 
   const sort = searchParams.sort as 'created' | 'updated' | undefined;
 
-  const query = {
-    sort,
-    tag,
-    handle,
-    page: parseInt(page, 10) || 1,
+  // comment フラグ
+  const comment = searchParams.comment === 'true' ? 'true' : undefined;
+  const pageStr = params.page ?? '1'; // undefined の場合は '1' にフォールバック
+  const query: Record<string, string | string[]> = {
+    page: pageStr.toString(), // number → string に変換
   };
+  if (tag) query.tag = tag;
+  if (handle) query.handle = handle;
+  if (sort) query.sort = sort;
+  if (comment) query.comment = comment;
 
   return (
     <Container size="md" mx="auto" my="sx">
-      <Breadcrumbs items={[{ label: t("header.bookmarkMenu") },{ label: t("header.browse") }]} />
+      <Breadcrumbs items={[{ label: t("header.bookmarkMenu") }, { label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
-      <LatestBookmark params={{ locale }} t={t} query={query} />
+      <LatestBookmark
+        params={{ locale }}
+        searchParams={query} // comment もここに含まれる
+      />
     </Container>
   );
 }

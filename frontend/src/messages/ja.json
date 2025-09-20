@@ -82,6 +82,9 @@
 			"user": {
 				"title": "ユーザー",
 				"placeholder": "検索するハンドル"
+			},
+			"commentpriority": {
+				"title": "コメントを優先して表示する"
 			}
 		},
 		"button": {

@@ -249,7 +249,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     </Text>
                     {tags &&
                         <Stack my='xs'>
-                            <TagBadge tags={tags} />
+                            <TagBadge tags={tags} locale={locale} />
                             <ModerationBadges moderations={moderations} />
                         </Stack>
                     }

@@ -3,9 +3,6 @@ import path from "path";
 import ReactMarkdown from "react-markdown";
 import { Container} from "@mantine/core";
 
-
-export const revalidate = 3600; // 秒単位（3600秒 = 60分）
-
 interface PageProps {
   params: { locale: string };
 }

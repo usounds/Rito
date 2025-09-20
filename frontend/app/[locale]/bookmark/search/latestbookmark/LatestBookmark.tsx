@@ -3,10 +3,17 @@ import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 import PaginationWrapper from './PaginationWrapper';
+import type { Prisma } from '@prisma/client';
 
 type PageProps = {
   params: { locale: string };
-  searchParams?: { page?: string; sort?: 'created' | 'updated' };
+  searchParams?: {
+    page?: string;
+    sort?: 'created' | 'indexed';
+    tag?: string[];
+    handle?: string[];
+    comment?: string;
+  };
 };
 
 export async function LatestBookmark({ params, searchParams }: PageProps) {
@@ -14,10 +21,35 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const take = 12;
   const skip = (page - 1) * take;
 
-  console.log('page:'+page)
+  // --- Prisma where 条件 ---
+  const where: Prisma.BookmarkWhereInput = {};
 
+  if (searchParams?.handle?.length) {
+    where.handle = { in: searchParams.handle };
+  }
+
+  if (searchParams?.tag?.length) {
+    where.tags = {
+      some: {
+        tag: {
+          name: { in: searchParams.tag },
+        },
+      },
+    };
+  }
+
+  if (searchParams?.comment === 'true') {
+    where.comments = { some: {} };
+  }
+
+  // --- ソート ---
+  const orderBy: Prisma.BookmarkOrderByWithRelationInput =
+    searchParams?.sort === 'created' ? { created_at: 'desc' } : { indexed_at: 'desc' };
+
+  // --- Prisma データ取得 ---
   const bookmarks = await prisma.bookmark.findMany({
-    orderBy: { indexed_at: 'desc' },
+    where,
+    orderBy,
     take,
     skip,
     include: { comments: true, tags: { include: { tag: true } } },
@@ -25,7 +57,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
-  const totalCount = await prisma.bookmark.count();
+  const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
 
   return (
@@ -46,8 +78,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
         ))}
       </SimpleGrid>
 
-      {/* ページネーションは Client Component に委譲 */}
-      <PaginationWrapper total={totalPages} page={page} />
+      <PaginationWrapper total={totalPages} page={page} query={searchParams ?? { page: '1' }} />
     </Stack>
   );
 }

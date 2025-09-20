@@ -19,7 +19,6 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
 
   // searchParams を同期変数として扱う
   const query = searchParams ?? {};
-  console.log(searchParams)
   const useComment = searchParams?.comment === 'true'; // ←ここが重要
 
   const page = query.page ? parseInt(query.page) : 1;
@@ -69,9 +68,6 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
 
           const displayTitle = useComment ? comment.title : b.ogpTitle || comment.title || '';
           const displayComment = useComment ? comment.comment : b.ogpDescription || comment.comment || '';
-
-          console.log('useComment:'+useComment)
-          console.log('displayComment:'+displayComment)
 
           const moderationList: string[] = useComment
             ? comment.moderations || []

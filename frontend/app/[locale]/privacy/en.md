@@ -22,7 +22,6 @@ The Service uses the following external services:
   → [Google Privacy Policy](https://policies.google.com/privacy)
 - OpenAI (for moderation purposes. Note that the model in use, omni-moderation-latest, does not learn from the content)
   → [Privacy Policy](https://openai.com/policies/row-privacy-policy/)
-→ Privacy Policy
 - UFOs (for obtaining Lexicon information)  
   ※ Thank you [fig](https://bsky.app/profile/bad-example.com), developer of [microcosm](https://bsky.app/profile/microcosm.blue)
   

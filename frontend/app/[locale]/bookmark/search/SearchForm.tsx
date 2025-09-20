@@ -28,10 +28,16 @@ export function SearchForm({
   // App Router 用: クエリパラメータを取得
   const searchParams = useSearchParams();
 
-  useEffect(() => {
-    if (!searchParams) return;
-    setCommentPriority(searchParams.get('comment') === 'true');
-  }, [searchParams]);
+useEffect(() => {
+  if (!searchParams) return;
+
+  const tagParam = searchParams.get('tag');
+  const handleParam = searchParams.get('handle');
+
+  setCommentPriority(searchParams.get('comment') === 'true');
+  setTags(tagParam ? tagParam.split(',') : []);
+  setHandles(handleParam ? handleParam.split(',') : []);
+}, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

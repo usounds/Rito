@@ -23,7 +23,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import classes from './Article.module.scss';
-import { useTranslations } from "next-intl";
 
 
 type ArticleCardProps = {
@@ -133,7 +132,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         >{comment}</Markdown>
                     </Text>
 
-                    <TagBadge tags={tags} />
+                    <TagBadge tags={tags} locale={locale} />
                 </BlurReveal>
 
             </Box>

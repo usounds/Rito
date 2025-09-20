@@ -20,43 +20,54 @@ export function generateStaticParams() {
 }
 
 type PageProps = {
-  params: Promise<{ locale: string; page: string }>;
-  searchParams: Promise<Record<string, string | string[] | undefined>>;
+  params: Promise<{ locale: string; page?: string }>;
+  searchParams: Promise<{
+    page?: string;
+    sort?: 'created' | 'indexed';
+    tag?: string[];
+    handle?: string[];
+    comment?: string;
+  }>;
 };
 
 export default async function BookmarksPage(props: PageProps) {
-  // paramsとsearchParamsをawaitで取得
+  // --- await 必須 ---
   const params = await props.params;
   const searchParams = await props.searchParams;
 
   const locale = params.locale;
-  const page = params.page;
+  const pageStr = searchParams.page ?? params.page ?? '1';
 
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
-  // タグ
+  // --- タグ ---
   const tag = searchParams.tag
-    ? (Array.isArray(searchParams.tag) ? searchParams.tag : searchParams.tag.split(','))
+    ? (Array.isArray(searchParams.tag)
+      ? searchParams.tag
+      : (searchParams.tag as string).split(',')
+    )
       .map(t => t.trim())
       .filter(Boolean)
     : undefined;
-
-  // ハンドル
+    
+  // --- ハンドル ---
   const handle = searchParams.handle
-    ? (Array.isArray(searchParams.handle) ? searchParams.handle : searchParams.handle.split(','))
+    ? (Array.isArray(searchParams.handle)
+      ? searchParams.handle
+      : (searchParams.handle as string).split(',')
+    )
       .map(h => h.trim())
       .filter(Boolean)
     : undefined;
+  // --- ソート ---
+  const sort = searchParams.sort === 'created' ? 'created' : 'indexed';
 
-  const sort = searchParams.sort as 'created' | 'updated' | undefined;
-
-  // comment フラグ
+  // --- コメントフラグ ---
   const comment = searchParams.comment === 'true' ? 'true' : undefined;
-  const pageStr = searchParams.page ? String(searchParams.page) : '1';
-  const query: Record<string, string | string[]> = {
-    page: pageStr,
-  };
+
+  // --- LatestBookmark に渡す query ---
+  const query: Record<string, string | string[]> = { page: pageStr };
   if (tag) query.tag = tag;
   if (handle) query.handle = handle;
   if (sort) query.sort = sort;
@@ -66,10 +77,7 @@ export default async function BookmarksPage(props: PageProps) {
     <Container size="md" mx="auto" my="sx">
       <Breadcrumbs items={[{ label: t("header.bookmarkMenu") }, { label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
-      <LatestBookmark
-        params={{ locale }}
-        searchParams={query} // comment もここに含まれる
-      />
+      <LatestBookmark params={{ locale }} searchParams={query} />
     </Container>
   );
 }

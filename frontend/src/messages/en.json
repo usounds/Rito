@@ -83,6 +83,9 @@
 			"user": {
 				"title": "User",
 				"placeholder": "Search user handle"
+			},
+			"commentprioritycommentpriority": {
+				"title": "Comment Priority"
 			}
 		},
 		"button": {

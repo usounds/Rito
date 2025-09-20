@@ -145,7 +145,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 {/* 右上固定の atUri エリア */}
                 {atUri && (
                     <>
-                        <Link href={`/${locale}/bookmark/regist?aturi=${encodeURIComponent(atUri)}`}>
+                        <Link href={`/${locale}/bookmark/register?aturi=${encodeURIComponent(atUri)}`}>
                             <ActionIcon variant="transparent" color="gray" aria-label="Edit">
                                 <SquarePen size={16} />
                             </ActionIcon>

@@ -212,7 +212,7 @@ export const RegistBookmark: React.FC<RegistBookmarkProps> = ({ aturi, onClose }
                             ? {
                                 ...c,
                                 title: data.result?.ogTitle || c.title,
-                                comment: data.result?.ogDescription || c.comment,
+                                //comment: data.result?.ogDescription || c.comment,
                             }
                             : c
                     ))

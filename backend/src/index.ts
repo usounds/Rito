@@ -6,8 +6,6 @@ import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
 import OpenAI from "openai";
 import { Client, simpleFetchHandler } from '@atcute/client';
-
-
 const publicAgent = new Client({
   handler: simpleFetchHandler({
     service: 'https://public.api.bsky.app',
@@ -109,6 +107,29 @@ async function init() {
     }, CURSOR_UPDATE_INTERVAL);
   });
 
+
+  function isValidTangledUrl(url: string, userProfHandle: string): boolean {
+    try {
+      const u = new URL(url);
+
+      // ドメインが tangled.org であることを確認
+      if (u.hostname !== "tangled.org") return false;
+
+      // パスを分解
+      const parts = u.pathname.split("/").filter(Boolean);
+
+      // 最低でも2要素必要（例: ["@rito.blue", "skeet.el"]）
+      if (parts.length < 2) return false;
+
+      // 1個目が @handle であることを確認
+      if (parts[0] !== `@${userProfHandle}`) return false;
+
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
     const record = event.commit.record as BlueRitoFeedBookmark.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
@@ -135,6 +156,8 @@ async function init() {
             if (domain === handle || domain.endsWith('.' + handle)) {
               isVerify = true;
             }
+          } else if (isValidTangledUrl(event.commit.record.subject || '', handle)) {
+            isVerify = true
           }
         } catch {
           // URL パースエラーは無視
@@ -250,7 +273,7 @@ async function init() {
         await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
       }
 
-      logger.info(`Upserted bookmark: ${aturi}, OGP moderation: ${ogpModerationResult}`);
+      logger.info(`Upserted bookmark: ${aturi}, Verify: ${isVerify},  OGP moderation: ${ogpModerationResult}`);
     } catch (err) {
       logger.error(`Error in upsert: ${err}`);
     }
@@ -422,7 +445,7 @@ async function init() {
         handle = userProfile.data.handle;
 
         const reversedHandle = handle.split('.').reverse().join('.');
-        if (! verified && nsid.startsWith(reversedHandle)) {
+        if (!verified && nsid.startsWith(reversedHandle)) {
           logger.info(`Verified via Profile: ${did} -> ${reversedHandle}`);
           verified = true;
         }

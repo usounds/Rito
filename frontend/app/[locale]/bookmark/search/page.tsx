@@ -53,9 +53,9 @@ export default async function BookmarksPage(props: PageProps) {
 
   // comment フラグ
   const comment = searchParams.comment === 'true' ? 'true' : undefined;
-  const pageStr = params.page ?? '1'; // undefined の場合は '1' にフォールバック
+  const pageStr = searchParams.page ? String(searchParams.page) : '1';
   const query: Record<string, string | string[]> = {
-    page: pageStr.toString(), // number → string に変換
+    page: pageStr,
   };
   if (tag) query.tag = tag;
   if (handle) query.handle = handle;

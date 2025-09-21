@@ -17,7 +17,7 @@ export async function generateStaticParams() {
 }
 
 export default async function StatusPage({ params }: StatusProps) {
-    const { locale } = params;
+    const { locale } = await params;
     const t = await getTranslations({ locale });
 
     const bookmarks = await prisma.bookmark.count({});

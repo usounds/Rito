@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken, refreshAccessToken } from "@/logic/HandleOauth";
 
 export async function GET(req: NextRequest) {
+  const referer = req.headers.get("referer");
+
+  // Referer が存在して、自サイトのURLで始まらない場合は403
+  if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
   try {
     let accessToken: string | null | undefined = null;
-    let refreshToken: string | null | undefined = null;
     let updatedCookies: { key: string; value: string; maxAge?: number }[] | null | undefined;
 
     // --- アクセストークン取得 ---

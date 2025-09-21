@@ -1,10 +1,8 @@
-import { Container, SimpleGrid, Text, ThemeIcon, Title, Button, Group } from '@mantine/core';
+import { Button, Container, Group, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core';
+import { AtSign, Bookmark, FileText, Search, SquareArrowOutUpRight } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
-import classes from './Features.module.scss';
-import { Bookmark, AtSign, FileText } from 'lucide-react';
-import { FolderSearch } from 'lucide-react';
-import { SquareArrowOutUpRight } from 'lucide-react';
 import Link from "next/link";
+import classes from './Features.module.scss';
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
@@ -78,7 +76,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           <Button
             component={Link}
             href={`/${locale}/bookmark/search`}
-            leftSection={<FolderSearch size={14}
+            leftSection={<Search size={14}
             />} variant="default">
             {t('button.search')}
           </Button>

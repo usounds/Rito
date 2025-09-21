@@ -1,10 +1,10 @@
 'use client';
-import { Button, Group, TagsInput, Checkbox } from '@mantine/core';
+import { Button, Checkbox, Group, TagsInput } from '@mantine/core';
 import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
+import { useEffect, useState } from 'react';
 
 type SearchFormProps = {
   locale: string;

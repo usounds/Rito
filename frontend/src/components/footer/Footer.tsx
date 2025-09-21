@@ -1,9 +1,15 @@
-import { Text, Container, Group, ActionIcon } from '@mantine/core';
+import { Container, Group, Text,Anchor } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
+import { FaBluesky, FaGithub } from "react-icons/fa6";
 import classes from './Footer.module.scss';
-import { FaGithub } from "react-icons/fa6";
-import { FaBluesky } from "react-icons/fa6";
+import Link from 'next/link';
 
-export function Footer() {
+type FooterProps = {
+    locale: string;
+};
+
+export async function Footer({ locale }: FooterProps) {
+    const t = await getTranslations({ locale });
 
     return (
         <div className={classes.footer}>
@@ -11,6 +17,14 @@ export function Footer() {
                 <Text c="dimmed">Developed by usounds.work</Text>
 
                 <Group gap="md" my="sm" wrap="nowrap">
+<Anchor
+  href={`/${locale}/status`}
+  c="dimmed"
+  size="sm"
+  style={{ textDecoration: 'none', cursor: 'pointer' }}
+>
+  {t('status.title')}
+</Anchor>
 
                     <a
                         href="https://bsky.app/profile/rito.blue"
@@ -29,7 +43,6 @@ export function Footer() {
                     >
                         <FaGithub />
                     </a>
-
                 </Group>
             </Container>
         </div>

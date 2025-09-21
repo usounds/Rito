@@ -2,83 +2,92 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
-import PaginationWrapper from './PaginationWrapper';
-import type { Prisma } from '@prisma/client';
 
 type PageProps = {
   params: { locale: string };
   searchParams?: {
-    page?: string;
-    sort?: 'created' | 'indexed';
+    sort?: 'created' | 'updated';
     tag?: string[];
     handle?: string[];
-    comment?: string;
+    page?: string;
+    comment?: string; // コメント優先フラグ
   };
 };
 
 export async function LatestBookmark({ params, searchParams }: PageProps) {
-  const page = searchParams?.page ? parseInt(searchParams.page) : 1;
+  const locale = params.locale;
+  const query = searchParams ?? {};
+  const useComment = query.comment === 'true'; // ← コメント優先フラグ
+
+  const page = query.page ? parseInt(query.page) : 1;
   const take = 12;
   const skip = (page - 1) * take;
+  const orderField = query.sort === 'created' ? 'created_at' : 'indexed_at';
 
   // --- Prisma where 条件 ---
-  const where: Prisma.BookmarkWhereInput = {};
+  const where: any = {};
 
-  if (searchParams?.handle?.length) {
-    where.handle = { in: searchParams.handle };
+  if (query.handle?.length) {
+    where.handle = { in: query.handle };
   }
 
-  if (searchParams?.tag?.length) {
-    where.tags = {
-      some: {
-        tag: {
-          name: { in: searchParams.tag },
-        },
-      },
-    };
+  if (query.tag?.length) {
+    where.AND = query.tag.map((t) => ({
+      tags: { some: { tag: { name: { equals: t, mode: 'insensitive' } } } },
+    }));
   }
 
-  if (searchParams?.comment === 'true') {
-    where.comments = { some: {} };
-  }
-
-  // --- ソート ---
-  const orderBy: Prisma.BookmarkOrderByWithRelationInput =
-    searchParams?.sort === 'created' ? { created_at: 'desc' } : { indexed_at: 'desc' };
-
-  // --- Prisma データ取得 ---
   const bookmarks = await prisma.bookmark.findMany({
     where,
-    orderBy,
+    orderBy: { [orderField]: 'desc' },
     take,
     skip,
-    include: { comments: true, tags: { include: { tag: true } } },
+    include: {
+      comments: true,
+      tags: { include: { tag: true } },
+    },
   });
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
-  const totalCount = await prisma.bookmark.count({ where });
-  const totalPages = Math.ceil(totalCount / take);
-
   return (
     <Stack>
-      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }}>
-        {normalized.map((b) => (
-          <Article
-            key={b.uri}
-            url={b.subject}
-            title={b.ogpTitle || ''}
-            handle={b.handle}
-            comment={b.ogpDescription || ''}
-            tags={b.tags}
-            image={b.ogpImage || undefined}
-            date={new Date(b.indexedAt)}
-            moderations={b.moderations || []}
-          />
-        ))}
-      </SimpleGrid>
+      <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+        {normalized.map((b) => {
+          // コメント優先フラグが true の場合は locale に対応したコメントを優先表示
+          const comment =
+            b.comments?.find((c) => c.lang === locale) ||
+            b.comments?.[0] || { title: '', comment: '', moderations: [] };
 
-      <PaginationWrapper total={totalPages} page={page} query={searchParams ?? { page: '1' }} />
+          const displayTitle = useComment ? comment.title : b.ogpTitle || comment.title || '';
+          const displayComment = useComment ? comment.comment : b.ogpDescription || comment.comment || '';
+
+          const moderationList: string[] = useComment
+            ? comment.moderations || []
+            : [
+                ...(b.moderations || []),
+                ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
+              ];
+
+          const dateField: 'createdAt' | 'indexedAt' = query.sort === 'created' ? 'createdAt' : 'indexedAt';
+          const displayDate = new Date(b[dateField]);
+
+          return (
+            <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+              <Article
+                url={b.subject}
+                title={displayTitle}
+                handle={b.handle}
+                comment={displayComment}
+                tags={b.tags}
+                image={b.ogpImage || undefined}
+                date={displayDate}
+                moderations={moderationList}
+              />
+            </div>
+          );
+        })}
+      </SimpleGrid>
     </Stack>
   );
 }

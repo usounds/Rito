@@ -15,17 +15,21 @@ async function sha256(buffer: string) {
   return await crypto.subtle.digest("SHA-256", new TextEncoder().encode(buffer));
 }
 
-export async function GET(req: NextRequest) { 
+export async function GET(req: NextRequest) {
   const referer = req.headers.get("referer");
 
   // Referer が存在して、自サイトのURLで始まらない場合は403
   if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
-  
+
   const handle = req.nextUrl.searchParams.get("handle") || "";
   const returnTo = req.nextUrl.searchParams.get("returnTo") || "/";
   const locale = req.nextUrl.searchParams.get("locale") || "ja"; // デフォルトは ja
+
+  if (!returnTo.startsWith("/") && !returnTo.startsWith(process.env.NEXT_PUBLIC_URL!)) {
+    return new NextResponse("Invalid Return To", { status: 403 });
+  }
 
   // PKCE code_verifier と state を生成
   const codeVerifier = crypto.randomUUID();

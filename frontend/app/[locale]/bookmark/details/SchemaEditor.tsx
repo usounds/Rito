@@ -114,9 +114,9 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>NSID</Table.Th>
-                <Table.Th>Schema</Table.Th>
-                <Table.Th>Count</Table.Th>
-                <Table.Th>Actions</Table.Th>
+                <Table.Th>{messages.detail.field.schema.title}</Table.Th>
+                <Table.Th>{messages.detail.field.count.title}</Table.Th>
+                <Table.Th>{messages.detail.field.action.title}</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>

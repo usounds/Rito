@@ -26,7 +26,7 @@ The Service uses the following external services:
   ※ Thank you [fig](https://bsky.app/profile/bad-example.com), developer of [microcosm](https://bsky.app/profile/microcosm.blue)
   
 ## 5. Information Management
-- OAuth authentication information is encrypted and managed on a dedicated server and will be discarded or updated within one year.
+- OAuth authentication information managed on a dedicated server and will be discarded or updated within one year.
 - Bookmarks and schemas are collected from information published in the PDS, so no specific retention period is set.
 
 ## 6. User Rights
@@ -37,7 +37,7 @@ The Service uses the following external services:
 This Privacy Policy may be revised as necessary. Revisions will be announced on this site.
 
 ## 8. Revision History
-- 2025/09/20 First edition
+- 2025/09/23 First edition
 
 ## 9. Contact
 Developer: @usounds.work  

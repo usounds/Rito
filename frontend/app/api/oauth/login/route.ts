@@ -61,8 +61,6 @@ export async function GET(req: NextRequest) {
     ...(handle && { login_hint: handle }),
   });
 
-  console.log(authParams)
-
   const authUrl = `${AIP_BASE}/oauth/authorize?${authParams.toString()}`;
   return NextResponse.redirect(authUrl);
 }

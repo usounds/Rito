@@ -61,6 +61,7 @@ export default function RegistBookmarkPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const aturi = searchParams.get("aturi") || undefined;
+    const subjectParam = searchParams.get("subject") || undefined;
 
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
@@ -85,6 +86,13 @@ export default function RegistBookmarkPage() {
     const thisClient = useXrpcAgentStore(state => state.thisClient);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [activeTab, setActiveTab] = useState<string | null>(locale);
+
+    useEffect(() => {
+        if (subjectParam) {
+            // URI デコードしてからセット
+            setUrl(decodeURIComponent(subjectParam));
+        }
+    }, [subjectParam]);
 
     useEffect(() => {
         if (!activeDid) {

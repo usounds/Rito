@@ -6,13 +6,14 @@ import TimeAgo from "@/components/TimeAgo";
 import publicSuffixList from '@/data/publicSuffixList.json';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
-import { Container, Spoiler, Stack, Tabs, TabsList, TabsPanel, TabsTab, Text, Timeline, TimelineItem, Title } from "@mantine/core";
+import { Container, Spoiler, Stack, Tabs, TabsList, TabsPanel, TabsTab, Text, Timeline, TimelineItem, Title, Flex } from "@mantine/core";
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import Link from 'next/link';
 import Markdown from 'react-markdown';
 import { SchemaEditor } from "./SchemaEditor";
+import EditMenu from '@/components/EditMenu';
 
 export const metadata: Metadata = {
     robots: {
@@ -103,7 +104,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
     const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
-    const tags: string[] = normalized.flatMap(b => b.tags || []);
+    const tags: string[] = Array.from(new Set(normalized.flatMap(b => b.tags || [])));
 
     const verifiedBookmarks = normalized.filter((b) =>
         b.tags.includes("Verified")
@@ -208,6 +209,12 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
             });
     }
 
+    if (verifiedBookmarks.length == 0 && otherBookmarks.length == 0) return (
+        <Container size="md" mx="auto">
+            <Text c="dimmed">{t('detail.inform.nobookmark')}</Text>
+        </Container>
+    )
+
     return (
         <>
             <Container size="md" mx="auto">
@@ -218,7 +225,13 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         blurAmount={6}
                         overlayText={t('detail.view')}
                     >
-                        <Title order={4}>{displayTitle}</Title>
+                        <Flex justify="space-between" align="center" style={{ width: '100%' }}>
+                            {/* 左側：タイトル */}
+                            <Title order={4}>{displayTitle}</Title>
+
+                            {/* 右側：EditMenu ボタン */}
+                            <EditMenu subject={uri} />
+                        </Flex>
                         <Text size="md" component="div">
                             <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')} >
                                 <Markdown

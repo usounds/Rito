@@ -55,7 +55,7 @@
 				"placeholder": "alice.bsky.social"
 			},
 			"agree": {
-        "title": "右の内容に合意する"
+				"title": "右の内容に合意する"
 			}
 		},
 		"button": {
@@ -71,7 +71,13 @@
 	"mybookmark": {
 		"latest": "最新のブックマーク",
 		"login": "自分のブックマークを管理するにはログインしてください",
-		"empty": "右下からブックマークを登録してください"
+		"empty": "右下からブックマークを登録してください",
+		"field": {
+			"search": {
+				"title": "単語検索",
+				"placeholder": "検索する単語を入力"
+			}
+		}
 	},
 	"search": {
 		"field": {
@@ -255,8 +261,8 @@
 			"user": "ユーザー",
 			"server": "バックエンド"
 		},
-		"inform":{
-			"fine":"遅延なし",
+		"inform": {
+			"fine": "遅延なし",
 			"delay": "遅れ"
 		}
 	}

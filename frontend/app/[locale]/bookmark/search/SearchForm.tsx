@@ -28,16 +28,16 @@ export function SearchForm({
   // App Router 用: クエリパラメータを取得
   const searchParams = useSearchParams();
 
-useEffect(() => {
-  if (!searchParams) return;
+  useEffect(() => {
+    if (!searchParams) return;
 
-  const tagParam = searchParams.get('tag');
-  const handleParam = searchParams.get('handle');
+    const tagParam = searchParams.get('tag');
+    const handleParam = searchParams.get('handle');
 
-  setCommentPriority(searchParams.get('comment') === 'true');
-  setTags(tagParam ? tagParam.split(',') : []);
-  setHandles(handleParam ? handleParam.split(',') : []);
-}, [searchParams]);
+    setCommentPriority(searchParams.get('comment') === 'true');
+    setTags(tagParam ? tagParam.split(',') : []);
+    setHandles(handleParam ? handleParam.split(',') : []);
+  }, [searchParams]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +60,11 @@ useEffect(() => {
           label={messages.search.field.tag.title}
           placeholder={messages.search.field.tag.placeholder}
           value={tags}
-          onChange={setTags}
+          onChange={(newTags) => {
+            // '#' を削除してから state にセット
+            const filtered = newTags.map(tag => tag.replace(/#/g, ""));
+            setTags(filtered);
+          }}
           styles={{ input: { fontSize: 16 } }}
           clearable
         />

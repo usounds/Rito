@@ -549,7 +549,11 @@ export default function RegistBookmarkPage() {
                 <TagsInput
                     data={[]}
                     value={tags}
-                    onChange={setTags}
+                    onChange={(newTags) => {
+                        // 新しいタグ配列から '#' を含むタグを除外
+                        const filtered = newTags.map(tag => tag.replace(/#/g, ""));
+                        setTags(filtered);
+                    }}
                     label={messages.create.field.tag.title}
                     description={messages.create.field.tag.description}
                     placeholder={messages.create.field.tag.placeholder}
@@ -557,7 +561,8 @@ export default function RegistBookmarkPage() {
                     maxLength={25}
                     leftSection={<Tag size={16} />}
                     clearable
-                    styles={{ input: { fontSize: 16, }, }} />
+                    styles={{ input: { fontSize: 16 } }}
+                />
                 <Tabs value={activeTab} onChange={setActiveTab}>
                     <Tabs.List>
                         <Tabs.Tab value="ja">{messages.create.tab.ja}</Tabs.Tab>

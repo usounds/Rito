@@ -190,7 +190,7 @@ export function LoginButtonOrUser() {
                 <>
                     <Menu shadow="md" width={200}>
                         <Menu.Target>
-                            <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} size={26} />
+                            <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} size={28} />
                         </Menu.Target>
 
                         <Menu.Dropdown>

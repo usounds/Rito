@@ -17,6 +17,43 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { AppBskyFeedPost } from '@atcute/bluesky';
 import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
+import RichtextBuilder from '@atcute/bluesky-richtext-builder';
+const MAX_TEXT_LENGTH = 300;
+
+export function buildPost(
+    activeComment: string | undefined,
+    tags: string[],
+    messages: any
+) {
+    const builder = new RichtextBuilder();
+
+    // ホワイトスペースを含むタグは除外
+    const validTags = tags.filter(tag => !/\s/.test(tag));
+
+    // タグ分の文字数を計算（# + タグ文字 + 半角スペース）
+    const tagsLength = validTags.reduce((sum, tag, index) => {
+        const space = index > 0 ? 1 : 0; // 2個目以降は半角スペース
+        return sum + 1 + tag.length + space; // # + tag.length + space
+    }, 0);
+
+    // text部分を短くして addText
+    const baseText = activeComment || messages.create.inform.bookmark;
+    builder.addText(baseText.slice(0, MAX_TEXT_LENGTH - tagsLength));
+
+    // タグを追加
+    validTags.forEach((tag, index) => {
+        if (index > 0) builder.addText(" "); // 半角スペースを挿入
+        builder.addTag(tag);
+    });
+
+    return {
+        $type: "app.bsky.feed.post",
+        text: builder.text,
+        facets: builder.facets,
+        createdAt: new Date().toISOString(),
+        via: messages.title
+    };
+}
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -129,7 +166,7 @@ export default function RegistBookmarkPage() {
         };
 
         fetchBookmark();
-    }, [aturi,activeDid]);
+    }, [aturi, activeDid]);
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {
         try {
@@ -393,9 +430,7 @@ export default function RegistBookmarkPage() {
                 };
 
                 const appBskyFeedPost: MyPost = {
-                    $type: "app.bsky.feed.post",
-                    text: activeComment?.slice(0, 300) || messages.create.inform.bookmark,
-                    createdAt: new Date().toISOString(),
+                    ...(buildPost(activeComment, tags, messages) as Omit<MyPost, "via">),
                     via: messages.title
                 };
 

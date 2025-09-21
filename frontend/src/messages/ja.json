@@ -130,6 +130,9 @@
 				"title": "コメント",
 				"placeholder": "ソーシャルブックマーク",
 				"description": "ブックマークのコメント"
+			},
+			"posttobluesky": {
+				"title": "Blueskyに投稿する"
 			}
 		},
 		"button": {
@@ -144,7 +147,9 @@
 		},
 		"inform": {
 			"canverify": "あなたはこのURLの認証コメントを登録できます",
-			"success": "登録しました"
+			"success": "登録しました",
+			"bookmark": "リトにブックマークを登録しました",
+			"ogp": "{0}さんたちのブックマークを見る"
 		},
 		"error": {
 			"invalidurl": "URLの形式が不正です",

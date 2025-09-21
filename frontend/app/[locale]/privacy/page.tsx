@@ -1,9 +1,9 @@
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { Container } from "@mantine/core";
 import fs from "fs";
+import { getTranslations } from "next-intl/server";
 import path from "path";
 import ReactMarkdown from "react-markdown";
-import { Container } from "@mantine/core";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: { locale: string };

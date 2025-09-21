@@ -1,9 +1,8 @@
 // app/xrpc/[...path]/route.ts
-import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken } from "@/logic/HandleOauth";
-import * as jose from "jose";
 import { createHash } from "crypto";
-
+import * as jose from "jose";
+import { NextRequest, NextResponse } from "next/server";
 
 interface AtpSessionResponse {
   did: string;

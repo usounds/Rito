@@ -1,7 +1,6 @@
 "use client";
-
-import { useState, ReactNode } from "react";
 import { Box } from "@mantine/core";
+import { ReactNode, useState } from "react";
 
 interface BlurRevealProps {
   children: ReactNode;

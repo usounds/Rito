@@ -1,5 +1,5 @@
-import { Breadcrumbs as MantineBreadcrumbs, Anchor,Stack } from "@mantine/core";
-import { useTranslations,useLocale } from "next-intl";
+import { Anchor, Breadcrumbs as MantineBreadcrumbs, Stack } from "@mantine/core";
+import { useLocale, useTranslations } from "next-intl";
 
 interface Crumb {
   label: string;

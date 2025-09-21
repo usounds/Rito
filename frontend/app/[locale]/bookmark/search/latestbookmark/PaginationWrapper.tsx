@@ -1,6 +1,5 @@
 "use client";
-
-import { Pagination, Center } from "@mantine/core";
+import { Center, Pagination } from "@mantine/core";
 import Link from "next/link";
 
 type Props = {

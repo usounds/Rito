@@ -203,13 +203,26 @@
 				"title": "アクション"
 			}
 		},
+		"menu": {
+			"title": "メニュー",
+			"regist": {
+				"title": "ブックマークの登録"
+			},
+			"edit": {
+				"title": "ブックマークの編集"
+			},
+			"delete": {
+				"title": "ブックマークの削除"
+			}
+		},
 		"button": {
 			"close": "閉じる",
 			"new": "投稿"
 		},
 		"inform": {
 			"error": "システムエラーが発生しました",
-			"success": "登録しました"
+			"success": "登録しました",
+			"nobookmark": "ブックマークはありません"
 		},
 		"error": {
 			"uriRequired": "URIは必須です"

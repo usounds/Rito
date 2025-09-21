@@ -8,12 +8,12 @@ import { getTranslations } from "next-intl/server";
 export const revalidate = 300; // 5分ごとに再生成
 
 type StatusProps = {
-  params: { locale: string };
+    params: { locale: string };
 };
 
 export async function generateStaticParams() {
-  // routing.locales は ['en', 'ja'] などの配列
-  return ['en', 'ja'].map(locale => ({ locale }));
+    // routing.locales は ['en', 'ja'] などの配列
+    return ['en', 'ja'].map(locale => ({ locale }));
 }
 
 export default async function StatusPage({ params }: StatusProps) {
@@ -25,20 +25,19 @@ export default async function StatusPage({ params }: StatusProps) {
     const uniqueDids = await prisma.bookmark.groupBy({
         by: ['did'],
         _count: true,
-    });
-
-    const record = await prisma.jetstreamIndex.findUnique({
+    }); const record = await prisma.jetstreamIndex.findUnique({
         where: { service: 'rito' },
     });
 
     let comment: string;
-    let diffMinutes: number | null = null;
+    let diffMinutes: number = 0
 
     if (!record) {
         comment = t('status.inform.delay');
     } else {
+        // record.index はマイクロ秒単位
         const indexNum = BigInt(record.index);
-        const indexDate = new Date(Number(indexNum));
+        const indexDate = new Date(Number(indexNum) / 1000); // µs → ms
         const now = new Date();
         const diffMs = now.getTime() - indexDate.getTime();
         const fiveMinutes = 5 * 60 * 1000;
@@ -60,7 +59,7 @@ export default async function StatusPage({ params }: StatusProps) {
                     { title: t('status.field.bookmark'), icon: 'bookmark', value: bookmarks, diff: 0 },
                     { title: t('status.field.tag'), icon: 'tag', value: tags, diff: 0 },
                     { title: t('status.field.user'), icon: 'user', value: uniqueDids.length, diff: 0 },
-                    { title: t('status.field.server'), icon: 'server', value: comment, diff: diffMinutes||0 },
+                    { title: t('status.field.server'), icon: 'server', value: comment, diff: diffMinutes * -1 || 0 },
                 ]}
             />
         </Container>

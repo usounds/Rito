@@ -18,6 +18,8 @@
     "@atcute/client": "^4.0.3",
     "@atcute/lexicons": "^1.1.1",
     "@atcute/tid": "^1.0.2",
+    "@fortawesome/free-brands-svg-icons": "^7.0.1",
+    "@fortawesome/react-fontawesome": "^3.0.2",
     "@mantine/core": "^8.3.1",
     "@mantine/form": "^8.3.1",
     "@mantine/hooks": "^8.3.1",

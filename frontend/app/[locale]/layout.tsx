@@ -7,6 +7,7 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/header/Header";
+import {Footer} from "@/components/footer/Footer";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextTopLoader from 'nextjs-toploader';
 
@@ -73,6 +74,7 @@ export default async function RootLayout({
             />
             <Header />
             {children}
+            <Footer />
           </MantineProvider>
         </NextIntlClientProvider>
       </body>

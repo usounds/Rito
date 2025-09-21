@@ -48,7 +48,7 @@
 		"titleDescription": "Blueskyのアカウントでログイン",
 		"create": "Blueskyのアカウントを作成する",
 		"didresolve": "DIDを解決しています",
-		"redirect": "認可ページに遷移します",
+		"redirect": "認証中です。必要に応じて認証画面に遷移します",
 		"field": {
 			"handle": {
 				"title": "ハンドル",

@@ -49,7 +49,7 @@
 		"handle": "Handle",
 		"create": "Create a Bluesky account",
 		"didresolve": "Resolving DID",
-		"redirect": "Redirecting to Authorize page",
+		"redirect": "Authenticating. You will be redirected to sign in page if necessary.",
 		"field": {
 			"handle": {
 				"title": "Handle",

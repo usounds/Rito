@@ -21,13 +21,18 @@ type RegistSchemaProps = {
 export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, schema, domain, onClose }) => {
     const messages = useMessages();
     const thisClient = useXrpcAgentStore(state => state.thisClient);
-    const [loading, setLoading] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
-    const [schemaValue, setSchemaValue] = useState(
-        !schema || schema === "-" ? `https://${domain}/` : schema
-    );
+    const [loading, setLoading] = useState(false);
+
+    // 初期 schemaValue を決定
+    const initialSchemaValue =
+        !schema || schema === "-" || schema === "missing:schema"
+            ? `https://${domain}/missing.schema`
+            : schema;
+
+    const [schemaValue, setSchemaValue] = useState(initialSchemaValue);
     const [nsidValue, setNsidValue] = useState(nsid);
-    const [checked, setChecked] = useState(schema === "missing:schema");
+    const [checked, setChecked] = useState(initialSchemaValue === `https://${domain}/missing.schema`);
     const [schemaError, setSchemaError] = useState('');
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,10 +40,11 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
         setChecked(isChecked);
 
         if (isChecked) {
-            // スイッチがオンなら schemaValue をデフォルトに戻す
-            setSchemaValue(`missing:schema`);
+            // スイッチがオンなら missing.schema を適用
+            setSchemaValue(`https://${domain}/missing.schema`);
         } else {
-            setSchemaValue(`https://${domain}/`)
+            // スイッチがオフなら通常の schema に戻す
+            setSchemaValue(`https://${domain}/`);
         }
     };
 

@@ -33,22 +33,30 @@ export async function refreshAccessToken(refreshToken: string) {
 }
 
 // リクエストからアクセストークンを取得し、必要ならリフレッシュ
-export async function getAccessToken(req: Request | { cookies: Map<string, string> | { get: (key: string) => { value?: string } } }) {
+export async function getAccessToken(
+  req: Request | { cookies: Map<string, string> | { get: (key: string) => { value?: string } } },
+  forceRefresh: boolean = false
+) {
   let accessToken: string | undefined = (req as any).cookies.get?.(ACCESS_TOKEN_COOKIE)?.value;
-  const refreshToken: string | undefined = (req as any).cookies.get?.(REFRESH_TOKEN_COOKIE)?.value;
+  let refreshToken: string | undefined = (req as any).cookies.get?.(REFRESH_TOKEN_COOKIE)?.value;
 
-  if (!accessToken && !refreshToken) return { accessToken: null, updatedCookies: null };
+  if (!accessToken && !refreshToken) {
+    return { accessToken: null, refreshToken: null, updatedCookies: null };
+  }
 
   let updatedCookies: { key: string; value: string; maxAge: number }[] = [];
 
-  if (!accessToken && refreshToken) {
+  // forceRefresh が true またはアクセストークンがない場合にリフレッシュ
+  if ((forceRefresh || !accessToken) && refreshToken) {
     const tokenData = await refreshAccessToken(refreshToken);
     accessToken = tokenData.access_token;
+    refreshToken = tokenData.refresh_token; // 新しいリフレッシュトークンも更新
+
     updatedCookies.push(
       { key: ACCESS_TOKEN_COOKIE, value: tokenData.access_token, maxAge: ACCESS_TOKEN_MAX_AGE },
       { key: REFRESH_TOKEN_COOKIE, value: tokenData.refresh_token, maxAge: REFRESH_TOKEN_MAX_AGE }
     );
   }
 
-  return { accessToken, updatedCookies };
+  return { accessToken, refreshToken, updatedCookies };
 }

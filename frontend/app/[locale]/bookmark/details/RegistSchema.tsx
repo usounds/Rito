@@ -1,12 +1,14 @@
 "use client";
-import { BlueRitoServiceSchema } from '@/lexicons';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { ActorIdentifier } from '@atcute/lexicons/syntax';
-import { Button, Group, Stack, Switch, TextInput } from '@mantine/core';
+import { Button, Group, Stack, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Trash, X } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useState } from 'react';
+import { ActorIdentifier } from '@atcute/lexicons/syntax';
+import { Pencil } from 'lucide-react';
+import { BlueRitoServiceSchema } from '@/lexicons';
+import { Switch } from '@mantine/core';
 
 type RegistSchemaProps = {
     nsid: string;

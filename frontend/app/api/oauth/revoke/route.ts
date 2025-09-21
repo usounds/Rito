@@ -5,6 +5,13 @@ const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
 
 export async function GET(req: NextRequest) {
+  const referer = req.headers.get("referer");
+
+  // Referer が存在して、自サイトのURLで始まらない場合は403
+  if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
+    return new NextResponse("Forbidden", { status: 403 });
+  }
+
     try {
         // クッキーからアクセストークンとリフレッシュトークンを取得
         const accessToken = req.cookies.get("access_token")?.value;

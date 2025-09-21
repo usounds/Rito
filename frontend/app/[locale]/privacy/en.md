@@ -31,7 +31,7 @@ The Service uses the following external services:
 
 ## 6. User Rights
 - Information including DIDs is managed by the users themselves and is not subject to deletion requests handled by the Service.  
-- If you wish to delete bookmark information, please use the deletion functionality provided on this site.
+- If you wish to delete your bookmark information, please note that data stored on the PDS cannot be deleted by others. Therefore, you must delete it yourself using the functions provided on this site.
 
 ## 7. Revisions
 This Privacy Policy may be revised as necessary. Revisions will be announced on this site.

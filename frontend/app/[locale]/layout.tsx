@@ -7,9 +7,10 @@ import { getMessages } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import Header from "@/components/header/Header";
-import {Footer} from "@/components/footer/Footer";
+import { Footer } from "@/components/footer/Footer";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextTopLoader from 'nextjs-toploader';
+import Script from "next/script";
 
 export async function generateMetadata({
   params,
@@ -63,6 +64,21 @@ export default async function RootLayout({
     <html lang={locale} {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
+        {/* GA4 gtag.js を非同期で読み込む */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-TD8B3FMRTJ"
+          strategy="afterInteractive"
+        />
+
+        {/* GA4 初期化 */}
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-TD8B3FMRTJ');
+          `}
+        </Script>
       </head>
       <body>
         <NextIntlClientProvider messages={messages}>

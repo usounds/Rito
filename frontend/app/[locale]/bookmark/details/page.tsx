@@ -1,20 +1,18 @@
+import { BlurReveal } from "@/components/BlurReveal";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { ModerationBadges } from "@/components/ModerationBadges";
+import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
-import { SchemaEditor } from "./SchemaEditor";
-import { BlurReveal } from "@/components/BlurReveal"
+import publicSuffixList from '@/data/publicSuffixList.json';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
-import { Container, Stack, Text, Timeline, TimelineItem, Title } from "@mantine/core";
+import { Container, Spoiler, Stack, Tabs, TabsList, TabsPanel, TabsTab, Text, Timeline, TimelineItem, Title } from "@mantine/core";
+import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import { cookies } from "next/headers";
 import Link from 'next/link';
 import Markdown from 'react-markdown';
-import { Spoiler } from '@mantine/core';
-import { Tabs, TabsList, TabsTab, TabsPanel } from '@mantine/core';
-import { cookies } from "next/headers";
-import { TagBadge } from '@/components/TagBadge';
-import publicSuffixList from '@/data/publicSuffixList.json';
-import Breadcrumbs from "@/components/Breadcrumbs"
-import { ModerationBadges } from "@/components/ModerationBadges";
-import type { Metadata } from "next";
+import { SchemaEditor } from "./SchemaEditor";
 
 export const metadata: Metadata = {
     robots: {

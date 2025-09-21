@@ -1,8 +1,8 @@
-import { Container, Group, Text,Anchor } from '@mantine/core';
+import { Container, Group, Text } from '@mantine/core';
 import { getTranslations } from 'next-intl/server';
+import Link from 'next/link';
 import { FaBluesky, FaGithub } from "react-icons/fa6";
 import classes from './Footer.module.scss';
-import Link from 'next/link';
 
 type FooterProps = {
     locale: string;
@@ -17,14 +17,12 @@ export async function Footer({ locale }: FooterProps) {
                 <Text c="dimmed">Developed by usounds.work</Text>
 
                 <Group gap="md" my="sm" wrap="nowrap">
-<Anchor
-  href={`/${locale}/status`}
-  c="dimmed"
-  size="sm"
-  style={{ textDecoration: 'none', cursor: 'pointer' }}
->
-  {t('status.title')}
-</Anchor>
+                    <Link
+                        href={`/${locale}/status`}
+                        style={{ textDecoration: 'none', cursor: 'pointer', color: 'gray', fontSize: '0.875rem' }}
+                    >
+                        {t('status.title')}
+                    </Link>
 
                     <a
                         href="https://bsky.app/profile/rito.blue"

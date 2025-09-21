@@ -72,7 +72,13 @@
 	"mybookmark": {
 		"latest": "Latest Bookmark",
 		"login": "Please log in to manage your bookmarks",
-		"empty": "Please register your bookmarks"
+		"empty": "Please register your bookmarks",
+		"field": {
+			"search": {
+				"title": "Word Search",
+				"placeholder": "Enter a word to search"
+			}
+		}
 	},
 	"search": {
 		"field": {
@@ -256,8 +262,8 @@
 			"user": "User",
 			"server": "Backend"
 		},
-		"inform":{
-			"fine":"Fine",
+		"inform": {
+			"fine": "Fine",
 			"delay": "Delay"
 		}
 	}

@@ -12,9 +12,11 @@ import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
-import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { AppBskyFeedPost } from '@atcute/bluesky';
+import { Switch } from '@mantine/core';
+import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -22,7 +24,6 @@ export default function RegistBookmarkPage() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const aturi = searchParams.get("aturi") || undefined;
-
 
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
@@ -33,6 +34,7 @@ export default function RegistBookmarkPage() {
     const [isFetchOGP, setIsFetchOGP] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
     const [isCanVerify, setIsVerify] = useState(false);
+    const [isPostToBluesky, setIsPostToBluesky] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
     const [ogpTitle, setOgpTitle] = useState<string | null>(null);
@@ -304,21 +306,36 @@ export default function RegistBookmarkPage() {
             }
         }
 
+        // Title が空でないものをすべて取り込む
+        const filteredComments = comments
+            .filter((c) => c.title.trim() !== "")
+            .map((c) => ({
+                lang: c.lang,
+                title: c.title,
+                comment: c.comment || "",
+            }));
+
+        // 2件以上ある場合のみ activeTab に一致するコメントを取り出す
+        let activeComment: string | undefined;
+        if (filteredComments.length >= 2) {
+            const matched = filteredComments.find((c) => c.lang === activeTab);
+            activeComment = matched?.comment;
+        }else{
+            activeComment = filteredComments[0].comment
+        }
+
+
         const obj: BlueRitoFeedBookmark.Main = {
             $type: "blue.rito.feed.bookmark",
             createdAt: new Date().toISOString(),
             subject: url as `${string}:${string}`,
-            comments: comments
-                .filter((c) => c.title.trim() !== "") // タイトルが空でないものだけ
-                .map((c) => ({
-                    lang: c.lang,
-                    title: c.title,
-                    comment: c.comment || "",
-                })),
+            comments: filteredComments, // Titleが入力されているものは全て登録
             tags: tags.length > 0 ? tags : undefined,
             ogpTitle: ogpTitleLocal || "",
             ogpDescription: ogpDescriptionLocal || "",
             ogpImage: (ogpImageLocal || "") as `${string}:${string}`,
+            // activeComment を格納したい場合は以下を追加
+            // activeComment,
         };
 
         let rkeyLocal
@@ -363,6 +380,39 @@ export default function RegistBookmarkPage() {
                 value: obj as Record<string, unknown>,
             });
 
+            if (isPostToBluesky) {
+                type MyPost = AppBskyFeedPost.Main & {
+                    via?: string;
+                };
+
+                const appBskyFeedPost: MyPost = {
+                    $type: "app.bsky.feed.post",
+                    text: activeComment?.slice(0, 300) || messages.create.inform.bookmark,
+                    createdAt: new Date().toISOString(),
+                    via: messages.title
+                };
+
+                let ogpMessage = messages.create.inform.ogp
+
+                ogpMessage = ogpMessage.replace("{0}", userProf?.handle ?? "");
+
+                appBskyFeedPost.embed = {
+                    $type: 'app.bsky.embed.external',
+                    external: {
+                        uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}` as unknown as ResourceUri,
+                        title: messages.title,
+                        description: ogpMessage,
+                    },
+                };
+
+                writes.push({
+                    $type: "com.atproto.repo.applyWrites#create" as const,
+                    collection: "app.bsky.feed.post" as `${string}.${string}.${string}`,
+                    rkey: rkeyLocal,
+                    value: appBskyFeedPost as unknown as Record<string, unknown>,
+                });
+            }
+
         }
 
         if (!activeDid) {
@@ -370,6 +420,8 @@ export default function RegistBookmarkPage() {
         }
 
         try {
+
+            console.log(writes)
             const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: activeDid as ActorIdentifier,
@@ -522,6 +574,13 @@ export default function RegistBookmarkPage() {
                 </Tabs>
 
                 <Group justify="right">
+                    {!aturi &&
+                        <Switch
+                            label={messages.create.field.posttobluesky.title}
+                            checked={isPostToBluesky}
+                            onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                        />
+                    }
                     <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
                 </Group>
             </Stack >

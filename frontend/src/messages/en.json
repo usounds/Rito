@@ -131,6 +131,9 @@
 				"title": "Comment",
 				"placeholder": "This is an exciting site",
 				"description": "Comment for the URL"
+			},
+			"posttobluesky": {
+				"title": "Post to Bluesky"
 			}
 		},
 		"button": {
@@ -145,7 +148,9 @@
 		},
 		"inform": {
 			"canverify": "You can register a verified comment for this URL",
-			"success": "Regist successfully"
+			"success": "Regist successfully",
+			"bookmark": "Bookmarked on Rito",
+			"ogp": "View {0} and others' bookmarks"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",

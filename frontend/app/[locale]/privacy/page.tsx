@@ -1,7 +1,9 @@
 import fs from "fs";
 import path from "path";
 import ReactMarkdown from "react-markdown";
-import { Container} from "@mantine/core";
+import { Container } from "@mantine/core";
+import Breadcrumbs from "@/components/Breadcrumbs";
+import { getTranslations } from "next-intl/server";
 
 interface PageProps {
   params: { locale: string };
@@ -9,6 +11,7 @@ interface PageProps {
 
 export default async function PrivacyPage({ params }: PageProps) {
   const { locale } = await params;
+  const t = await getTranslations({ locale });
 
   // privacy フォルダ内の md を参照
   const filePath = path.join(process.cwd(), "app", "[locale]", "privacy", `${locale}.md`);
@@ -23,6 +26,7 @@ export default async function PrivacyPage({ params }: PageProps) {
 
   return (
     <Container size="md" mx="auto">
+      <Breadcrumbs items={[{ label: t("header.privacypolicy") }]} />
       <ReactMarkdown>{content}</ReactMarkdown>
     </Container>
   );

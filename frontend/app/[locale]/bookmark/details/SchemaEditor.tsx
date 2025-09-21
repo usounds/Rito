@@ -130,7 +130,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
                       <Table.Td >Owner</Table.Td>
                       <Table.Td>
                         <Button
-                          disabled={(!canEdit && !activeDid)}
+                          disabled={(!canEdit || !activeDid)}
                           onClick={() => handleEdit(match.nsid, match.owner!.schema)}
                           variant="outline"
                           size="xs"

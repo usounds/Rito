@@ -5,7 +5,7 @@ import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
-import { Affix, Avatar, Button, Menu, Modal } from "@mantine/core";
+import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
 import { BookmarkPlus, LogOut } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -30,13 +30,38 @@ export function LoginButtonOrUser() {
     const [isRegist, setIsRegist] = useState(true)
 
     useEffect(() => {
-        // /regist が含まれていたら非表示
+        // パスに /register が含まれていたら非表示
         if (pathname?.includes('/register')) {
-            setIsRegist(false); // 非表示にする場合は false
-        } else {
-            setIsRegist(true);
+            setIsRegist(false);
+            return;
         }
-    }, [pathname]); // pathname が変わると実行
+
+        const handleScroll = () => {
+            const scrollY = window.scrollY;
+            const innerHeight = window.innerHeight;
+            const scrollHeight = document.documentElement.scrollHeight;
+
+            // ページがスクロール可能か確認
+            const canScroll = scrollHeight > innerHeight;
+
+            if (!canScroll) {
+                setIsRegist(true); // スクロールできない場合は常に表示
+                return;
+            }
+
+            // ページ下から 100px 以内なら非表示
+            if (scrollY + innerHeight >= scrollHeight - 100) {
+                setIsRegist(false);
+            } else {
+                setIsRegist(true);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        handleScroll(); // 初回チェック
+
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [pathname]);
 
     useEffect(() => {
         const updateSize = () => {
@@ -153,16 +178,19 @@ export function LoginButtonOrUser() {
                             <Menu.Item leftSection={<LogOut size={14} />} color="red" onClick={handleLogout}>{messages.header.items.logout}</Menu.Item>
                         </Menu.Dropdown>
                     </Menu>
-                    {isRegist &&
-                        <Affix position={{ bottom: 20, right: 20 }} zIndex='5'>
-                            <Button
-                                onClick={() => router.push(`/${locale}/bookmark/register`)}
-                                leftSection={<BookmarkPlus size={16} />}
-                            >
-                                {messages.create.title}
-                            </Button>
-                        </Affix>
-                    }
+                    <Affix position={{ bottom: 20, right: 20 }}>
+                        <Transition transition="slide-up" mounted={isRegist}>
+                            {(transitionStyles) => (
+                                <Button
+                                    leftSection={<BookmarkPlus size={16} />}
+                                    style={transitionStyles}
+                                    onClick={() => router.push(`/${locale}/bookmark/register`)}
+                                >
+                                    {messages.create.title}
+                                </Button>
+                            )}
+                        </Transition>
+                    </Affix>
 
                 </>
 

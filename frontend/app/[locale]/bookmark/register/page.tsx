@@ -50,8 +50,15 @@ export default function RegistBookmarkPage() {
     const [activeTab, setActiveTab] = useState<string | null>(locale);
 
     useEffect(() => {
+        if (!activeDid) {
+            router.back();
+            return
+
+        }
         const fetchBookmark = async () => {
-            if (!aturi) return
+            if (!aturi) {
+                return
+            }
             try {
 
 
@@ -122,7 +129,7 @@ export default function RegistBookmarkPage() {
         };
 
         fetchBookmark();
-    }, [aturi]);
+    }, [aturi,activeDid]);
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {
         try {
@@ -320,7 +327,7 @@ export default function RegistBookmarkPage() {
         if (filteredComments.length >= 2) {
             const matched = filteredComments.find((c) => c.lang === activeTab);
             activeComment = matched?.comment;
-        }else{
+        } else {
             activeComment = filteredComments[0].comment
         }
 
@@ -421,7 +428,6 @@ export default function RegistBookmarkPage() {
 
         try {
 
-            console.log(writes)
             const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: activeDid as ActorIdentifier,

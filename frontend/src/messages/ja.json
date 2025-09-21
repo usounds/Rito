@@ -246,5 +246,18 @@
 		"inform": {
 			"nobookmark": "ブックマークは登録されていません"
 		}
+	},
+	"status": {
+		"title": "ステータス",
+		"field": {
+			"bookmark": "ブックマーク",
+			"tag": "タグ",
+			"user": "ユーザー",
+			"server": "バックエンド"
+		},
+		"inform":{
+			"fine":"遅延なし",
+			"delay": "遅れ"
+		}
 	}
 }

@@ -1,5 +1,4 @@
 "use client";
-import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import { Button, Group, Stack } from '@mantine/core';
@@ -7,6 +6,7 @@ import { notifications } from '@mantine/notifications';
 import { Check, Trash, X } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useState } from 'react';
+import { useMyBookmark } from "@/state/MyBookmark";
 
 type DeleteBookmarkProps = {
     aturi?: string;

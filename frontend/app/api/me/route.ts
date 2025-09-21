@@ -1,5 +1,5 @@
-import { getAccessToken } from "@/logic/HandleOauth";
 import { NextRequest, NextResponse } from "next/server";
+import { getAccessToken } from "@/logic/HandleOauth";
 
 export async function GET(req: NextRequest) {
   try {

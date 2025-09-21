@@ -1,13 +1,15 @@
 "use client"
 import { BlurReveal } from "@/components/BlurReveal";
-import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { ModerationBadges } from "@/components/ModerationBadges";
+import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
+import { useRouter } from 'next/navigation';
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
     ActionIcon,
+    Badge,
     Box,
     Card,
     Group,
@@ -18,7 +20,6 @@ import {
 import { SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import classes from './Article.module.scss';

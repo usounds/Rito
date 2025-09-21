@@ -1,9 +1,9 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
-import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { MyBookmark } from './MyBookmark';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   robots: {

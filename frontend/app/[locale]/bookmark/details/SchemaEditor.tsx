@@ -1,11 +1,11 @@
 "use client";
-import { usePreferenceStore } from "@/state/PreferenceStore";
+import { RegistSchema } from "./RegistSchema";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Button, Group, Modal, ScrollArea, Switch, Table, Text } from "@mantine/core";
+import { usePreferenceStore } from "@/state/PreferenceStore";
+import { Button, Modal, Table, Switch, Group, Text, ScrollArea } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useMessages } from "next-intl";
 import { useEffect, useState } from "react";
-import { RegistSchema } from "./RegistSchema";
 
 interface SchemaEditorProps {
   nsid: string;

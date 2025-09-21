@@ -306,21 +306,21 @@ async function init() {
         links.push(record.embed.external.uri);
       }
 
-      // 重複排除
-      const uniqueLinks = Array.from(new Set(links));
+      // 重複・undefined 排除
+      const uniqueLinks = Array.from(new Set(links.filter((l): l is string => !!l)));
       if (uniqueLinks.length === 0) return;
 
-      // Bookmark チェック
+      // Bookmark チェック（空配列回避済み）
       const matchingBookmarks = await prisma.bookmark.findMany({
         where: { subject: { in: uniqueLinks } },
       });
-      if (matchingBookmarks.length === 0) return;
+      if (!matchingBookmarks || matchingBookmarks.length === 0) return;
 
       // UserDidHandle upsert
       let handle = 'no handle';
       try {
         const userProfile = await publicAgent.get('app.bsky.actor.getProfile', { params: { actor: event.did } });
-        if (userProfile.ok) handle = userProfile.data.handle;
+        if (userProfile.ok && userProfile.data?.handle) handle = userProfile.data.handle;
       } catch (err) {
         logger.error(`Error fetching profile for ${event.did}: ${err}`);
       }
@@ -345,7 +345,7 @@ async function init() {
         update: {
           handle,
           text: record.text || '',
-          lang: record.langs || [],
+          lang: Array.isArray(record.langs) ? record.langs : [],
           moderation_result: postModerationResult,
           indexed_at: new Date(),
         },
@@ -354,17 +354,17 @@ async function init() {
           did: event.did,
           handle,
           text: record.text || '',
-          lang: record.langs || [],
+          lang: Array.isArray(record.langs) ? record.langs : [],
           moderation_result: postModerationResult,
           indexed_at: new Date(),
         },
       });
 
-      // PostUri 作成
+      // PostUri 作成（空配列チェック）
       if (uniqueLinks.length > 0) {
         await prisma.postUri.createMany({
           data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
-          skipDuplicates: true, // 重複防止
+          skipDuplicates: true,
         });
       }
 
@@ -375,7 +375,6 @@ async function init() {
       logger.error(`Error in upsertPost for ${aturi}: ${err}`);
     }
   }
-
 
   // イベント登録
   jetstream.onCreate(BOOKMARK, upsertBookmark);

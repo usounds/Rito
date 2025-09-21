@@ -247,5 +247,18 @@
 		"inform": {
 			"nobookmark": "No bookmarks have been added"
 		}
+	},
+	"status": {
+		"title": "Status",
+		"field": {
+			"bookmark": "Bookmark",
+			"tag": "Tag",
+			"user": "User",
+			"server": "Backend"
+		},
+		"inform":{
+			"fine":"Fine",
+			"delay": "Delay"
+		}
 	}
 }

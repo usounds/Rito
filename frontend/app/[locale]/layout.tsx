@@ -90,7 +90,7 @@ export default async function RootLayout({
             />
             <Header />
             {children}
-            <Footer />
+            <Footer locale={locale}/>
           </MantineProvider>
         </NextIntlClientProvider>
       </body>

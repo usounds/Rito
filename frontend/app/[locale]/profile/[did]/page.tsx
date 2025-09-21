@@ -13,7 +13,7 @@ type ProfileBookmarkProps = {
 
 
 export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
-  const { locale, did } = params;
+  const { locale, did } = await params;
 
   // 翻訳を取得
   const t = await getTranslations({ locale });

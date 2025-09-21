@@ -1,7 +1,6 @@
-import { ActionIcon, useMantineColorScheme, useComputedColorScheme } from '@mantine/core';
-import { Sun } from 'lucide-react';
+import { ActionIcon, useComputedColorScheme, useMantineColorScheme } from '@mantine/core';
+import { Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from "react";
-import { Moon } from 'lucide-react';
 
 export function SwitchColorMode() {
   const { setColorScheme } = useMantineColorScheme();

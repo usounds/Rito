@@ -1,22 +1,19 @@
 "use client";
-
+import Breadcrumbs from "@/components/Breadcrumbs";
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
+import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
+import { Bookmark, Comment } from "@/type/ApiTypes";
+import { AppBskyFeedPost } from '@atcute/bluesky';
+import { ActorIdentifier, isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri, ResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container } from '@mantine/core';
+import { Button, Container, Group, Stack, Switch, Tabs, TagsInput, Textarea, TextInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { useMyBookmark } from "@/state/MyBookmark";
-import { Comment, Bookmark } from "@/type/ApiTypes";
-import { useSearchParams, useRouter } from 'next/navigation';
-import Breadcrumbs from "@/components/Breadcrumbs";
-import { AppBskyFeedPost } from '@atcute/bluesky';
-import { Switch } from '@mantine/core';
-import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();

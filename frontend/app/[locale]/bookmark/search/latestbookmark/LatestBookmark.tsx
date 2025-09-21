@@ -1,7 +1,7 @@
 import { Article } from '@/components/bookmarkcard/Article';
 import { prisma } from '@/logic/HandlePrismaClient';
+import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
 import { SimpleGrid, Stack } from '@mantine/core';
-import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 
 type PageProps = {
   params: { locale: string };

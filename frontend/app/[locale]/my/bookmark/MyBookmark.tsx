@@ -19,7 +19,6 @@ export function MyBookmark() {
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
-                height: '80vh',
                 gap: '1rem',
             }}
         >
@@ -35,11 +34,10 @@ export function MyBookmark() {
                     flexDirection: 'column',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    height: '80vh',
                     gap: '1rem',
                 }}
             >
-                {messages.mybookmark.empty}
+                <Text>{messages.mybookmark.empty}</Text>
             </Box>
         );
     }

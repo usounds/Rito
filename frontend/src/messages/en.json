@@ -56,7 +56,7 @@
 				"placeholder": "alice.bsky.social"
 			},
 			"agree": {
-        "title": "Agree to "
+				"title": "Agree to "
 			}
 		},
 		"button": {
@@ -178,9 +178,19 @@
 		"view": "View moderated content",
 		"nocomment": "No comment",
 		"needlogin": "You need to log in to view comments",
+		"owner": "Owner",
 		"field": {
 			"developer": {
 				"title": "Developer Mode"
+			},
+			"schema": {
+				"title": "Schema"
+			},
+			"count": {
+				"title": "Count"
+			},
+			"action": {
+				"title": "Action"
 			}
 		},
 		"button": {

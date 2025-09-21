@@ -177,9 +177,19 @@
 		"view": "モデレーションされた文章を見る",
 		"nocomment": "コメントはありません",
 		"needlogin": "コメントを参照するにはログインが必要です",
+		"owner": "オーナー",
 		"field": {
 			"developer": {
 				"title": "開発者モード"
+			},
+			"schema": {
+				"title": "スキーマ"
+			},
+			"count": {
+				"title": "件数"
+			},
+			"action": {
+				"title": "アクション"
 			}
 		},
 		"button": {

@@ -25,14 +25,15 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
     const [loading, setLoading] = useState(false);
 
     // 初期 schemaValue を決定
-    const initialSchemaValue =
-        !schema || schema === "-" || schema === "missing:schema"
-            ? `https://${domain}/missing.schema`
-            : schema;
+    const initialSchemaValue = (!schema )
+        ? `https://${domain}/`
+        : schema;
 
     const [schemaValue, setSchemaValue] = useState(initialSchemaValue);
     const [nsidValue, setNsidValue] = useState(nsid);
-    const [checked, setChecked] = useState(initialSchemaValue === `https://${domain}/missing.schema`);
+    const [checked, setChecked] = useState(
+        initialSchemaValue === `https://${domain}/missing.schema` && schema !== "-"
+    );
     const [schemaError, setSchemaError] = useState('');
 
     const handleSwitchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

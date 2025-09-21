@@ -208,9 +208,22 @@
 			"close": "Close",
 			"new": "New Post"
 		},
+		"menu": {
+			"title": "Menu",
+			"regist": {
+				"title": "Regist Bookmark"
+			},
+			"edit": {
+				"title": "Edit Bookmark"
+			},
+			"delete": {
+				"title": "Delete Bookmark"
+			}
+		},
 		"inform": {
 			"error": "A system error has occurred",
-			"success": "Successfully registered"
+			"success": "Successfully registered",
+			"nobookmark": "No bookmarks"
 		},
 		"error": {
 			"uriRequired": "URI is required"

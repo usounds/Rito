@@ -120,10 +120,10 @@ export default function Header() {
             <Link href={`/${locale}/bookmark/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}
             </Link>
-            <Link href={`/${locale}/tos`} className={classes.link}>
+            <Link href={`/${locale}/tos`} className={classes.link} onClick={closeDrawer}>
               {messages.header.termofuse}
             </Link>
-            <Link href={`/${locale}/privacy`} className={classes.link}>
+            <Link href={`/${locale}/privacy`} className={classes.link} onClick={closeDrawer}>
               {messages.header.privacypolicy}
             </Link>
           </Stack>

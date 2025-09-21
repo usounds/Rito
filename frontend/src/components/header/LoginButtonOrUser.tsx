@@ -36,6 +36,12 @@ export function LoginButtonOrUser() {
             return;
         }
 
+        if (!activeDid) {
+            setIsRegist(false);
+            return;
+
+        }
+
         const handleScroll = () => {
             const scrollY = window.scrollY;
             const innerHeight = window.innerHeight;
@@ -61,7 +67,7 @@ export function LoginButtonOrUser() {
         handleScroll(); // 初回チェック
 
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [pathname]);
+    }, [pathname, activeDid]);
 
     useEffect(() => {
         const updateSize = () => {
@@ -165,6 +171,20 @@ export function LoginButtonOrUser() {
 
     return (
         <>
+            <Affix position={{ bottom: 20, right: 20 }}>
+                <Transition transition="slide-up" mounted={isRegist}>
+                    {(transitionStyles) => (
+                        <Button
+                            leftSection={<BookmarkPlus size={16} />}
+                            style={transitionStyles}
+                            onClick={() => router.push(`/${locale}/bookmark/register`)}
+                        >
+                            {messages.create.title}
+                        </Button>
+                    )}
+                </Transition>
+            </Affix>
+
             {isLoggedIn && userProf ? (
                 // ログイン済みの場合に表示する要素
                 <>
@@ -178,20 +198,6 @@ export function LoginButtonOrUser() {
                             <Menu.Item leftSection={<LogOut size={14} />} color="red" onClick={handleLogout}>{messages.header.items.logout}</Menu.Item>
                         </Menu.Dropdown>
                     </Menu>
-                    <Affix position={{ bottom: 20, right: 20 }}>
-                        <Transition transition="slide-up" mounted={isRegist}>
-                            {(transitionStyles) => (
-                                <Button
-                                    leftSection={<BookmarkPlus size={16} />}
-                                    style={transitionStyles}
-                                    onClick={() => router.push(`/${locale}/bookmark/register`)}
-                                >
-                                    {messages.create.title}
-                                </Button>
-                            )}
-                        </Transition>
-                    </Affix>
-
                 </>
 
             ) : (

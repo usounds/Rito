@@ -4,8 +4,8 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
 import { Container, SimpleGrid, Stack, Text } from '@mantine/core';
-import { getTranslations } from "next-intl/server";
 import type { Metadata } from 'next';
+import { getTranslations } from "next-intl/server";
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };

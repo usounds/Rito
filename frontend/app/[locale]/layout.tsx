@@ -1,16 +1,15 @@
+import { Footer } from "@/components/footer/Footer";
+import Header from "@/components/header/Header";
+import { routing } from "@/i18n/routing";
+import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
 import '@mantine/core/styles.css';
-import { MantineProvider, ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
 import { Notifications } from "@mantine/notifications";
 import '@mantine/notifications/styles.css';
 import { NextIntlClientProvider, hasLocale } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { routing } from "@/i18n/routing";
-import Header from "@/components/header/Header";
-import { Footer } from "@/components/footer/Footer";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
+import NextTopLoader from 'nextjs-toploader';
 
 export async function generateMetadata({
   params,

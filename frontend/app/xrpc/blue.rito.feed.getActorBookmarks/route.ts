@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { prisma } from '@/logic/HandlePrismaClient';
-import { isDid } from '@atcute/lexicons/syntax';
 import { normalizeBookmarks } from '@/type/ApiTypes';
+import { isDid } from '@atcute/lexicons/syntax';
+import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {
   try {

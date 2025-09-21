@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { prisma } from '@/logic/HandlePrismaClient';
+import { NextRequest, NextResponse } from "next/server";
 
 const AIP_BASE = process.env.OIDC_PROVIDER!;
 const CLIENT_ID = process.env.RITO_CLIENT_ID!;

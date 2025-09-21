@@ -1,7 +1,7 @@
-import React from 'react';
-import { Group, Badge } from '@mantine/core';
+import { Badge, Group } from '@mantine/core';
 import { BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
+import React from 'react';
 
 interface TagBadgeProps {
   tags: string[];

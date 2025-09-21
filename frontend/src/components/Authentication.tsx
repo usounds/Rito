@@ -17,8 +17,6 @@ import { X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useState } from "react";
 import Link from 'next/link';
-import { FaBluesky } from "react-icons/fa6";
-import { useTopLoader } from 'nextjs-toploader';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)
@@ -27,7 +25,6 @@ export function Authentication(props: PaperProps) {
   const setHandle = useXrpcAgentStore(state => state.setHandle);
   const messages = useMessages();
   const locale = useLocale();
-  const loader = useTopLoader();
 
   function sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -127,7 +124,6 @@ export function Authentication(props: PaperProps) {
 
     try {
       const returnTo = window.location.href;
-      loader.start()
       const url = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
       window.location.href = url;
 
@@ -215,7 +211,7 @@ export function Authentication(props: PaperProps) {
         >
           {messages.login.create}
         </Anchor>
-        <Button type="submit" radius="xl" loading={isLoading} disabled={!checked} leftSection={<FaBluesky />}>
+        <Button type="submit" radius="xl" loading={isLoading} disabled={!checked}>
           {messages.login.button.login}
         </Button>
       </Group>

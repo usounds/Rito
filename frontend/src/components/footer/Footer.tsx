@@ -1,9 +1,7 @@
 import { Text, Container, Group, ActionIcon } from '@mantine/core';
 import classes from './Footer.module.scss';
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faGithub } from "@fortawesome/free-brands-svg-icons";
-import { faBluesky } from '@fortawesome/free-brands-svg-icons';
-
+import { FaGithub } from "react-icons/fa6";
+import { FaBluesky } from "react-icons/fa6";
 
 export function Footer() {
 
@@ -11,32 +9,28 @@ export function Footer() {
         <div className={classes.footer}>
             <Container className={classes.inner}>
                 <Text c="dimmed">Developed by usounds.work</Text>
-                <Group gap="xs" wrap="nowrap">
-                    <ActionIcon
-                        size="sm"
-                        color="gray"
-                        variant="subtle"
-                        component="a"
-                        href="https://github.com/usounds/Rito"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <FontAwesomeIcon icon={faGithub} />
-                    </ActionIcon>
 
-                    <ActionIcon
-                        size="sm"
-                        color="gray"
-                        variant="subtle"
-                        component="a"
+                <Group gap="md" my="sm" wrap="nowrap">
+
+                    <a
                         href="https://bsky.app/profile/rito.blue"
                         target="_blank"
                         rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", color: "#666", fontSize: 20 }}
                     >
-                        <FontAwesomeIcon icon={faBluesky} />
-                    </ActionIcon>
-                </Group>
+                        <FaBluesky />
+                    </a>
 
+                    <a
+                        href="https://github.com/usounds/Rito"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: "inline-flex", alignItems: "center", color: "#666", fontSize: 20 }}
+                    >
+                        <FaGithub />
+                    </a>
+
+                </Group>
             </Container>
         </div>
     );

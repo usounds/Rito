@@ -1,14 +1,20 @@
-import { Group, Paper, SimpleGrid, Text } from '@mantine/core';
 import {
   IconArrowDownRight,
   IconArrowUpRight,
-  IconUserPlus
+  IconCoin,
+  IconDiscount2,
+  IconReceipt2,
+  IconUserPlus,
 } from '@tabler/icons-react';
-import { Bookmark, Server, Tag } from 'lucide-react';
+import { Group, Paper, SimpleGrid, Text } from '@mantine/core';
 import classes from './Stats.module.scss';
+import { Bookmark, Server, Tag } from 'lucide-react';
 
 const icons = {
   user: IconUserPlus,
+  discount: IconDiscount2,
+  receipt: IconReceipt2,
+  coin: IconCoin,
   bookmark: Bookmark,
   tag: Tag,
   server: Server

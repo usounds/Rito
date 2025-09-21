@@ -1,14 +1,15 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
+import { useLocale } from 'next-intl';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
 import { BookmarkPlus, LogOut } from 'lucide-react';
-import { useLocale, useMessages } from 'next-intl';
-import { usePathname, useRouter } from 'next/navigation';
+import { useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);

@@ -16,9 +16,9 @@ import {
   useMantineTheme
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { AtSign, Bookmark, FileText } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
+import { Bookmark, AtSign, FileText } from 'lucide-react';
 import classes from './Header.module.scss';
 
 export default function Header() {

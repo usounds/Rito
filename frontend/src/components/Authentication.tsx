@@ -15,10 +15,10 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
-import Link from 'next/link';
-import { useTopLoader } from 'nextjs-toploader';
 import { useState } from "react";
+import Link from 'next/link';
 import { FaBluesky } from "react-icons/fa6";
+import { useTopLoader } from 'nextjs-toploader';
 
 export function Authentication(props: PaperProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false)

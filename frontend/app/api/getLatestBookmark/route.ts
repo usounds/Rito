@@ -1,6 +1,6 @@
 // app/api/bookmarks/route.ts
-import { prisma } from "@/logic/HandlePrismaClient";
 import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from "@/logic/HandlePrismaClient";
 
 export async function GET(req: NextRequest) {
 

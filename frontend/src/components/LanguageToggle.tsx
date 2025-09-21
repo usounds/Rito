@@ -1,9 +1,10 @@
 "use client";
+
 import { ActionIcon } from "@mantine/core";
-import { Languages } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-import { useTopLoader } from 'nextjs-toploader';
 import React from "react";
+import { Languages } from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
+import { useTopLoader } from 'nextjs-toploader';
 
 const LanguageToggle: React.FC = () => {
   const router = useRouter();

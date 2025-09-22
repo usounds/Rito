@@ -51,6 +51,8 @@ export default async function StatusPage({ params }: StatusProps) {
         }
     }
 
+    await prisma.$disconnect();
+
     return (
         <Container size="md" mx="auto" >
             <Breadcrumbs items={[{ label: t('status.title') }]} />

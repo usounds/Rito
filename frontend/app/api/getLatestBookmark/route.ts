@@ -10,5 +10,7 @@ export async function GET(req: NextRequest) {
     include: { comments: true, tags: true },
   });
 
+  await prisma.$disconnect();
+
   return NextResponse.json(bookmarks);
 }

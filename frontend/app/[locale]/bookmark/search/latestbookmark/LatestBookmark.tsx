@@ -54,6 +54,8 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
+  await prisma.$disconnect();
+
   return (
     <Stack>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">

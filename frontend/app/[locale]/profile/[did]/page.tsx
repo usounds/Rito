@@ -64,6 +64,8 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
+  await prisma.$disconnect();
+
   return (
     <Container size="md" mx="auto" >
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />

@@ -36,6 +36,9 @@ export async function GET(req: Request) {
     }
 
     const normalized = normalizeBookmarks(bookmarks)
+
+    await prisma.$disconnect();
+
     return NextResponse.json(normalized, {
       status: 200,
       headers: {

@@ -215,6 +215,8 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
         </Container>
     )
 
+    await prisma.$disconnect();
+
     return (
         <>
             <Container size="md" mx="auto">

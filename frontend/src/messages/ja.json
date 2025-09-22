@@ -272,7 +272,7 @@
 	},
 	"status": {
 		"title": "ステータス",
-		"description": "リトの状態を5分おきに更新します",
+		"description": "リトの状態を1分おきに更新します",
 		"field": {
 			"bookmark": "ブックマーク",
 			"tag": "タグ",

@@ -5,7 +5,7 @@ import { prisma } from '@/logic/HandlePrismaClient';
 import { Container ,Text} from '@mantine/core';
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = 300; // 5分ごとに再生成
+export const revalidate = 60; // 5分ごとに再生成
 
 type StatusProps = {
     params: { locale: string };

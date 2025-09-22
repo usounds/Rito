@@ -103,9 +103,6 @@ export async function GET(req: Request) {
                 verified: bookmarkVerified, // コメント単位も同じ判定にするなら同じ値
             })),
         };
-
-        await prisma.$disconnect();
-
         return NextResponse.json(result, {
             status: 200,
             headers: {

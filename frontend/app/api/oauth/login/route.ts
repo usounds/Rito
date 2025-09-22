@@ -62,8 +62,5 @@ export async function GET(req: NextRequest) {
   });
 
   const authUrl = `${AIP_BASE}/oauth/authorize?${authParams.toString()}`;
-
-  await prisma.$disconnect();
-
   return NextResponse.redirect(authUrl);
 }

@@ -62,7 +62,13 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.next();
   if (updatedCookies) {
     updatedCookies.forEach(c =>
-      res.cookies.set(c.key, c.value, { httpOnly: true, path: "/", sameSite: "lax", maxAge: c.maxAge })
+      res.cookies.set(c.key, c.value, {
+        httpOnly: true,
+        secure: true,
+        path: "/",
+        sameSite: "lax",
+        maxAge: c.maxAge
+      })
     );
   }
 
@@ -107,9 +113,7 @@ export async function POST(req: NextRequest) {
     let data: any;
     try { data = await pdsRes.json(); } catch { data = { error: "Failed to parse response" }; }
 
-
-
-        const response = NextResponse.json({
+    const response = NextResponse.json({
       success: pdsRes.ok,
       status: pdsRes.status,
       data,
@@ -121,6 +125,7 @@ export async function POST(req: NextRequest) {
       updatedCookies.forEach((c) =>
         response.cookies.set(c.key, c.value, {
           httpOnly: true,
+          secure: true,
           path: "/",
           sameSite: "lax",
           maxAge: c.maxAge,

@@ -15,6 +15,8 @@ export async function GET(req: NextRequest) {
       orderBy: { verified: "desc" }, // verified が優先
     });
 
+    await prisma.$disconnect();
+
     return NextResponse.json(resolvers);
   } catch (error) {
     console.error(error);

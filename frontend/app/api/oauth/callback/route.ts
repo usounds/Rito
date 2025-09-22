@@ -71,6 +71,8 @@ export async function GET(req: NextRequest) {
       });
     }
 
+    await prisma.$disconnect();
+
     return res;
   } catch (err: any) {
     console.error("OAuth callback error:", err);

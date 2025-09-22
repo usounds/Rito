@@ -5,12 +5,12 @@ const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
 
 export async function GET(req: NextRequest) {
-  const referer = req.headers.get("referer");
+    const referer = req.headers.get("referer");
 
-  // Referer が存在して、自サイトのURLで始まらない場合は403
-  if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
-    return new NextResponse("Forbidden", { status: 403 });
-  }
+    // Referer が存在して、自サイトのURLで始まらない場合は403
+    if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
+        return new NextResponse("Forbidden", { status: 403 });
+    }
 
     try {
         // クッキーからアクセストークンとリフレッシュトークンを取得
@@ -21,8 +21,9 @@ export async function GET(req: NextRequest) {
         const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64");
 
         // アクセストークンを無効化
+        /*
         if (accessToken) {
-            await fetch(`${AIP_BASE}/oauth/revoke`, {
+            const ret = await fetch(`${AIP_BASE}/oauth/revoke`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -33,11 +34,14 @@ export async function GET(req: NextRequest) {
                     token_type_hint: "access_token",
                 }),
             });
+            console.log(ret)
         }
+        */
 
         // リフレッシュトークンを無効化
+        /*
         if (refreshToken) {
-            await fetch(`${AIP_BASE}/oauth/revoke`, {
+            const ret = await fetch(`${AIP_BASE}/oauth/revoke`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/x-www-form-urlencoded",
@@ -48,7 +52,9 @@ export async function GET(req: NextRequest) {
                     token_type_hint: "refresh_token",
                 }),
             });
+            console.log(ret)
         }
+        */
 
         // クッキー削除
         const res = NextResponse.json({ ok: true, message: "Logged out" });

@@ -2,6 +2,7 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
+import PaginationWrapper from './PaginationWrapper';
 
 type PageProps = {
   params: { locale: string };
@@ -48,6 +49,9 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
     },
   });
 
+    const totalCount = await prisma.bookmark.count({ where });
+  const totalPages = Math.ceil(totalCount / take);
+
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
   return (
@@ -88,6 +92,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
           );
         })}
       </SimpleGrid>
+      <PaginationWrapper total={totalPages} page={page} query={query}/>
     </Stack>
   );
 }

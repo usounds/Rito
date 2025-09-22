@@ -206,15 +206,15 @@
 			}
 		},
 		"menu": {
-			"title": "メニュー",
+			"title": "ブックマークメニュー",
 			"regist": {
-				"title": "ブックマークの登録"
+				"title": "登録"
 			},
 			"edit": {
-				"title": "ブックマークの編集"
+				"title": "編集"
 			},
 			"delete": {
-				"title": "ブックマークの削除"
+				"title": "削除"
 			}
 		},
 		"button": {

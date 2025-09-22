@@ -290,7 +290,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                             { title: '', comment: '', moderation_result: [] };
                                         return (
                                             <TimelineItem key={idx}>
-                                                <Text component="div" c="dimmed">
+                                                <Text component="div" >
                                                     <BlurReveal
                                                         moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
                                                         blurAmount={6}
@@ -346,7 +346,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                         <Timeline bulletSize={20} lineWidth={4}>
                                             {postDataArray.map((post, idx) => (
                                                 <TimelineItem key={idx}>
-                                                    <Text component="div" c="dimmed">
+                                                    <Text component="div">
                                                         <BlurReveal
                                                             moderated={Array.isArray(post.moderations) && post.moderations.length > 0}
                                                             blurAmount={6}

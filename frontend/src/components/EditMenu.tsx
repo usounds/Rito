@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { DeleteBookmark } from '@/components/DeleteBookmark';
 import Link from 'next/link';
 import { useLocale } from 'next-intl';
+import { useRouter } from "next/navigation";
 
 type Props = {
     subject: string;
@@ -19,6 +20,7 @@ export default function EditMenu({ subject }: Props) {
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const locale = useLocale();
     const messages = useMessages();
+    const router = useRouter();
 
     // subject に対応するブックマークがあるか判定
     const matchedBookmark = myBookmark.find(b => b.subject === subject);
@@ -28,6 +30,19 @@ export default function EditMenu({ subject }: Props) {
     }, []);
 
     if (!activeDid) return null;
+
+    const handleEdit = () => {
+        const targetUrl = `/${locale}/bookmark/register?aturi=${encodeURIComponent(
+            matchedBookmark?.uri ?? ""
+        )}`;
+        router.push(targetUrl);
+    };
+
+
+    const handleRegister = () => {
+        const targetUrl = `/${locale}/bookmark/register?subject=${encodeURIComponent(subject)}`
+        router.push(targetUrl);
+    };
 
     return (
         <Menu shadow="md" width={200}>
@@ -53,31 +68,16 @@ export default function EditMenu({ subject }: Props) {
 
                 {matchedBookmark ? (
                     <>
-                        <Menu.Item leftSection={<SquarePen size={14} />}>
-
-                            <Link href={`/${locale}/bookmark/register?aturi=${encodeURIComponent(matchedBookmark?.uri)}`} style={{
-                                textDecoration: 'none',
-                                color: 'inherit',
-                                wordBreak: 'break-all',   // 単語途中でも改行
-                                overflowWrap: 'anywhere', // 長いURLを折り返す
-                            }}>
-                                {messages.detail.menu.edit.title}
-                            </Link>
+                        <Menu.Item leftSection={<SquarePen size={14} />} onClick={handleEdit} >
+                            {messages.detail.menu.edit.title}
                         </Menu.Item>
                         <Menu.Item leftSection={<Trash2 size={14} />} onClick={() => setDeleteBookmark(true)} color='red'>
                             {messages.detail.menu.delete.title}
                         </Menu.Item>
                     </>
                 ) : (
-                    <Menu.Item leftSection={<BookmarkPlus size={14} />}>
-                        <Link href={`/${locale}/bookmark/register?subject=${encodeURIComponent(subject)}`} style={{
-                            textDecoration: 'none',
-                            color: 'inherit',
-                            wordBreak: 'break-all',   // 単語途中でも改行
-                            overflowWrap: 'anywhere', // 長いURLを折り返す
-                        }}>
+                    <Menu.Item leftSection={<BookmarkPlus size={14} />} onClick={handleRegister} >
                             {messages.detail.menu.regist.title}
-                        </Link>
                     </Menu.Item>
                 )}
             </Menu.Dropdown>

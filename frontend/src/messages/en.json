@@ -211,15 +211,15 @@
 			"new": "New Post"
 		},
 		"menu": {
-			"title": "Menu",
+			"title": "Bookmark Menu",
 			"regist": {
-				"title": "Regist Bookmark"
+				"title": "Register"
 			},
 			"edit": {
-				"title": "Edit Bookmark"
+				"title": "Edit"
 			},
 			"delete": {
-				"title": "Delete Bookmark"
+				"title": "Delete"
 			}
 		},
 		"inform": {

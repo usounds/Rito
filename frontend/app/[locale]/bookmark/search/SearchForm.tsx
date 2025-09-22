@@ -1,10 +1,12 @@
 'use client';
-import { Button, Checkbox, Group, TagsInput } from '@mantine/core';
+import { Button, Checkbox, Group, TagsInput, SimpleGrid } from '@mantine/core';
 import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
 import { useEffect, useState } from 'react';
+import { usePathname } from "next/navigation";
+import { ClipboardPaste } from 'lucide-react';
 
 type SearchFormProps = {
   locale: string;
@@ -21,9 +23,11 @@ export function SearchForm({
   const [handles, setHandles] = useState<string[]>(defaultHandles);
   const [commentPriority, setCommentPriority] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
   const messages = useMessages();
   const router = useRouter();
   const loader = useTopLoader();
+  const pathname = usePathname();
 
   // App Router 用: クエリパラメータを取得
   const searchParams = useSearchParams();
@@ -53,29 +57,42 @@ export function SearchForm({
     setIsLoading(false);
   };
 
+  const handleCopy = async () => {
+    const url = `${window.location.origin}${pathname}?${searchParams.toString()}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000); // 2秒後にリセット
+    } catch (err) {
+      console.error("Failed to copy: ", err);
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit}>
       <Group grow mb="xs">
-        <TagsInput
-          label={messages.search.field.tag.title}
-          placeholder={messages.search.field.tag.placeholder}
-          value={tags}
-          onChange={(newTags) => {
-            // '#' を削除してから state にセット
-            const filtered = newTags.map(tag => tag.replace(/#/g, ""));
-            setTags(filtered);
-          }}
-          styles={{ input: { fontSize: 16 } }}
-          clearable
-        />
-        <TagsInput
-          label={messages.search.field.user.title}
-          placeholder={messages.search.field.user.placeholder}
-          value={handles}
-          onChange={setHandles}
-          styles={{ input: { fontSize: 16 } }}
-          clearable
-        />
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+          <TagsInput
+            label={messages.search.field.tag.title}
+            placeholder={messages.search.field.tag.placeholder}
+            value={tags}
+            onChange={(newTags) => {
+              // '#' を削除してから state にセット
+              const filtered = newTags.map(tag => tag.replace(/#/g, ""));
+              setTags(filtered);
+            }}
+            styles={{ input: { fontSize: 16 } }}
+            clearable
+          />
+          <TagsInput
+            label={messages.search.field.user.title}
+            placeholder={messages.search.field.user.placeholder}
+            value={handles}
+            onChange={setHandles}
+            styles={{ input: { fontSize: 16 } }}
+            clearable
+          />
+        </SimpleGrid>
       </Group>
 
       <Group mb="xs">
@@ -93,6 +110,13 @@ export function SearchForm({
           leftSection={<Search size={14} />}
         >
           {messages.search.button.search}
+        </Button>
+        <Button
+          color={copied ? "teal" : "gray"}
+          onClick={handleCopy}
+          leftSection={<ClipboardPaste size={14} />}
+        >
+          {copied ? messages.search.button.urlcopyed : messages.search.button.urlcopy}
         </Button>
       </Group>
     </form>

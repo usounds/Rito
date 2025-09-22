@@ -273,7 +273,7 @@
 	},
 	"status": {
 		"title": "Status",
-		"description": "Updates the status of Rito every 5 minutes",
+		"description": "Updates the status of Rito every 1 minutes",
 		"field": {
 			"bookmark": "Bookmark",
 			"tag": "Tag",

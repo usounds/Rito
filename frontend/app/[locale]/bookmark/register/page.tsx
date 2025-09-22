@@ -19,6 +19,7 @@ import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
 const MAX_TEXT_LENGTH = 300;
+
 export function buildPost(
     activeComment: string | undefined,
     tags: string[],
@@ -27,7 +28,12 @@ export function buildPost(
     const builder = new RichtextBuilder();
 
     // ホワイトスペースを含むタグは除外
-    const validTags = tags.filter(tag => !/\s/.test(tag));
+    let validTags = tags.filter(tag => !/\s/.test(tag));
+
+    // rito.blue が含まれていなければ追加
+    if (!validTags.includes("rito.blue")) {
+        validTags = [...validTags, "rito.blue"];
+    }
 
     // タグ分の文字数を計算（# + タグ文字 + 半角スペース）
     const tagsLength = validTags.reduce((sum, tag) => {

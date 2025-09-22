@@ -1,14 +1,11 @@
 import { PrismaClient } from '@prisma/client';
+
 export * from '@prisma/client';
 
-declare global {
-  // Node.js では globalThis に prisma を追加
-  var prisma: PrismaClient | undefined;
-}
+const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-// Prisma Client をグローバルに保持（再生成を防ぐ）
-export const prisma: PrismaClient =
-  globalThis.prisma ||
+export const prisma =
+  globalForPrisma.prisma ||
   new PrismaClient({
     log:
       process.env.NODE_ENV === 'development'
@@ -16,6 +13,4 @@ export const prisma: PrismaClient =
         : ['error'],
   });
 
-if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
-}
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;

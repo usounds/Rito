@@ -6,7 +6,7 @@ The Service respects users' privacy and handles personal information appropriate
 ## 1. Information Collected
 The Service may collect the following information:
 - DID, an identifier in the ATProtocol
-- Bookmark schema information entered on this site
+- Bookmark schema information entered on this service
 
 ## 2. Purpose of Use
 The collected information is used to provide applications that utilize the bookmark and schema functions offered by the Service.
@@ -31,13 +31,13 @@ The Service uses the following external services:
 
 ## 6. User Rights
 - Information including DIDs is managed by the users themselves and is not subject to deletion requests handled by the Service.  
-- If you wish to delete your bookmark information, please note that data stored on the PDS cannot be deleted by others. Therefore, you must delete it yourself using the functions provided on this site.
+- If you wish to delete your bookmark information, please note that data stored on the PDS cannot be deleted by others. Therefore, you must delete it yourself using the functions provided on this service.
 
 ## 7. Revisions
-This Privacy Policy may be revised as necessary. Revisions will be announced on this site.
+This Privacy Policy may be revised as necessary. Revisions will be announced on this service.
 
 ## 8. Revision History
-- 2025/09/23 First edition
+- 2025/09/22 First edition
 
 ## 9. Contact
 Developer: @usounds.work  

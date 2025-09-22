@@ -73,6 +73,7 @@ export async function GET(req: NextRequest) {
       updatedCookies.forEach((c) =>
         res.cookies.set(c.key, c.value, {
           httpOnly: true,
+          secure: true,
           path: "/",
           sameSite: "lax",
           maxAge: c.maxAge,

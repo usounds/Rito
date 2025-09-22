@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
     const res = NextResponse.redirect(returnTo||'');
     res.cookies.set("access_token", tokenData.access_token, {
       httpOnly: true,
+      secure: true,
       path: "/",
       sameSite: "lax",
       maxAge: ACCESS_TOKEN_MAX_AGE,
@@ -63,6 +64,7 @@ export async function GET(req: NextRequest) {
     if (tokenData.refresh_token) {
       res.cookies.set("refresh_token", tokenData.refresh_token, {
         httpOnly: true,
+        secure: true,
         path: "/",
         sameSite: "lax",
         maxAge: REFRESH_TOKEN_MAX_AGE,

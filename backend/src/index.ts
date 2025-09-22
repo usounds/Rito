@@ -12,6 +12,7 @@ const publicAgent = new Client({
   }),
 });
 
+
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
 });
@@ -42,6 +43,11 @@ const prisma = new PrismaClient();
 let cursor = "0";
 let prev_time_us = "0";
 let cursorUpdateInterval: NodeJS.Timeout;
+
+(prisma as any).$on('error', (e: any) => {
+  logger.error(`Prisma error event: ${e?.message || e}`);
+  process.exit(1); // DB接続が切れたらプロセス終了
+});
 
 function epochUsToDateTime(cursor: string | number): string {
   return new Date(Number(cursor) / 1000).toISOString();

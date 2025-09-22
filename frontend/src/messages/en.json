@@ -241,7 +241,9 @@
 		"inform": {
 			"error": "A system error has occurred",
 			"success": "Regist successfully",
-			"successDelete": "Delete successfully"
+			"successDelete": "Delete successfully",
+			"nolexicon": "No lexicon found",
+			"loading": "Loading..."
 		},
 		"field": {
 			"nsid": {

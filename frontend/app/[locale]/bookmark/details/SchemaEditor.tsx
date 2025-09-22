@@ -92,9 +92,9 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
     open();
   };
 
-  if (loading) return <Group my="sm"><Text c="dimmed">Loading...</Text></Group>;
+  if (loading) return <Group my="sm"><Text c="dimmed">{messages.editschema.inform.loading}</Text></Group>;
   if (error) return <Group my="sm"><Text c="dimmed">Error: {error}</Text></Group>;
-  if (data.length === 0) return <Group my="sm"><Text c="dimmed">No matches found</Text></Group>;
+  if (data.length === 0) return <Group my="sm"><Text c="dimmed">{messages.editschema.inform.nolexicon}</Text></Group>;
 
   return (
     <>

@@ -6,7 +6,7 @@ The Service respects users' privacy and handles personal information appropriate
 ## 1. Information Collected
 The Service may collect the following information:
 - DID, an identifier in the ATProtocol
-- Bookmark schema information entered on this service
+- Bookmark and schema information entered on this service
 
 ## 2. Purpose of Use
 The collected information is used to provide applications that utilize the bookmark and schema functions offered by the Service.

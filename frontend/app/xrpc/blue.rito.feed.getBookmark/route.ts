@@ -26,7 +26,12 @@ export async function GET(req: Request) {
     });
 
     const normalized = normalizeBookmarks(bookmarks)
-    return NextResponse.json(normalized);
+    return NextResponse.json(normalized, {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    });
   } catch (err) {
     console.error("Error fetching bookmarks:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });

@@ -19,7 +19,6 @@ import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
 const MAX_TEXT_LENGTH = 300;
-
 export function buildPost(
     activeComment: string | undefined,
     tags: string[],
@@ -31,18 +30,17 @@ export function buildPost(
     const validTags = tags.filter(tag => !/\s/.test(tag));
 
     // タグ分の文字数を計算（# + タグ文字 + 半角スペース）
-    const tagsLength = validTags.reduce((sum, tag, index) => {
-        const space = index > 0 ? 1 : 0; // 2個目以降は半角スペース
-        return sum + 1 + tag.length + space; // # + tag.length + space
+    const tagsLength = validTags.reduce((sum, tag) => {
+        return sum + 1 + tag.length + 1; // # + tag.length + 半角スペース
     }, 0);
 
     // text部分を短くして addText
     const baseText = activeComment || messages.create.inform.bookmark;
     builder.addText(baseText.slice(0, MAX_TEXT_LENGTH - tagsLength));
 
-    // タグを追加
-    validTags.forEach((tag, index) => {
-        if (index > 0) builder.addText(" "); // 半角スペースを挿入
+    // タグを追加（全てのタグの前に半角スペース）
+    validTags.forEach(tag => {
+        builder.addText(" "); // 半角スペースを挿入
         builder.addTag(tag);
     });
 

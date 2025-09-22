@@ -2,7 +2,7 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Stats } from '@/components/stats/Stats';
 import { prisma } from '@/logic/HandlePrismaClient';
-import { Container } from '@mantine/core';
+import { Container ,Text} from '@mantine/core';
 import { getTranslations } from "next-intl/server";
 
 export const revalidate = 300; // 5分ごとに再生成
@@ -54,6 +54,7 @@ export default async function StatusPage({ params }: StatusProps) {
     return (
         <Container size="md" mx="auto" >
             <Breadcrumbs items={[{ label: t('status.title') }]} />
+            <Text mt='sm'>{ t('status.description') }</Text>
             <Stats
                 data={[
                     { title: t('status.field.bookmark'), icon: 'bookmark', value: bookmarks, diff: 0 },

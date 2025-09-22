@@ -94,7 +94,9 @@
 			}
 		},
 		"button": {
-			"search": "検索"
+			"search": "検索",
+			"urlcopy": "URLをコピー",
+			"urlcopyed": "コピー済み！"
 		}
 	},
 	"moderations": {
@@ -268,6 +270,7 @@
 	},
 	"status": {
 		"title": "ステータス",
+		"description": "リトの状態を5分おきに更新します",
 		"field": {
 			"bookmark": "ブックマーク",
 			"tag": "タグ",

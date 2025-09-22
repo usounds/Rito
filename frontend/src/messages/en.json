@@ -95,7 +95,9 @@
 			}
 		},
 		"button": {
-			"search": "Search"
+			"search": "Search",
+			"urlcopy": "Copy URL",
+			"urlcopyed": "Copied!"
 		}
 	},
 	"moderations": {
@@ -269,6 +271,7 @@
 	},
 	"status": {
 		"title": "Status",
+		"description": "Updates the status of Rito every 5 minutes",
 		"field": {
 			"bookmark": "Bookmark",
 			"tag": "Tag",

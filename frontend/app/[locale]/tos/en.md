@@ -9,7 +9,7 @@
 - Comments on Bluesky are only accessible to logged-in users.  
 
 ## Moderation
-- This site is intended to be used solely for the purpose of boosting and sharing bookmarks of target URLs.  
+- This service is intended to be used solely for the purpose of boosting and sharing bookmarks of target URLs.  
 - You may not use this site to attack, harass, threaten, discriminate against, defame, violate the privacy of, incite violence against, or otherwise cause harm to any individual, corporation, organization, group, or other third party.  
 - It is also prohibited to specify particular URLs, websites, or online accounts for the purpose of inducing or encouraging attacks or interference by others.  
 - Posting URLs that link to so-called pornographic content is not allowed on this site.  

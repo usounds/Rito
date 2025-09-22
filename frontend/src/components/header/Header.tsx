@@ -103,6 +103,7 @@ export default function Header() {
       <Drawer
         opened={drawerOpened}
         onClose={closeDrawer}
+        position="right"
         size="100%"
         padding="md"
         title={messages.header.navigation}

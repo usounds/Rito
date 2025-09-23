@@ -151,7 +151,6 @@ async function init() {
       if (res.ok) {
         const didData = await res.json();
         handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
-        console.log(handle)
       }
 
       if (!handle) {

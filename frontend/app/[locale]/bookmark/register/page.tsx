@@ -543,9 +543,9 @@ export default function RegistBookmarkPage() {
 
                 console.log('debug', { referrer, origin })
 
-                const registerPath = `/${locale}/bookmark/register`;
+                const registerPath = `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/register`;
 
-                if (referrer.startsWith(origin) && !referrer.endsWith(registerPath)) {
+                if (referrer.startsWith(origin) && !referrer.startsWith(registerPath)) {
                     // 同じサイトかつ直前ページが /bookmark/register でなければ履歴戻り
                     router.back();
                 } else {

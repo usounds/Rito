@@ -19,6 +19,7 @@ import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
 import { Authentication } from "@/components/Authentication";
+import { TagSuggestion } from "@/components/TagSuggest";
 
 const MAX_TEXT_LENGTH = 300;
 
@@ -94,8 +95,27 @@ export default function RegistBookmarkPage() {
     const [activeTab, setActiveTab] = useState<string | null>(locale);
     const [loginOpened, setLoginOpened] = useState(false);
     const [isSettingUp, setIsSettingUp] = useState(true);
+    const myBookmark = useMyBookmark(state => state.myBookmark);
+    const [myTag, setMyTag] = useState<string[]>([]);
 
     useEffect(() => {
+        if(myTag.length > 0) return; 
+        const allMyTags = myBookmark
+            .flatMap((b) => b.tags)
+            .filter((t, i, arr) => arr.indexOf(t) === i)
+            .filter((t) => t !== "Verified");
+        setMyTag(allMyTags);
+
+    }, [myBookmark]);
+
+    useEffect(() => {
+
+        const allMyTags = myBookmark
+            .flatMap((b) => b.tags)
+            .filter((t, i, arr) => arr.indexOf(t) === i)
+            .filter((t) => t !== "Verified");
+        setMyTag(allMyTags);
+
         if (!subjectParam && !titleParam && !aturi) {
             setIsSettingUp(false)
             return
@@ -647,6 +667,12 @@ export default function RegistBookmarkPage() {
                             leftSection={<Tag size={16} />}
                             clearable
                             styles={{ input: { fontSize: 16 } }}
+                        />
+
+                        <TagSuggestion
+                            tags={myTag}
+                            selectedTags={tags}
+                            setTags={setTags}
                         />
 
                         <Tabs value={activeTab} onChange={setActiveTab}>

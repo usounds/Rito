@@ -75,7 +75,7 @@ export default async function BookmarksPage(props: PageProps) {
 
   return (
     <Container size="md" mx="auto" my="sx">
-      <Breadcrumbs items={[{ label: t("header.bookmarkMenu") }, { label: t("header.browse") }]} />
+      <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href:`/${locale}/bookmark/search`}, { label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
       <LatestBookmark params={{ locale }} searchParams={query} />
     </Container>

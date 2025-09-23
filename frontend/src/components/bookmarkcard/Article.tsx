@@ -90,20 +90,13 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
     const linkProps = { href: localUrl, target: '_blank', rel: 'noopener noreferrer' };
 
+    console.log(image)
+
     return (
         <Card withBorder radius="md" className={classes.card} style={{
             height: '100%', display: 'flex', flexDirection: 'column',
             position: 'relative',
         }}>
-
-            {(image && false) &&
-                <div>
-                    <a {...linkProps}>
-                        <Image src={image} height={180} />
-
-                    </a>
-                </div>
-            }
 
             <Box style={{ position: 'relative' }} onClick={() => setIsClicked(!isClicked)}>
 
@@ -112,6 +105,16 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     blurAmount={6}
                     overlayText={messages.detail.view}
                 >
+
+
+                    {(image) &&
+                        <Card.Section>
+                            <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}>
+                                <Image src={image} height={180} />
+
+                            </Link>
+                        </Card.Section>
+                    }
 
                     <Text fw={500} c="inherit" >
                         <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}

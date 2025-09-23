@@ -158,7 +158,8 @@
 			"canverify": "You can register a verified comment for this URL",
 			"success": "Regist successfully",
 			"bookmark": "Bookmarked on Rito",
-			"ogp": "View {0} and others' bookmarks"
+			"ogp": "View {0} and others' bookmarks",
+			"needlogin": "Login is required to register a bookmark"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",

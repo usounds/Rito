@@ -13,7 +13,7 @@ export const ModerationBadges: React.FC<ModerationBadgesProps> = ({ moderations 
   }
 
   return (
-    <Group my='xs'>
+    <Group mb="xs" gap={3}>
       {moderations.map((mod) => (
         <Badge
           key={mod}

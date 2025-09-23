@@ -5,7 +5,7 @@ import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text } from '@mantine/core';
+import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
@@ -68,6 +68,7 @@ export default function RegistBookmarkPage() {
     const router = useRouter();
     const aturi = searchParams.get("aturi") || undefined;
     const subjectParam = searchParams.get("subject") || undefined;
+    const titleParam = searchParams.get("title") || undefined;
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
         { lang: "ja", title: "", comment: "", moderations: [] },
@@ -92,22 +93,67 @@ export default function RegistBookmarkPage() {
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [activeTab, setActiveTab] = useState<string | null>(locale);
     const [loginOpened, setLoginOpened] = useState(false);
+    const [isSettingUp, setIsSettingUp] = useState(true);
 
     useEffect(() => {
-        if (subjectParam) {
-            // URI デコードしてからセット
-            setUrl(decodeURIComponent(subjectParam));
+        if (!subjectParam && !titleParam && !aturi) {
+            setIsSettingUp(false)
+            return
         }
-    }, [subjectParam]);
 
-    useEffect(() => {
+        if (subjectParam) {
+            try {
+                const decodedUrl = decodeURIComponent(subjectParam);
+                const urlObj = new URL(decodedUrl);
+
+                // 除外したいトラッキング系のクエリパラメータ
+                const removeKeys = [
+                    "utm_source",
+                    "utm_medium",
+                    "utm_campaign",
+                    "utm_term",
+                    "utm_content",
+                    "gclid",
+                    "fbclid",
+                    "msclkid",
+                    "mc_cid",
+                    "mc_eid",
+                    "pk_campaign",
+                    "pk_kwd",
+                    "ref",
+                    "affiliate_id"
+                ];
+
+                removeKeys.forEach(key => urlObj.searchParams.delete(key));
+
+                setUrl(urlObj.toString());
+            } catch (err) {
+                console.error("Invalid URL:", subjectParam, err);
+                setUrl(decodeURIComponent(subjectParam)); // fallback
+            }
+        }
+
+        if (titleParam) {
+            const decodedTitle = decodeURIComponent(titleParam);
+            setComments(prev =>
+                prev.map(comment =>
+                    comment.lang === locale
+                        ? { ...comment, title: decodedTitle } // 現在の locale に合致するものだけ更新
+                        : comment
+                )
+            );
+        }
+
+        if (subjectParam || titleParam) {
+            setIsSettingUp(false)
+            return
+        }
+
         const fetchBookmark = async () => {
             if (!aturi) {
                 return
             }
             try {
-
-
 
                 // ① Zustand から先に初期表示用データを探す
                 const localBookmark = useMyBookmark.getState().myBookmark.find(
@@ -170,12 +216,15 @@ export default function RegistBookmarkPage() {
                 console.error(err);
                 //setBookmark(null);
             } finally {
-                //setLoading(false);
+                setIsSettingUp(false)
+
             }
         };
 
         fetchBookmark();
-    }, [aturi, activeDid]);
+
+    }, [subjectParam, titleParam, locale, aturi]);
+
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {
         try {
@@ -489,7 +538,16 @@ export default function RegistBookmarkPage() {
                 });
 
                 setIsNeedReload(true)
-                router.back();
+                const referrer = document.referrer;
+                const origin = window.location.origin;
+
+                if (referrer.startsWith(origin)) {
+                    // 同じサイトなら履歴戻り
+                    router.back();
+                } else {
+                    // 違うサイトならマイブックマークへ
+                    router.push(`/${locale}/my/bookmark`);
+                }
             } else {
                 notifications.show({
                     title: 'Error',
@@ -530,146 +588,164 @@ export default function RegistBookmarkPage() {
                     { label: messages.create.button.regist }
                 ]}
             />
-            <Stack gap="sm">
-                <TextInput
-                    label={messages.create.field.url.title}
-                    description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
-                    placeholder={messages.create.field.url.placeholder}
-                    value={url} onChange={handleUrlChange}
-                    leftSection={isCanVerify && <BadgeCheck size={16} />}
-                    withAsterisk
-                    error={urlError}
-                    autoFocus={aturi == null}
-                    styles={{ input: { fontSize: 16, }, }} />
-                <Group justify="center">
-                    <Button
-                        leftSection={<PanelsTopLeft size={16} />}
-                        variant="default"
-                        onClick={handleGetOgp}
-                        loading={isFetchOGP}
-                        style={{ width: "auto" }}
-                        disabled={
-                            !url.startsWith('https://') &&
-                            !schema == null
-                        }
-                    >
-                        {messages.create.button.ogp}
-                    </Button>
-                </Group>
-                <TagsInput
-                    data={[]}
-                    value={tags}
-                    onChange={(newTags) => {
-                        // 新しいタグ配列から '#' を含むタグを除外
-                        const filtered = newTags.map(tag => tag.replace(/#/g, ""));
-                        setTags(filtered);
-                    }}
-                    label={messages.create.field.tag.title}
-                    description={messages.create.field.tag.description}
-                    placeholder={messages.create.field.tag.placeholder}
-                    maxTags={10}
-                    maxLength={25}
-                    leftSection={<Tag size={16} />}
-                    clearable
-                    styles={{ input: { fontSize: 16 } }}
-                />
-                <Tabs value={activeTab} onChange={setActiveTab}>
-                    <Tabs.List>
-                        <Tabs.Tab value="ja">{messages.create.tab.ja}</Tabs.Tab>
-                        <Tabs.Tab value="en">{messages.create.tab.en}</Tabs.Tab>
-                    </Tabs.List>
+            <Stack >
+                <Box pos="relative">
+                    <LoadingOverlay
+                        visible={isSettingUp}
+                        zIndex={1000}
+                        overlayProps={{ radius: "sm", blur: 2 }}
+                    />
 
-
-                    <Tabs.Panel value="ja">
+                    {/* Box 内の要素を Stack で縦並び */}
+                    <Stack gap="sm">
                         <TextInput
-                            label={messages.create.field.title.title}
-                            placeholder={messages.create.field.title.placeholder}
-                            description={messages.create.field.title.description}
-                            error={titleError}
-                            value={comments.find((c) => c.lang === "ja")?.title || ""}
-                            maxLength={50}
-                            onChange={(e) => handleChange("ja", "title", e.currentTarget.value)}
+                            label={messages.create.field.url.title}
+                            description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
+                            placeholder={messages.create.field.url.placeholder}
+                            value={url}
+                            onChange={handleUrlChange}
+                            leftSection={isCanVerify && <BadgeCheck size={16} />}
                             withAsterisk
+                            error={urlError}
+                            autoFocus={aturi == null}
                             styles={{ input: { fontSize: 16 } }}
                         />
-                        <Textarea
-                            label={messages.create.field.comment.title}
-                            description={messages.create.field.comment.description}
-                            placeholder={messages.create.field.comment.placeholder}
-                            value={comments.find((c) => c.lang === "ja")?.comment || ""}
-                            maxLength={2000}
-                            autosize
-                            onChange={(e) => handleChange("ja", "comment", e.currentTarget.value)}
-                            styles={{ input: { fontSize: 16 } }}
-                        />
-                    </Tabs.Panel>
 
-                    <Tabs.Panel value="en">
-                        <TextInput
-                            label={messages.create.field.title.title}
-                            placeholder={messages.create.field.title.placeholder}
-                            description={messages.create.field.title.description}
-                            error={titleError}
-                            value={comments.find((c) => c.lang === "en")?.title || ""}
-                            maxLength={50}
-                            onChange={(e) => handleChange("en", "title", e.currentTarget.value)}
-                            withAsterisk
-                            styles={{ input: { fontSize: 16 } }}
-                        />
-                        <Textarea
-                            label={messages.create.field.comment.title}
-                            description={messages.create.field.comment.description}
-                            placeholder={messages.create.field.comment.placeholder}
-                            value={comments.find((c) => c.lang === "en")?.comment || ""}
-                            maxLength={2000}
-                            autosize
-                            onChange={(e) => handleChange("en", "comment", e.currentTarget.value)}
-                            styles={{ input: { fontSize: 16 } }}
-                        />
-                    </Tabs.Panel>
-                </Tabs>
-
-                <Group justify="right">
-                    {activeDid ? (
-                        <>
-                            {!aturi && (
-                                <Switch
-                                    label={messages.create.field.posttobluesky.title}
-                                    checked={isPostToBluesky}
-                                    onChange={() => setIsPostToBluesky(!isPostToBluesky)}
-                                />
-                            )}
+                        <Group justify="center">
                             <Button
-                                leftSection={<BookmarkPlus size={16} />}
-                                onClick={handleSubmit}
-                                loading={isSubmit}
+                                leftSection={<PanelsTopLeft size={16} />}
+                                variant="default"
+                                onClick={handleGetOgp}
+                                loading={isFetchOGP}
+                                style={{ width: "auto" }}
+                                disabled={
+                                    !url.startsWith('https://') &&
+                                    !schema == null
+                                }
                             >
-                                {messages.create.button.regist}
+                                {messages.create.button.ogp}
                             </Button>
-                        </>
-                    ) :
-                        <>
-                            <Text>{messages.create.inform.needlogin}</Text>
-                            <Button onClick={() => setLoginOpened(true)} variant="default">
-                                {messages.login.title}
-                            </Button>
+                        </Group>
 
-                            <Modal
-                                opened={loginOpened}
-                                onClose={() => setLoginOpened(false)}
-                                size="md"
-                                title={messages.login.titleDescription}
-                                closeOnClickOutside={false}
-                                centered
-                            >
-                                <Authentication />
-                            </Modal>
-                        </>
+                        <TagsInput
+                            data={[]}
+                            value={tags}
+                            onChange={(newTags) => {
+                                const filtered = newTags.map(tag => tag.replace(/#/g, ""));
+                                setTags(filtered);
+                            }}
+                            label={messages.create.field.tag.title}
+                            description={messages.create.field.tag.description}
+                            placeholder={messages.create.field.tag.placeholder}
+                            maxTags={10}
+                            maxLength={25}
+                            disabled={!activeDid}
+                            leftSection={<Tag size={16} />}
+                            clearable
+                            styles={{ input: { fontSize: 16 } }}
+                        />
 
-                    }
+                        <Tabs value={activeTab} onChange={setActiveTab}>
+                            <Tabs.List>
+                                <Tabs.Tab value="ja">{messages.create.tab.ja}</Tabs.Tab>
+                                <Tabs.Tab value="en">{messages.create.tab.en}</Tabs.Tab>
+                            </Tabs.List>
 
-                </Group>
-            </Stack >
+                            <Tabs.Panel value="ja">
+                                <TextInput
+                                    label={messages.create.field.title.title}
+                                    placeholder={messages.create.field.title.placeholder}
+                                    description={messages.create.field.title.description}
+                                    error={titleError}
+                                    value={comments.find((c) => c.lang === "ja")?.title || ""}
+                                    maxLength={50}
+                                    onChange={(e) => handleChange("ja", "title", e.currentTarget.value)}
+                                    withAsterisk
+                                    disabled={!activeDid}
+                                    styles={{ input: { fontSize: 16 } }}
+                                />
+                                <Textarea
+                                    label={messages.create.field.comment.title}
+                                    description={messages.create.field.comment.description}
+                                    placeholder={messages.create.field.comment.placeholder}
+                                    value={comments.find((c) => c.lang === "ja")?.comment || ""}
+                                    maxLength={2000}
+                                    autosize
+                                    disabled={!activeDid}
+                                    onChange={(e) => handleChange("ja", "comment", e.currentTarget.value)}
+                                    styles={{ input: { fontSize: 16 } }}
+                                />
+                            </Tabs.Panel>
+
+                            <Tabs.Panel value="en">
+                                <TextInput
+                                    label={messages.create.field.title.title}
+                                    placeholder={messages.create.field.title.placeholder}
+                                    description={messages.create.field.title.description}
+                                    error={titleError}
+                                    value={comments.find((c) => c.lang === "en")?.title || ""}
+                                    maxLength={50}
+                                    onChange={(e) => handleChange("en", "title", e.currentTarget.value)}
+                                    withAsterisk
+                                    disabled={!activeDid}
+                                    styles={{ input: { fontSize: 16 } }}
+                                />
+                                <Textarea
+                                    label={messages.create.field.comment.title}
+                                    description={messages.create.field.comment.description}
+                                    placeholder={messages.create.field.comment.placeholder}
+                                    value={comments.find((c) => c.lang === "en")?.comment || ""}
+                                    maxLength={2000}
+                                    autosize
+                                    disabled={!activeDid}
+                                    onChange={(e) => handleChange("en", "comment", e.currentTarget.value)}
+                                    styles={{ input: { fontSize: 16 } }}
+                                />
+                            </Tabs.Panel>
+                        </Tabs>
+
+                        <Group justify="right">
+                            {activeDid ? (
+                                <>
+                                    {!aturi && (
+                                        <Switch
+                                            label={messages.create.field.posttobluesky.title}
+                                            checked={isPostToBluesky}
+                                            onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                                        />
+                                    )}
+                                    <Button
+                                        leftSection={<BookmarkPlus size={16} />}
+                                        onClick={handleSubmit}
+                                        loading={isSubmit}
+                                    >
+                                        {messages.create.button.regist}
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <Text>{messages.create.inform.needlogin}</Text>
+                                    <Button onClick={() => setLoginOpened(true)} variant="default">
+                                        {messages.login.title}
+                                    </Button>
+
+                                    <Modal
+                                        opened={loginOpened}
+                                        onClose={() => setLoginOpened(false)}
+                                        size="md"
+                                        title={messages.login.titleDescription}
+                                        closeOnClickOutside={false}
+                                        centered
+                                    >
+                                        <Authentication />
+                                    </Modal>
+                                </>
+                            )}
+                        </Group>
+                    </Stack>
+                </Box>
+            </Stack>
+
 
         </Container>
     );

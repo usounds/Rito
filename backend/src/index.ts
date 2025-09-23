@@ -144,31 +144,40 @@ async function init() {
     let handle = 'no handle';
     let isVerify = false;
 
+    const maxAttempts = 2;
 
-    try {
-      // まず DID から plc.directory を参照
-      const res = await fetch(`https://plc.directory/${event.did}`);
-      if (res.ok) {
-        const didData = await res.json();
-        handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch(`https://plc.directory/${event.did}`);
+        if (res.ok) {
+          const didData = await res.json();
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+        logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
+          break; // 成功したらループを抜ける
+        } else {
+          logger.warn(`Attempt ${attempt}: plc.directory fetch failed with status ${res.status}`);
+        }
+      } catch (err) {
+        logger.warn(`Attempt ${attempt}: plc.directory fetch error for DID: ${event.did}`);
       }
 
-      if (!handle) {
-        // plc.directory で取得できなければ publicAgent で取得
+    }
+
+    if (!handle) {
+      logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
+      try {
         const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
           params: { actor: event.did },
         });
-
         if (userProfile.ok && userProfile.data.handle) {
           handle = userProfile.data.handle;
         } else {
-          logger.warn(`handle が取得できませんでした DID: ${event.did}`);
+          logger.error(`Error fetching handle from publicAgent: ${event.did}`);
           return;
         }
+      } catch (err) {
+        logger.error(`Error fetching handle from publicAgent: ${err}`);
       }
-
-    } catch (err) {
-      logger.error(`Error fetching handle or verifying URL: ${err}`);
     }
 
     // URL が正しいかチェック

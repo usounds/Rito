@@ -242,29 +242,40 @@ async function init() {
         const commentTexts: string[] = [];
         if (c.title) commentTexts.push(c.title);
         if (c.comment) commentTexts.push(c.comment);
+
         const commentFlaggedCategories = await checkModeration(commentTexts);
         const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
 
-        await prisma.comment.upsert({
+        // 既存コメントを lang ごとにチェック
+        const existing = await prisma.comment.findFirst({
           where: {
-            bookmark_uri_lang: { // 複合ユニークを事前に Prisma schema で定義しておく
-              bookmark_uri: aturi,
-              lang: c.lang,
-            }
-          },
-          update: {
-            title: c.title,
-            comment: c.comment,
-            moderation_result: commentModerationResult,
-          },
-          create: {
             bookmark_uri: aturi,
             lang: c.lang,
-            title: c.title,
-            comment: c.comment,
-            moderation_result: commentModerationResult,
           },
         });
+
+        if (existing) {
+          // update
+          await prisma.comment.update({
+            where: { id: existing.id },
+            data: {
+              title: c.title,
+              comment: c.comment,
+              moderation_result: commentModerationResult,
+            },
+          });
+        } else {
+          // create
+          await prisma.comment.create({
+            data: {
+              bookmark_uri: aturi,
+              lang: c.lang,
+              title: c.title,
+              comment: c.comment,
+              moderation_result: commentModerationResult,
+            },
+          });
+        }
       }
 
       // タグの更新

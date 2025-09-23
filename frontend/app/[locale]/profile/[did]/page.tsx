@@ -68,7 +68,7 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
     <Container size="md" mx="auto" >
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
       <Stack>
-        {normalized.length===0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
+        {normalized.length === 0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
         <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
           {normalized.map((b) => {
             const comment =
@@ -90,7 +90,7 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
                   handle={b.handle}
                   comment={comment.comment || b.ogpDescription || ''}
                   tags={b.tags}
-                  image={b.ogpImage || undefined}
+                  image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
                   date={displayDate}
                   moderations={moderationList}
                 />

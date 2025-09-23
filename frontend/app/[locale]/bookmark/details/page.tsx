@@ -218,7 +218,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     return (
         <>
             <Container size="md" mx="auto">
-                <Breadcrumbs items={[{ label: t("header.bookmarkMenu") }, { label: t("header.details") }]} />
+                <Breadcrumbs items={[{ label: t("header.bookmarkMenu") , href:`/${locale}/bookmark/search`}, { label: t("header.details") }]} />
                 <Stack gap={4}>
                     <BlurReveal
                         moderated={moderations.length > 0}
@@ -321,7 +321,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                         {"by @" + bookmark.handle + " "}
 
                                                     </Link>
-                                                    <TimeAgo date={bookmark.indexedAt} />
+                                                    <TimeAgo date={bookmark.indexedAt} locale={locale} />
                                                 </Text>
                                             </TimelineItem>
                                         );
@@ -374,7 +374,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                         }}>
                                                             {"by @" + post.handle + " "}
                                                         </Link>
-                                                        <TimeAgo date={post.indexedAt} />
+                                                        <TimeAgo date={post.indexedAt} locale={locale} />
                                                     </Text>
                                                 </TimelineItem>
                                             ))}

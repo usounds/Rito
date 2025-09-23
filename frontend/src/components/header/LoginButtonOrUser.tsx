@@ -3,7 +3,7 @@ import { Authentication } from "@/components/Authentication";
 import { useLocale } from 'next-intl';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Bookmark,TagRanking} from '@/type/ApiTypes';
+import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
 import { BookmarkPlus, LogOut } from 'lucide-react';
@@ -21,6 +21,7 @@ export function LoginButtonOrUser() {
     const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const isNeedReload = useMyBookmark(state => state.isNeedReload);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
+    const tagRanking = useMyBookmark(state => state.tagRanking);
     const setTagRanking = useMyBookmark(state => state.setTagRanking);
     const messages = useMessages();
     const isLoggedIn = !!activeDid;
@@ -85,10 +86,20 @@ export function LoginButtonOrUser() {
     }, [])
 
     useEffect(() => {
-        if (activeDid) return
+
 
         (async () => {
             try {
+                if (tagRanking.length===0) {
+                    const res2 = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag`);
+                    if (res2.ok) {
+                        const data: TagRanking[] = await res2.json();
+                        setTagRanking(data);
+                    }
+                }
+
+                if (activeDid) return
+
                 // まず /api/me から activeDid を取得
                 const meRes = await fetch("/api/me");
                 if (!meRes.ok) {
@@ -115,13 +126,6 @@ export function LoginButtonOrUser() {
                     params: { actor: did },
                 });
                 if (userProfile.ok) setUserProf(userProfile.data);
-
-
-                const res2 = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag`);
-                if (res2.ok) {
-                    const data: TagRanking[] = await res2.json();
-                    setTagRanking(data);
-                }
 
             } catch (err) {
                 console.error("Error initializing user session:", err);

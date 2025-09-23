@@ -152,7 +152,7 @@ async function init() {
         if (res.ok) {
           const didData = await res.json();
           handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
-        logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
+          logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
           break; // 成功したらループを抜ける
         } else {
           logger.warn(`Attempt ${attempt}: plc.directory fetch failed with status ${res.status}`);
@@ -347,11 +347,41 @@ async function init() {
 
       // UserDidHandle upsert
       let handle = 'no handle';
-      try {
-        const userProfile = await publicAgent.get('app.bsky.actor.getProfile', { params: { actor: event.did } });
-        if (userProfile.ok && userProfile.data?.handle) handle = userProfile.data.handle;
-      } catch (err) {
-        logger.error(`Error fetching profile for ${event.did}: ${err}`);
+
+      const maxAttempts = 2;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          const res = await fetch(`https://plc.directory/${event.did}`);
+          if (res.ok) {
+            const didData = await res.json();
+            handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+            logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
+            break; // 成功したらループを抜ける
+          } else {
+            logger.warn(`Attempt ${attempt}: plc.directory fetch failed with status ${res.status}`);
+          }
+        } catch (err) {
+          logger.warn(`Attempt ${attempt}: plc.directory fetch error for DID: ${event.did}`);
+        }
+
+      }
+
+      if (!handle) {
+        logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
+        try {
+          const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+            params: { actor: event.did },
+          });
+          if (userProfile.ok && userProfile.data.handle) {
+            handle = userProfile.data.handle;
+          } else {
+            logger.error(`Error fetching handle from publicAgent: ${event.did}`);
+            return;
+          }
+        } catch (err) {
+          logger.error(`Error fetching handle from publicAgent: ${err}`);
+        }
       }
 
       await prisma.userDidHandle.upsert({

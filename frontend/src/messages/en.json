@@ -3,8 +3,8 @@
 	"description": "A social bookmarking service built on the AT Protocol. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
 	"loading": "Loading",
 	"button": {
-		"search": "Search",
-		"start": "Get Started"
+		"search": "Search everyone's bookmarks",
+		"start": "View my bookmarks"
 	},
 	"ogp": {
 		"title": "Rito",
@@ -188,7 +188,7 @@
 		"rito": "Rito",
 		"bluesky": "Bluesky",
 		"resolver": "Lexicon",
-		"view": "View moderated content",
+		"view": "View moderated contents",
 		"nocomment": "No comment",
 		"needlogin": "You need to log in to view comments",
 		"owner": "Owner",

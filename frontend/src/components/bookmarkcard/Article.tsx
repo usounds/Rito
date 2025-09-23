@@ -91,8 +91,6 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     let imageUrl = image;
     if (imageUrl && !imageUrl.startsWith('https://') && domain) {
         imageUrl = `https://${domain}/${image}`;
-    }else{
-        imageUrl = undefined;
     }
 
     return (

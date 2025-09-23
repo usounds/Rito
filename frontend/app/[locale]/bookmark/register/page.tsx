@@ -541,11 +541,15 @@ export default function RegistBookmarkPage() {
                 const referrer = document.referrer;
                 const origin = window.location.origin;
 
-                if (referrer.startsWith(origin)) {
-                    // 同じサイトなら履歴戻り
+                console.log('debug', { referrer, origin })
+
+                const registerPath = `/${locale}/bookmark/register`;
+
+                if (referrer.startsWith(origin) && !referrer.endsWith(registerPath)) {
+                    // 同じサイトかつ直前ページが /bookmark/register でなければ履歴戻り
                     router.back();
                 } else {
-                    // 違うサイトならマイブックマークへ
+                    // 違うサイト、または直前ページが /bookmark/register ならマイブックマークへ
                     router.push(`/${locale}/my/bookmark`);
                 }
             } else {

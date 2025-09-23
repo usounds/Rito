@@ -5,7 +5,7 @@ import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container } from '@mantine/core';
+import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
@@ -18,6 +18,8 @@ import { AppBskyFeedPost } from '@atcute/bluesky';
 import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
+import { Authentication } from "@/components/Authentication";
+
 const MAX_TEXT_LENGTH = 300;
 
 export function buildPost(
@@ -66,7 +68,6 @@ export default function RegistBookmarkPage() {
     const router = useRouter();
     const aturi = searchParams.get("aturi") || undefined;
     const subjectParam = searchParams.get("subject") || undefined;
-
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
         { lang: "ja", title: "", comment: "", moderations: [] },
@@ -90,6 +91,7 @@ export default function RegistBookmarkPage() {
     const thisClient = useXrpcAgentStore(state => state.thisClient);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [activeTab, setActiveTab] = useState<string | null>(locale);
+    const [loginOpened, setLoginOpened] = useState(false);
 
     useEffect(() => {
         if (subjectParam) {
@@ -99,11 +101,6 @@ export default function RegistBookmarkPage() {
     }, [subjectParam]);
 
     useEffect(() => {
-        if (!activeDid) {
-            router.back();
-            return
-
-        }
         const fetchBookmark = async () => {
             if (!aturi) {
                 return
@@ -633,14 +630,44 @@ export default function RegistBookmarkPage() {
                 </Tabs>
 
                 <Group justify="right">
-                    {!aturi &&
-                        <Switch
-                            label={messages.create.field.posttobluesky.title}
-                            checked={isPostToBluesky}
-                            onChange={() => setIsPostToBluesky(!isPostToBluesky)}
-                        />
+                    {activeDid ? (
+                        <>
+                            {!aturi && (
+                                <Switch
+                                    label={messages.create.field.posttobluesky.title}
+                                    checked={isPostToBluesky}
+                                    onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                                />
+                            )}
+                            <Button
+                                leftSection={<BookmarkPlus size={16} />}
+                                onClick={handleSubmit}
+                                loading={isSubmit}
+                            >
+                                {messages.create.button.regist}
+                            </Button>
+                        </>
+                    ) :
+                        <>
+                            <Text>{messages.create.inform.needlogin}</Text>
+                            <Button onClick={() => setLoginOpened(true)} variant="default">
+                                {messages.login.title}
+                            </Button>
+
+                            <Modal
+                                opened={loginOpened}
+                                onClose={() => setLoginOpened(false)}
+                                size="md"
+                                title={messages.login.titleDescription}
+                                closeOnClickOutside={false}
+                                centered
+                            >
+                                <Authentication />
+                            </Modal>
+                        </>
+
                     }
-                    <Button leftSection={<BookmarkPlus size={16} />} onClick={handleSubmit} loading={isSubmit}>{messages.create.button.regist}</Button>
+
                 </Group>
             </Stack >
 

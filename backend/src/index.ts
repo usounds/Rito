@@ -207,7 +207,7 @@ async function init() {
       // DID->Handleテーブル
       await prisma.userDidHandle.upsert({
         where: { did: event.did },
-        update: {},
+        update: { handle: handle },
         create: { did: event.did, handle: handle },
       });
 
@@ -246,36 +246,27 @@ async function init() {
         const commentFlaggedCategories = await checkModeration(commentTexts);
         const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
 
-        // 既存コメントを lang ごとにチェック
-        const existing = await prisma.comment.findFirst({
+        // コメントの upsert
+        await prisma.comment.upsert({
           where: {
-            bookmark_uri: aturi,
-            lang: c.lang,
-          },
-        });
-
-        if (existing) {
-          // update
-          await prisma.comment.update({
-            where: { id: existing.id },
-            data: {
-              title: c.title,
-              comment: c.comment,
-              moderation_result: commentModerationResult,
-            },
-          });
-        } else {
-          // create
-          await prisma.comment.create({
-            data: {
+            bookmark_uri_lang: { // Prisma schema で @@unique([bookmark_uri, lang]) が必要
               bookmark_uri: aturi,
               lang: c.lang,
-              title: c.title,
-              comment: c.comment,
-              moderation_result: commentModerationResult,
-            },
-          });
-        }
+            }
+          },
+          update: {
+            title: c.title,
+            comment: c.comment,
+            moderation_result: commentModerationResult,
+          },
+          create: {
+            bookmark_uri: aturi,
+            lang: c.lang,
+            title: c.title,
+            comment: c.comment,
+            moderation_result: commentModerationResult,
+          },
+        });
       }
 
       // タグの更新
@@ -317,6 +308,7 @@ async function init() {
     } catch (err) {
       logger.error(`Error in upsert: ${err}`);
     }
+
   }
 
 

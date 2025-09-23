@@ -144,33 +144,47 @@ async function init() {
     let handle = 'no handle';
     let isVerify = false;
 
+
     try {
-      // ユーザー情報取得
-      const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-        params: { actor: event.did },
-      });
+      // まず DID から plc.directory を参照
+      const res = await fetch(`https://plc.directory/${event.did}`);
+      if (res.ok) {
+        const didData = await res.json();
+        handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+      }
 
-      if (userProfile.ok) {
-        handle = userProfile.data.handle;
+      if (!handle) {
+        // plc.directory で取得できなければ publicAgent で取得
+        const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+          params: { actor: event.did },
+        });
 
-        // URL が正しいかチェック
-        try {
-          const url = new URL(event.commit.record.subject || '');
-          const domain = url.hostname;
-
-          if (url.pathname === '/' || url.pathname === '') {
-            if (domain === handle || domain.endsWith('.' + handle)) {
-              isVerify = true;
-            }
-          } else if (isValidTangledUrl(event.commit.record.subject || '', handle)) {
-            isVerify = true
-          }
-        } catch {
-          // URL パースエラーは無視
+        if (userProfile.ok && userProfile.data.handle) {
+          handle = userProfile.data.handle;
+        } else {
+          logger.warn(`handle が取得できませんでした DID: ${event.did}`);
+          return;
         }
       }
+
+      // URL が正しいかチェック
+      const subject = event.commit.record.subject || '';
+      try {
+        const url = new URL(subject);
+        const domain = url.hostname;
+
+        if ((url.pathname === '/' || url.pathname === '') &&
+          (domain === handle || domain.endsWith(`.${handle}`))) {
+          isVerify = true;
+        } else if (isValidTangledUrl(subject, handle)) {
+          isVerify = true;
+        }
+      } catch {
+        // URL パースエラーは無視
+      }
+
     } catch (err) {
-      logger.error(`Error fetching userProfile: ${err}`);
+      logger.error(`Error fetching handle or verifying URL: ${err}`);
     }
 
     try {
@@ -439,26 +453,36 @@ async function init() {
       logger.info(`Verified via DNS TXT: ${subDomain} -> ${foundDid}`);
     }
 
-    try {
+    if (!verified) {
+      try {
+        const res = await fetch(`https://plc.directory/${event.did}`);
+        if (res.ok) {
+          const didData = await res.json();
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+        }
 
-      // まずユーザープロフィールから handle を取得
-      const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
-        params: { actor: did },
-      });
+        if (!handle) {
+          // まずユーザープロフィールから handle を取得
+          const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
+            params: { actor: did },
+          });
 
-      if (userProfile.ok) {
-        handle = userProfile.data.handle;
+          if (userProfile.ok) {
+            handle = userProfile.data.handle;
+
+          }
+
+        }
 
         const reversedHandle = handle.split('.').reverse().join('.');
-        if (!verified && nsid.startsWith(reversedHandle)) {
+        if (handle && nsid.startsWith(reversedHandle)) {
           logger.info(`Verified via Profile: ${did} -> ${reversedHandle}`);
           verified = true;
         }
+      } catch (err) {
+        logger.error(`Error fetching profile for ${did}: ${err}`);
       }
-    } catch (err) {
-      logger.error(`Error fetching profile for ${did}: ${err}`);
     }
-
 
     try {
       await prisma.resolver.upsert({

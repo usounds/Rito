@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAccessToken, refreshAccessToken } from "@/logic/HandleOauth";
+import { getAccessToken } from "@/logic/HandleOauth";
 
 export async function GET(req: NextRequest) {
   const referer = req.headers.get("referer");
@@ -36,11 +36,11 @@ export async function GET(req: NextRequest) {
     console.log("phase 2");
     let userInfoRes = await fetchUserInfo(accessToken);
 
-    // --- userinfo が 500 → アクセストークン取り直し ---
-    if (userInfoRes.status === 500) {
-      console.warn("userinfo 500 → アクセストークン取り直し");
+    // --- userinfo が 401/403/500 → アクセストークン取り直し ---
+    if ([401, 403, 500].includes(userInfoRes.status)) {
+      console.warn(`userinfo ${userInfoRes.status} → アクセストークン取り直し`);
       try {
-        const retry = await getAccessToken(req, true);
+        const retry = await getAccessToken(req, true); // 第二引数 true でリフレッシュ
         accessToken = retry.accessToken;
         updatedCookies = retry.updatedCookies;
         if (accessToken) {

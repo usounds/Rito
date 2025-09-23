@@ -20,6 +20,11 @@ export interface Comment {
   moderations: string[]; // 同上
 }
 
+export interface TagRanking {
+  tag: string;
+  count: number;
+}
+
 export function normalizeBookmarks(raw: any[]): Bookmark[] {
   return raw.map(b => ({
     uri: b.uri,

@@ -88,9 +88,12 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         }
     })();
 
-    const linkProps = { href: localUrl, target: '_blank', rel: 'noopener noreferrer' };
-
-    console.log(image)
+    let imageUrl = image;
+    if (imageUrl && !imageUrl.startsWith('https://') && domain) {
+        imageUrl = `https://${domain}/${image}`;
+    }else{
+        imageUrl = undefined;
+    }
 
     return (
         <Card withBorder radius="md" className={classes.card} style={{
@@ -107,10 +110,10 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 >
 
 
-                    {(image) &&
+                    {(imageUrl) &&
                         <Card.Section>
                             <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}>
-                                <Image src={image} height={180} />
+                                <Image src={imageUrl} height={180} />
 
                             </Link>
                         </Card.Section>

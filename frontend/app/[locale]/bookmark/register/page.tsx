@@ -542,6 +542,7 @@ export default function RegistBookmarkPage() {
                     leftSection={isCanVerify && <BadgeCheck size={16} />}
                     withAsterisk
                     error={urlError}
+                    autoFocus={aturi == null}
                     styles={{ input: { fontSize: 16, }, }} />
                 <Group justify="center">
                     <Button

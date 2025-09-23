@@ -3,6 +3,7 @@ import { AtSign, Bookmark, FileText, Search, SquareArrowOutUpRight } from 'lucid
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import classes from './Features.module.scss';
+import { BookmarkCheck } from 'lucide-react';
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
@@ -68,7 +69,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           <Button
             component={Link}
             href={`/${locale}/my/bookmark`}
-            leftSection={<SquareArrowOutUpRight size={14} />}
+            leftSection={<BookmarkCheck size={14} />}
             variant="default"
           >
             {t('button.start')}

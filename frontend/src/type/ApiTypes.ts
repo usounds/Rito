@@ -23,7 +23,6 @@ export interface Comment {
 export function normalizeBookmarks(raw: any[]): Bookmark[] {
   return raw.map(b => ({
     uri: b.uri,
- //   did: b.did,
     handle: b.handle,
     subject: b.subject,
     ogpTitle: b.ogp_title,
@@ -31,16 +30,16 @@ export function normalizeBookmarks(raw: any[]): Bookmark[] {
     ogpImage: b.ogp_image,
     createdAt: b.created_at,
     indexedAt: b.indexed_at,
-    moderations: Array.isArray(b.moderation_result)
-      ? b.moderation_result
-      : b.moderation_result ? [b.moderation_result] : [],
+    moderations: typeof b.moderation_result === 'string'
+      ? b.moderation_result.split(',').map((s: string) => s.trim())
+      : [],
     comments: b.comments.map((c: any) => ({
       lang: c.lang,
       title: c.title,
       comment: c.comment,
-      moderations: Array.isArray(c.moderation_result)
-        ? c.moderation_result
-        : c.moderation_result ? [c.moderation_result] : [],
+      moderations: typeof c.moderation_result === 'string'
+        ? c.moderation_result.split(',').map((s: string) => s.trim())
+        : [],
     })),
     tags: Array.isArray(b.tags)
       ? b.tags

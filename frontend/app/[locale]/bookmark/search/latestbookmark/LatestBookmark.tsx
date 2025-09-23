@@ -84,7 +84,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
                 handle={b.handle}
                 comment={displayComment}
                 tags={b.tags}
-                image={b.ogpImage || undefined}
+                image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
                 date={displayDate}
                 moderations={moderationList}
               />

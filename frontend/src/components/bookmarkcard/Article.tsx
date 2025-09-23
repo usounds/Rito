@@ -194,7 +194,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         }}>
                         {handle ? "by @" + handle + ' ' : ""}
                     </Link>
-                    <TimeAgo date={date} />
+                    <TimeAgo date={date} locale={locale} />
                 </Text>
 
             </Group>

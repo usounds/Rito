@@ -151,6 +151,7 @@ async function init() {
       if (res.ok) {
         const didData = await res.json();
         handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+        console.log(handle)
       }
 
       if (!handle) {
@@ -167,24 +168,24 @@ async function init() {
         }
       }
 
-      // URL が正しいかチェック
-      const subject = event.commit.record.subject || '';
-      try {
-        const url = new URL(subject);
-        const domain = url.hostname;
-
-        if ((url.pathname === '/' || url.pathname === '') &&
-          (domain === handle || domain.endsWith(`.${handle}`))) {
-          isVerify = true;
-        } else if (isValidTangledUrl(subject, handle)) {
-          isVerify = true;
-        }
-      } catch {
-        // URL パースエラーは無視
-      }
-
     } catch (err) {
       logger.error(`Error fetching handle or verifying URL: ${err}`);
+    }
+
+    // URL が正しいかチェック
+    const subject = event.commit.record.subject || '';
+    try {
+      const url = new URL(subject);
+      const domain = url.hostname;
+
+      if ((url.pathname === '/' || url.pathname === '') &&
+        (domain === handle || domain.endsWith(`.${handle}`))) {
+        isVerify = true;
+      } else if (isValidTangledUrl(subject, handle)) {
+        isVerify = true;
+      }
+    } catch {
+      // URL パースエラーは無視
     }
 
     try {

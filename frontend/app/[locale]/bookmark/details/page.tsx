@@ -14,6 +14,9 @@ import Link from 'next/link';
 import Markdown from 'react-markdown';
 import { SchemaEditor } from "./SchemaEditor";
 import EditMenu from '@/components/EditMenu';
+import { Bookmark as BookmarkIcon } from 'lucide-react';
+import { FaBluesky } from "react-icons/fa6";
+import { Library } from 'lucide-react';
 
 export const metadata: Metadata = {
     robots: {
@@ -218,7 +221,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     return (
         <>
             <Container size="md" mx="auto">
-                <Breadcrumbs items={[{ label: t("header.bookmarkMenu") , href:`/${locale}/bookmark/search`}, { label: t("header.details") }]} />
+                <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/${locale}/bookmark/search` }, { label: t("header.details") }]} />
                 <Stack gap={4}>
                     <BlurReveal
                         moderated={moderations.length > 0}
@@ -269,10 +272,15 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                 <Stack my="md">
                     <Tabs defaultValue="bookmarks" keepMounted={false}>
                         <TabsList>
-                            <TabsTab value="bookmarks">{t('detail.rito')}</TabsTab>
-                            <TabsTab value="posts">{t('detail.bluesky')}</TabsTab>
+                            <TabsTab
+                                value="bookmarks"
+                                leftSection={<BookmarkIcon size={16} />}
+                            >
+                                {t('detail.rito')}({otherBookmarks.length})
+                            </TabsTab>
+                            <TabsTab value="posts" leftSection={<FaBluesky size={16} />} >{t('detail.bluesky')}({postDataArray.length})</TabsTab>
                             {tags.some(tag => tag.toLowerCase().includes('atprotocol'.toLowerCase())) && (
-                                <TabsTab value="resolver">{t('detail.resolver')}</TabsTab>
+                                <TabsTab value="resolver" leftSection={<Library size={16} />} >{t('detail.resolver')}</TabsTab>
                             )}
                         </TabsList>
 
@@ -290,23 +298,26 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                             { title: '', comment: '', moderation_result: [] };
                                         return (
                                             <TimelineItem key={idx}>
-                                                <Text component="div" >
-                                                    <BlurReveal
-                                                        moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
-                                                        blurAmount={6}
-                                                        overlayText={t('detail.view')}
-                                                    >
-                                                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                            <Markdown
-                                                                components={{
-                                                                    p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                                }}
-                                                            >
-                                                                {comment.comment || t('detail.nocomment')}
-                                                            </Markdown>
-                                                        </Spoiler>
-                                                    </BlurReveal>
-                                                </Text>
+
+                                                {comment.comment &&
+                                                    <Text component="div" >
+                                                        <BlurReveal
+                                                            moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
+                                                            blurAmount={6}
+                                                            overlayText={t('detail.view')}
+                                                        >
+                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                                <Markdown
+                                                                    components={{
+                                                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
+                                                                    }}
+                                                                >
+                                                                    {comment.comment || t('detail.nocomment')}
+                                                                </Markdown>
+                                                            </Spoiler>
+                                                        </BlurReveal>
+                                                    </Text>
+                                                }
 
                                                 <ModerationBadges moderations={comment.moderations} />
                                                 <Text c="dimmed" size="sm">

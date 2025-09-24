@@ -249,7 +249,7 @@ async function init() {
             ogp_image: record.ogpImage,
             moderation_result: ogpModerationResult,
             handle: handle,
-            created_at: new Date(),
+            created_at: record.createdAt ? new Date(record.createdAt) : new Date(),
             indexed_at: new Date(),
           },
         })

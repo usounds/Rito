@@ -23,7 +23,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const page = query.page ? parseInt(query.page) : 1;
   const take = 12;
   const skip = (page - 1) * take;
-  const orderField = query.sort === 'created' ? 'created_at' : 'indexed_at';
+  const orderField = query.sort === 'updated' ? 'indexed_at' : 'created_at';
 
   // --- Prisma where 条件 ---
   const where: any = {};
@@ -49,7 +49,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
     },
   });
 
-    const totalCount = await prisma.bookmark.count({ where });
+  const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
@@ -69,11 +69,11 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
           const moderationList: string[] = useComment
             ? comment.moderations || []
             : [
-                ...(b.moderations || []),
-                ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
-              ];
+              ...(b.moderations || []),
+              ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
+            ];
 
-          const dateField: 'createdAt' | 'indexedAt' = query.sort === 'created' ? 'createdAt' : 'indexedAt';
+          const dateField: 'createdAt' | 'indexedAt' = query.sort === 'updated' ? 'indexedAt' : 'createdAt';
           const displayDate = new Date(b[dateField]);
 
           return (
@@ -92,7 +92,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
           );
         })}
       </SimpleGrid>
-      <PaginationWrapper total={totalPages} page={page} query={query}/>
+      <PaginationWrapper total={totalPages} page={page} query={query} />
     </Stack>
   );
 }

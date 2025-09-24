@@ -6,6 +6,11 @@ import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
 import OpenAI from "openai";
 import { Client, simpleFetchHandler } from '@atcute/client';
+import pLimit from "p-limit";
+import PQueue from 'p-queue';
+const queue = new PQueue({ concurrency: 1 });
+
+const dbLimit = pLimit(5); // 同時に DB 操作は最大 5 件まで
 const publicAgent = new Client({
   handler: simpleFetchHandler({
     service: 'https://public.api.bsky.app',
@@ -76,40 +81,45 @@ async function loadCursor(): Promise<string> {
 // 初期化
 async function init() {
   cursor = await loadCursor();
-  logger.info(`Cursor initialized: ${cursor} (${epochUsToDateTime(cursor)})`);
 
   const jetstream = new Jetstream({
-    wantedCollections: [BOOKMARK, SERVICE, POST_COLLECTION],
+    wantedCollections: [BOOKMARK, SERVICE],
     endpoint: JETSREAM_URL,
     cursor: Number(cursor),
     ws: WebSocket,
   });
 
   jetstream.on('open', () => {
-    logger.info('Jetstream open');
+    logger.info(`Jetstream open: ${JETSREAM_URL}`);
 
-    cursorUpdateInterval = setInterval(async () => {
-      if (jetstream.cursor) {
-        const currentCursor = jetstream.cursor.toString();
-        logger.info(`Cursor updated to: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
+    cursorUpdateInterval = setInterval(() => {
+      if (!jetstream.cursor) return;
 
+      const currentCursor = jetstream.cursor.toString();
+      logger.info(`wait db update: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
+
+      // DB 更新はキュー経由で
+      queue.add(async () => {
         try {
           await prisma.jetstreamIndex.upsert({
             where: { service: 'rito' },
             update: { index: currentCursor },
             create: { service: 'rito', index: currentCursor },
           });
-        } catch (err) {
-          logger.error(`Failed to load cursor from DB: ${err}`);
-        }
 
-        // 前回と同じなら再接続
-        if (prev_time_us === currentCursor) {
-          logger.info(`前回からtime_usが変動していませんので再接続します`);
-          jetstream.close();
+          logger.info(`Cursor updated to: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
+        } catch (err) {
+          logger.error(`Failed to upsert cursor in DB: ${err}`);
         }
-        prev_time_us = currentCursor;
+      });
+
+      // 前回と同じなら再接続
+      if (prev_time_us === currentCursor) {
+        logger.info(`前回からtime_usが変動していませんので再接続します`);
+        jetstream.close();
       }
+
+      prev_time_us = currentCursor;
     }, CURSOR_UPDATE_INTERVAL);
   });
 
@@ -137,6 +147,8 @@ async function init() {
   }
 
   async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
+    //console.log("upsertBookmark")
+
     const record = event.commit.record as BlueRitoFeedBookmark.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     cursor = event.time_us.toString();
@@ -205,37 +217,43 @@ async function init() {
       const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
 
       // DID->Handleテーブル
-      await prisma.userDidHandle.upsert({
-        where: { did: event.did },
-        update: { handle: handle },
-        create: { did: event.did, handle: handle },
-      });
+      //console.log("DID->Handleテーブル")
+      await dbLimit(() =>
+        prisma.userDidHandle.upsert({
+          where: { did: event.did },
+          update: { handle: handle },
+          create: { did: event.did, handle: handle },
+        })
+      );
 
       // Bookmark の upsert
-      await prisma.bookmark.upsert({
-        where: { uri: aturi },
-        update: {
-          subject: record.subject ?? '',
-          ogp_title: record.ogpTitle,
-          ogp_description: record.ogpDescription,
-          ogp_image: record.ogpImage,
-          moderation_result: ogpModerationResult,
-          handle: handle,
-          indexed_at: new Date(),
-        },
-        create: {
-          uri: aturi,
-          did: event.did,
-          subject: record.subject ?? '',
-          ogp_title: record.ogpTitle,
-          ogp_description: record.ogpDescription,
-          ogp_image: record.ogpImage,
-          moderation_result: ogpModerationResult,
-          handle: handle,
-          created_at: new Date(),
-          indexed_at: new Date(),
-        },
-      });
+      //console.log("Bookmark の upsert")
+      await dbLimit(() =>
+        prisma.bookmark.upsert({
+          where: { uri: aturi },
+          update: {
+            subject: record.subject ?? '',
+            ogp_title: record.ogpTitle,
+            ogp_description: record.ogpDescription,
+            ogp_image: record.ogpImage,
+            moderation_result: ogpModerationResult,
+            handle: handle,
+            indexed_at: new Date(),
+          },
+          create: {
+            uri: aturi,
+            did: event.did,
+            subject: record.subject ?? '',
+            ogp_title: record.ogpTitle,
+            ogp_description: record.ogpDescription,
+            ogp_image: record.ogpImage,
+            moderation_result: ogpModerationResult,
+            handle: handle,
+            created_at: new Date(),
+            indexed_at: new Date(),
+          },
+        })
+      );
 
       // コメントの upsert（個別に moderation）
       for (const c of record.comments ?? []) {
@@ -247,61 +265,89 @@ async function init() {
         const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
 
         // コメントの upsert
-        await prisma.comment.upsert({
-          where: {
-            bookmark_uri_lang: { // Prisma schema で @@unique([bookmark_uri, lang]) が必要
+        //console.log("コメントの upsert")
+        await dbLimit(() =>
+          prisma.comment.upsert({
+            where: {
+              bookmark_uri_lang: {
+                bookmark_uri: aturi,
+                lang: c.lang,
+              },
+            },
+            update: {
+              title: c.title,
+              comment: c.comment,
+              moderation_result: commentModerationResult,
+            },
+            create: {
               bookmark_uri: aturi,
               lang: c.lang,
-            }
-          },
-          update: {
-            title: c.title,
-            comment: c.comment,
-            moderation_result: commentModerationResult,
-          },
-          create: {
-            bookmark_uri: aturi,
-            lang: c.lang,
-            title: c.title,
-            comment: c.comment,
-            moderation_result: commentModerationResult,
-          },
-        });
+              title: c.title,
+              comment: c.comment,
+              moderation_result: commentModerationResult,
+            },
+          })
+        );
+      }
+
+      async function safeUpsertTag(name: string) {
+        try {
+          return await dbLimit(() =>
+            prisma.tag.upsert({
+              where: { name },
+              update: {},
+              create: { name },
+            })
+          );
+        } catch (err) {
+          console.error(`Tag upsert failed for "${name}":`, err);
+          return null; // エラーが出た場合は null を返す
+        }
       }
 
       // タグの更新
-      let tagsLocal = (record.tags ?? []).filter((name) => name.toLowerCase() !== "verified");
+      let tagsLocal = (record.tags ?? [])
+        .filter((name) => name && name.trim().length > 0) // 空文字を除外
+        .filter((name) => name.toLowerCase() !== "verified");
+
       if (isVerify) tagsLocal.push("Verified");
 
-      // タグの upsert
-      const tagRecords = await Promise.all(tagsLocal.map(name =>
-        prisma.tag.upsert({
-          where: { name },
-          update: {},
-          create: { name },
-        })
-      ));
+      // 順番に処理
+      const tagRecords = [];
+      for (const name of tagsLocal) {
+        const tag = await safeUpsertTag(name);
+        if (tag) tagRecords.push(tag);
+      }
 
-      // BookmarkTag の更新
+      // null を除外
+      const validTagRecords = tagRecords.filter(
+        (t): t is NonNullable<typeof t> => t !== null
+      );
+
+      // BookmarkTag の更新用
       const oldTagIds = await prisma.bookmarkTag.findMany({
         where: { bookmark_uri: aturi },
         select: { tag_id: true },
       }).then(res => res.map(r => r.tag_id));
 
-      const newTagIds = tagRecords.map(t => t.id);
+      const newTagIds = validTagRecords.map(t => t.id);
 
       // 不要タグ削除
       const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
       if (removeIds.length > 0) {
-        await prisma.bookmarkTag.deleteMany({
-          where: { bookmark_uri: aturi, tag_id: { in: removeIds } },
-        });
+        await dbLimit(() =>
+          prisma.bookmarkTag.deleteMany({
+            where: { bookmark_uri: aturi, tag_id: { in: removeIds } },
+          })
+        );
       }
 
       // 新規タグ追加
       const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
       for (const id of addIds) {
-        await prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } });
+        await dbLimit(() =>
+          prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } })
+        );
       }
 
       logger.info(`Upserted bookmark: ${aturi}, Verify: ${isVerify},  OGP moderation: ${ogpModerationResult}`);
@@ -343,9 +389,21 @@ async function init() {
       if (uniqueLinks.length === 0) return;
 
       // Bookmark チェック（空配列回避済み）
-      const matchingBookmarks = await prisma.bookmark.findMany({
-        where: { subject: { in: uniqueLinks } },
-      });
+      const chunkSize = 50; // 1回のクエリで処理する件数
+
+      const chunks = Array.from({ length: Math.ceil(uniqueLinks.length / chunkSize) }, (_, i) =>
+        uniqueLinks.slice(i * chunkSize, i * chunkSize + chunkSize)
+      );
+
+      const results = await Promise.all(
+        chunks.map(chunk =>
+          dbLimit(() =>
+            prisma.bookmark.findMany({ where: { subject: { in: chunk } } })
+          )
+        )
+      );
+
+      const matchingBookmarks = results.flat();
       if (!matchingBookmarks || matchingBookmarks.length === 0) return;
 
       // UserDidHandle upsert
@@ -387,11 +445,13 @@ async function init() {
         }
       }
 
-      await prisma.userDidHandle.upsert({
-        where: { did: event.did },
-        update: { handle },
-        create: { did: event.did, handle },
-      });
+      await dbLimit(() =>
+        prisma.userDidHandle.upsert({
+          where: { did: event.did },
+          update: { handle },
+          create: { did: event.did, handle },
+        })
+      );
 
       // Post の moderation チェック
       const postTexts = record.text ? [record.text] : [];
@@ -399,35 +459,41 @@ async function init() {
       const postModerationResult = postFlaggedCategories.length > 0 ? postFlaggedCategories.join(',') : null;
 
       // 既存 PostUri 削除
-      await prisma.postUri.deleteMany({ where: { postUri: aturi } });
+      await dbLimit(() =>
+        prisma.postUri.deleteMany({ where: { postUri: aturi } })
+      );
 
       // Post upsert
-      await prisma.post.upsert({
-        where: { uri: aturi },
-        update: {
-          handle,
-          text: record.text || '',
-          lang: Array.isArray(record.langs) ? record.langs : [],
-          moderation_result: postModerationResult,
-          indexed_at: new Date(),
-        },
-        create: {
-          uri: aturi,
-          did: event.did,
-          handle,
-          text: record.text || '',
-          lang: Array.isArray(record.langs) ? record.langs : [],
-          moderation_result: postModerationResult,
-          indexed_at: new Date(),
-        },
-      });
+      await dbLimit(() =>
+        prisma.post.upsert({
+          where: { uri: aturi },
+          update: {
+            handle,
+            text: record.text || '',
+            lang: Array.isArray(record.langs) ? record.langs : [],
+            moderation_result: postModerationResult,
+            indexed_at: new Date(),
+          },
+          create: {
+            uri: aturi,
+            did: event.did,
+            handle,
+            text: record.text || '',
+            lang: Array.isArray(record.langs) ? record.langs : [],
+            moderation_result: postModerationResult,
+            indexed_at: new Date(),
+          },
+        })
+      );
 
       // PostUri 作成（空配列チェック）
       if (uniqueLinks.length > 0) {
-        await prisma.postUri.createMany({
-          data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
-          skipDuplicates: true,
-        });
+        await dbLimit(() =>
+          prisma.postUri.createMany({
+            data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
+            skipDuplicates: true,
+          })
+        );
       }
 
       logger.info(
@@ -439,14 +505,17 @@ async function init() {
   }
 
   // イベント登録
-  jetstream.onCreate(BOOKMARK, upsertBookmark);
-  jetstream.onUpdate(BOOKMARK, upsertBookmark);
+  // BOOKMARK
+  jetstream.onCreate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
+  jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
 
-  jetstream.onCreate(POST_COLLECTION, upsertPost);
-  jetstream.onUpdate(POST_COLLECTION, upsertPost);
+  // POST_COLLECTION
+  //jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+  //jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
 
-  jetstream.onCreate(SERVICE, upsertResolver);
-  jetstream.onUpdate(SERVICE, upsertResolver);
+  // SERVICE
+  jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
+  jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
 
   // TXT レコード取得関数
   const fetchTxtRecords = async (subDomain: string): Promise<string | null> => {
@@ -527,11 +596,13 @@ async function init() {
     }
 
     try {
-      await prisma.resolver.upsert({
-        where: { nsid_did: { nsid, did } },
-        update: { schema, verified, indexed_at: new Date() },
-        create: { nsid, did, schema, verified, indexed_at: new Date() },
-      });
+      await dbLimit(() =>
+        prisma.resolver.upsert({
+          where: { nsid_did: { nsid, did } },
+          update: { schema, verified, indexed_at: new Date() },
+          create: { nsid, did, schema, verified, indexed_at: new Date() },
+        })
+      );
 
       logger.info(
         `Upserted resolver: nsid=${nsid}, ${did}, handle=${handle}, verified=${verified}`
@@ -541,63 +612,66 @@ async function init() {
     }
   }
 
+  jetstream.onDelete(BOOKMARK, event =>
+    queue.add(async () => {
+      cursor = event.time_us.toString();
+      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+      try {
+        const result = await dbLimit(() =>
+          prisma.bookmark.deleteMany({ where: { uri: aturi } })
+        );
 
+        if (result.count > 0) {
+          logger.info(`Deleted bookmark: ${aturi} (${result.count} records)`);
+        }
+      } catch (err) {
+        logger.error(`Error in onDelete bookmark: ${err}`);
+      }
+    })
+  );
 
-  jetstream.onDelete(BOOKMARK, async (event: CommitDeleteEvent<typeof BOOKMARK>) => {
+  jetstream.onDelete(SERVICE, event =>
+    queue.add(async () => {
+      const nsid = event.commit.rkey;
+      const did = event.did;
+      try {
+        const result = await dbLimit(() =>
+          prisma.resolver.deleteMany({ where: { nsid, did } })
+        );
+
+        if (result.count > 0) {
+          logger.info(`Deleted resolver: nsid=${nsid}, did=${did} (${result.count} records)`);
+        }
+      } catch (err) {
+        logger.error(`Error in onDelete resolver: ${err}`);
+      }
+    })
+  );
+
+  /*  jetstream.onDelete(POST_COLLECTION, event =>
+  queue.add(async () => {
     cursor = event.time_us.toString();
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-
-    try {
-      const result = await prisma.bookmark.deleteMany({ where: { uri: aturi } });
-      if (result.count > 0) {
-        logger.info(`Deleted bookmark: ${aturi} (${result.count} records)`);
-      }
-    } catch (err) {
-      logger.error(`Error in onDelete bookmark: ${err}`);
-    }
-  });
-
-  jetstream.onDelete(SERVICE, async (event: CommitDeleteEvent<typeof SERVICE>) => {
-    const nsid = event.commit.rkey;
-    const did = event.did;
-
-    try {
-      const result = await prisma.resolver.deleteMany({
-        where: { nsid, did },
-      });
-
-      if (result.count > 0) {
-        logger.info(`Deleted resolver: nsid=${nsid}, did=${did} (${result.count} records)`);
-      }
-    } catch (err) {
-      logger.error(`Error in onDelete resolver: ${err}`);
-    }
-  });
-
-
-  jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
-    cursor = event.time_us.toString();
-    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-
     try {
       // 1. Post に紐づく PostUri を先に削除
-      const deletedUris = await prisma.postUri.deleteMany({
-        where: { postUri: aturi }, // PostUri.postUri が外部キー
-      });
+      await dbLimit(() =>
+        prisma.postUri.deleteMany({ where: { postUri: aturi } })
+      );
 
       // 2. Post を削除
-      const deletedPosts = await prisma.post.deleteMany({
-        where: { uri: aturi },
-      });
+      const deletedPosts = await dbLimit(() =>
+        prisma.post.deleteMany({ where: { uri: aturi } })
+      );
+
       if (deletedPosts.count > 0) {
         logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
-      } else {
-        //logger.info(`No post found for deletion: ${aturi}`);
       }
     } catch (err) {
       logger.error(`Error in onDelete post for ${aturi}: ${err}`);
     }
-  });
+  })
+    );
+    */
 
 
   jetstream.on('close', () => {

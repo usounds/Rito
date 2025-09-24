@@ -21,6 +21,8 @@
     "@prisma/client": "^6.16.1",
     "@skyware/jetstream": "^0.2.5",
     "openai": "^5.19.1",
+    "p-limit": "^7.1.1",
+    "p-queue": "^8.1.1",
     "pino": "^9.9.4",
     "pino-pretty": "^13.1.1",
     "tsx": "^4.20.5",

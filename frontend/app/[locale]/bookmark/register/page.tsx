@@ -520,7 +520,7 @@ export default function RegistBookmarkPage() {
                     $type: 'app.bsky.embed.external',
                     external: {
                         uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}` as unknown as ResourceUri,
-                        title: messages.title,
+                        title: ogpTitleLocal + " | " + messages.title,
                         description: ogpMessage,
                     },
                 };

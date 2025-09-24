@@ -99,7 +99,7 @@ export default function RegistBookmarkPage() {
     const [myTag, setMyTag] = useState<string[]>([]);
 
     useEffect(() => {
-        if(myTag.length > 0) return; 
+        if (myTag.length > 0) return;
         const allMyTags = myBookmark
             .flatMap((b) => b.tags)
             .filter((t, i, arr) => arr.indexOf(t) === i)
@@ -520,8 +520,8 @@ export default function RegistBookmarkPage() {
                     $type: 'app.bsky.embed.external',
                     external: {
                         uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}` as unknown as ResourceUri,
-                        title: messages.title + " - " + ogpTitleLocal,
-                        description: ogpMessage,
+                        title: ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title,
+                        description: ogpMessage||'',
                     },
                 };
 

@@ -61,7 +61,7 @@ export default async function BookmarksPage(props: PageProps) {
       .filter(Boolean)
     : undefined;
   // --- ソート ---
-  const sort = searchParams.sort === 'created' ? 'created' : 'indexed';
+  //const sort = searchParams.sort === 'created' ? 'created' : 'indexed';
 
   // --- コメントフラグ ---
   const comment = searchParams.comment === 'true' ? 'true' : undefined;
@@ -70,7 +70,7 @@ export default async function BookmarksPage(props: PageProps) {
   const query: Record<string, string | string[]> = { page: pageStr };
   if (tag) query.tag = tag;
   if (handle) query.handle = handle;
-  if (sort) query.sort = sort;
+  //if (sort) query.sort = sort;
   if (comment) query.comment = comment;
 
   return (

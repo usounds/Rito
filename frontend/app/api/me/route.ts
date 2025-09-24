@@ -19,9 +19,11 @@ export async function GET(req: NextRequest) {
       accessToken = result.accessToken;
       updatedCookies = result.updatedCookies;
       if (!accessToken) {
+      console.warn("accessToken is null");
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       }
     } catch (err: any) {
+      console.warn("getAccessToken failed:", err.message);
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
@@ -33,7 +35,6 @@ export async function GET(req: NextRequest) {
       return res;
     };
 
-    console.log("phase 2");
     let userInfoRes = await fetchUserInfo(accessToken);
 
     // --- userinfo が 401/403/500 → アクセストークン取り直し ---
@@ -68,8 +69,8 @@ export async function GET(req: NextRequest) {
     });
 
     // --- 更新したクッキーをレスポンスに追加 ---
-    console.log("phase 4");
     if (updatedCookies) {
+    console.log("updatedCookies");
       updatedCookies.forEach((c) =>
         res.cookies.set(c.key, c.value, {
           httpOnly: true,

@@ -1,13 +1,12 @@
-import { BlurReveal } from "@/components/BlurReveal";
+// frontend/app/[locale]/bookmark/details/page.tsx
+import { prisma } from '@/logic/HandlePrismaClient';
+import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
+import { Container, Stack, Text, Spoiler, Flex, Title, Tabs, TabsList, TabsPanel, TabsTab, Timeline, TimelineItem } from "@mantine/core";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { BlurReveal } from "@/components/BlurReveal";
 import { ModerationBadges } from "@/components/ModerationBadges";
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
-import publicSuffixList from '@/data/publicSuffixList.json';
-import { prisma } from '@/logic/HandlePrismaClient';
-import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
-import { Container, Spoiler, Stack, Tabs, TabsList, TabsPanel, TabsTab, Text, Timeline, TimelineItem, Title, Flex } from "@mantine/core";
-import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { cookies } from "next/headers";
 import Link from 'next/link';
@@ -17,13 +16,8 @@ import EditMenu from '@/components/EditMenu';
 import { Bookmark as BookmarkIcon } from 'lucide-react';
 import { FaBluesky } from "react-icons/fa6";
 import { Library } from 'lucide-react';
-
-export const metadata: Metadata = {
-    robots: {
-        index: false,
-        follow: false,
-    },
-};
+import publicSuffixList from '@/data/publicSuffixList.json';
+import type { Metadata } from "next";
 
 interface PageProps {
     params: { locale: string };
@@ -31,376 +25,306 @@ interface PageProps {
 }
 
 interface PostData {
-    uri: string;            // PostUri の uri
-    text: string;           // Post の text
-    moderations: string[];   // Post の moderation_result をカンマ区切りで配列化
-    indexedAt: Date;        // Post の indexed_at
-    handle: string | null;  // Post の handle
+    uri: string;
+    text: string;
+    moderations: string[];
+    indexedAt: Date;
+    handle: string | null;
 }
 
+interface DisplayData {
+    displayTitle: string;
+    displayComment: string;
+    displayImage?: string;
+    domain: string;
+    moderations: string[];
+    bookmarks: Bookmark[];
+}
+
+/** 共通：displayTitle / displayComment / moderations を決定 */
+export async function getBookmarkDisplayData(uri: string, locale: string): Promise<DisplayData> {
+    const bookmarksRaw = await prisma.bookmark.findMany({
+        where: { subject: uri },
+        orderBy: { indexed_at: 'desc' },
+        include: {
+            comments: true,
+            tags: {
+                include: { tag: true },
+            },
+        },
+    });
+
+    const bookmarks = normalizeBookmarks(bookmarksRaw);
+
+    const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
+    const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
+
+    let displayTitle = "";
+    let displayComment = "";
+    let displayImage = "";
+    let moderations: string[] = [];
+
+    if (verifiedBookmarks.length > 0) {
+        const v = verifiedBookmarks[0];
+        const comment = v.comments?.find(c => c.lang === locale) || v.comments?.[0];
+        displayTitle = comment?.title || v.ogpTitle || "";
+        displayComment = comment?.comment || v.ogpDescription || "";
+        displayImage = v.ogpImage || "";
+        moderations = comment?.moderations || v.moderations || [];
+    } else if (otherBookmarks.length > 0) {
+        const o = otherBookmarks[0];
+        const comment = o.comments?.find(c => c.lang === locale) || o.comments?.[0];
+        displayTitle = o.ogpTitle || comment?.title || "";
+        displayComment = o.ogpDescription || comment?.comment || "";
+        displayImage = o.ogpImage || "";
+        moderations = comment?.moderations || o.moderations || [];
+    }
+
+    const domain = (() => {
+        try { return new URL(uri || '').hostname; }
+        catch { return uri; }
+    })();
+
+    if (displayImage && !displayImage.startsWith('https://') && domain) {
+        displayImage = `https://${domain}/${displayImage}`;
+    }
+
+    return { displayTitle, displayComment, moderations, bookmarks, displayImage ,domain};
+}
+
+/** OGP 用 generateMetadata */
+// export const metadata = { ... } は削除
+// 代わりに generateMetadata を使う
+
+export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
+    const { locale } = await params;
+    setRequestLocale(locale);
+    const t = await getTranslations({ locale });
+
+    const search = await searchParams;
+    const uri = typeof search.uri === "string" ? search.uri : undefined;
+
+    if (!uri) {
+        return {
+            title: t('detail.error.uriRequired'),
+            openGraph: {
+                title: t('detail.error.uriRequired'),
+                description: t('detail.error.uriRequired'),
+                url: `https://rito.blue/${locale}/bookmark/search`,
+                type: 'website',
+            },
+        };
+    }
+
+    const { displayTitle, displayComment, displayImage, domain } = await getBookmarkDisplayData(uri, locale);
+
+
+    return {
+        title: displayTitle + " | " + t('title') || t('detail.inform.nobookmark'),
+        openGraph: {
+            title: displayTitle + " | " + t('title') || t('detail.inform.nobookmark'),
+            description: t('detail.original') + ":"+domain+ ' | ' +  (displayComment || t('detail.inform.nobookmark')),
+            url: `https://rito.blue/${locale}/bookmark/details?uri=${encodeURIComponent(uri)}`,
+            images: displayImage ? [displayImage] : undefined,
+            type: 'website',
+        },
+    };
+}
+
+
+/** ドメイン情報取得ユーティリティ */
 const getNsid = (url: string) => {
     try {
         const host = new URL(url).hostname;
         const parts = host.split(".");
-        const len = parts.length;
-
-        // Public Suffix List にマッチする最長サフィックスを探す
-        let suffixIndex = len;
-        for (let i = 0; i < len; i++) {
+        let suffixIndex = parts.length;
+        for (let i = 0; i < parts.length; i++) {
             const candidate = parts.slice(i).join(".");
             if (publicSuffixList.includes(candidate)) {
                 suffixIndex = i;
                 break;
             }
         }
-
-        if (suffixIndex === 0) return host; // 見つからなければそのまま
-
-        // 直前の部分を含める → 2階層 or 3階層に
         const domainParts = parts.slice(Math.max(0, suffixIndex - 1));
-
-        // ドット区切りを逆順にする（TLDを先頭に）
         return domainParts.reverse().join(".");
     } catch {
         return url;
     }
 };
-
 const getDomain = (url: string) => {
-    try {
-        const host = new URL(url).hostname;
-        return host;
-    } catch {
-        return url;
-    }
+    try { return new URL(url).hostname; } catch { return url; }
 };
 
-export const revalidate = 60; // 秒単位（60秒 = 1分）
+export const revalidate = 60;
 
 export default async function DetailsPage({ params, searchParams }: PageProps) {
     const { locale } = await params;
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
+
     const cookieStore = await cookies();
     const token = cookieStore.get("access_token");
     const isLoggedIn = !!token;
 
-    // searchParams を await してから使う
     const search = await searchParams;
     const uri = typeof search.uri === "string" ? search.uri : undefined;
-    if (!uri) return <>{t('detail.error.uriRequired')}</>
+    if (!uri) return <Container><Text c="dimmed">{t('detail.error.uriRequired')}</Text></Container>;
 
-    const bookmarks = await prisma.bookmark.findMany({
-        where: {
-            subject: uri
-        },
-        orderBy: { "indexed_at": 'desc' },
-        include: {
-            comments: true,
-            tags: {
-                include: {
-                    tag: true,
-                },
-            },
-        },
-    })
+    const { displayTitle, displayComment, moderations, bookmarks } = await getBookmarkDisplayData(uri, locale);
 
-    const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
-
-    const tags: string[] = Array.from(new Set(normalized.flatMap(b => b.tags || [])));
-
-    const verifiedBookmarks = normalized.filter((b) =>
-        b.tags.includes("Verified")
-    );
-
-    const otherBookmarks = normalized.filter((b) =>
-        !b.tags.includes("Verified")
-    );
-
-    let displayTitle: string | null = null;
-    let displayComment: string | null = null;
-    let moderations: string[] = [];
-
-    if (verifiedBookmarks.length > 0) {
-        const v = verifiedBookmarks[0];
-        const comment =
-            v.comments?.find(c => c.lang === locale) ||
-            v.comments?.[0];
-
-        if (comment) {
-            // comment を優先して displayTitle / displayComment をセット
-            displayTitle = comment.title || v.ogpTitle || "";
-            displayComment = comment.comment || v.ogpDescription || "";
-
-            const commentModerations = comment.moderations ?? [];
-            const vModerations = v.moderations ?? [];
-
-            // comment が不足して OGP で補った場合は両方合算
-            moderations =
-                (displayTitle === comment.title && displayComment === comment.comment)
-                    ? commentModerations
-                    : Array.from(new Set([...vModerations, ...commentModerations]));
-        } else {
-            displayTitle = v.ogpTitle || "";
-            displayComment = v.ogpDescription || "";
-            moderations = v.moderations ?? [];
-        }
-    } else if (otherBookmarks.length > 0) {
-        const o = otherBookmarks[0];
-        const comment =
-            o.comments?.find(c => c.lang === locale) ||
-            o.comments?.[0];
-
-        if (comment) {
-            // displayTitle / displayComment の優先順：OGP -> comment
-            displayTitle = o.ogpTitle || comment.title || "";
-            displayComment = o.ogpDescription || comment.comment || "";
-
-            // moderations の合算
-            const commentModerations = comment.moderations ?? [];
-            const oModerations = o.moderations ?? [];
-            // display が OGP 由来なら oModerations のみ、comment 由来なら両方
-            moderations =
-                displayTitle === o.ogpTitle && displayComment === o.ogpDescription
-                    ? oModerations
-                    : Array.from(new Set([...oModerations, ...commentModerations]));
-        } else {
-            displayTitle = o.ogpTitle || "";
-            displayComment = o.ogpDescription || "";
-            moderations = o.moderations ?? [];
-        }
-    }
-
-    //投稿
-    // 指定した URL から Post と PostUri 情報を取得
-    let postDataArray: PostData[] = [];
-
-    if (isLoggedIn) {
-        const postUriRecords = await prisma.postUri.findMany({
-            where: {
-                uri: {
-                    equals: uri,
-                    mode: "insensitive",
-                },
-            },
-            include: {
-                post: {
-                    include: {
-                        uris: true,
-                    },
-                },
-            },
-            orderBy: {
-                post: {
-                    indexed_at: 'desc', // ここで Post.indexed_at で降順
-                },
-            },
-        });
-
-        postDataArray = postUriRecords
-            .filter(r => r.post) // post が存在するものだけ
-            .map(r => {
-                const post = r.post!;
-                const firstUri = post.uris[0]?.uri || ''; // 先頭の URL
-                return {
-                    uri: firstUri,
-                    text: post.text,
-                    moderations: post.moderation_result ? post.moderation_result.split(',') : [],
-                    indexedAt: post.indexed_at,
-                    handle: post.handle,
-                } as PostData;
-            });
-    }
-
-    if (verifiedBookmarks.length == 0 && otherBookmarks.length == 0) return (
+    if (bookmarks.length === 0) return (
         <Container size="md" mx="auto">
             <Text c="dimmed">{t('detail.inform.nobookmark')}</Text>
         </Container>
-    )
+    );
+
+    const tags: string[] = Array.from(new Set(bookmarks.flatMap(b => b.tags || [])));
+    const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
+    const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
+
+    // Post 情報取得
+    let postDataArray: PostData[] = [];
+    if (isLoggedIn) {
+        const postUriRecords = await prisma.postUri.findMany({
+            where: { uri: { equals: uri, mode: "insensitive" } },
+            include: { post: { include: { uris: true } } },
+            orderBy: { post: { indexed_at: 'desc' } },
+        });
+        postDataArray = postUriRecords
+            .filter(r => r.post)
+            .map(r => {
+                const post = r.post!;
+                return {
+                    uri: post.uris[0]?.uri || '',
+                    text: post.text,
+                    moderations: post.moderation_result?.split(',') || [],
+                    indexedAt: post.indexed_at,
+                    handle: post.handle,
+                };
+            });
+    }
 
     return (
-        <>
-            <Container size="md" mx="auto">
-                <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/${locale}/bookmark/search` }, { label: t("header.details") }]} />
-                <Stack gap={4}>
-                    <BlurReveal
-                        moderated={moderations.length > 0}
-                        blurAmount={6}
-                        overlayText={t('detail.view')}
-                    >
-                        <Flex justify="space-between" align="center" style={{ width: '100%' }}>
-                            {/* 左側：タイトル */}
-                            <Title order={4}>{displayTitle}</Title>
-
-                            {/* 右側：EditMenu ボタン */}
-                            <EditMenu subject={uri} />
-                        </Flex>
-                        <Text size="md" component="div">
-                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')} >
-                                <Markdown
-                                    components={{
-                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} />,
-                                    }}
-                                >{displayComment}
-                                </Markdown>
-                            </Spoiler>
-                        </Text>
-                    </BlurReveal>
-
-                    <Text size="sm" c="dimmed">
-                        <Link
-                            href={uri || ''}
-                            target="_blank"
-                            style={{
-                                textDecoration: 'none',
-                                color: 'inherit',
-                                wordBreak: 'break-all',   // 単語途中でも改行
-                                overflowWrap: 'anywhere', // 長いURLを折り返す
-                            }}
-                        >
-                            {uri}
-                        </Link>
+        <Container size="md" mx="auto">
+            <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/${locale}/bookmark/search` }, { label: t("header.details") }]} />
+            <Stack gap={4}>
+                <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
+                    <Flex justify="space-between" align="center" style={{ width: '100%' }}>
+                        <Title order={4}>{displayTitle}</Title>
+                        <EditMenu subject={uri} />
+                    </Flex>
+                    <Text size="md" component="div">
+                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                                {displayComment}
+                            </Markdown>
+                        </Spoiler>
                     </Text>
-                    {tags &&
-                        <Stack my='xs'>
-                            <TagBadge tags={tags} locale={locale} />
-                            <ModerationBadges moderations={moderations} />
-                        </Stack>
-                    }
-                </Stack>
+                </BlurReveal>
 
-                <Stack my="md">
-                    <Tabs defaultValue="bookmarks" keepMounted={false}>
-                        <TabsList>
-                            <TabsTab
-                                value="bookmarks"
-                                leftSection={<BookmarkIcon size={16} />}
-                            >
-                                {t('detail.rito')}({otherBookmarks.length})
-                            </TabsTab>
-                            <TabsTab value="posts" leftSection={<FaBluesky size={16} />} >{t('detail.bluesky')}({postDataArray.length})</TabsTab>
-                            {tags.some(tag => tag.toLowerCase().includes('atprotocol'.toLowerCase())) && (
-                                <TabsTab value="resolver" leftSection={<Library size={16} />} >{t('detail.resolver')}</TabsTab>
-                            )}
-                        </TabsList>
+                <Text size="sm" c="dimmed">
+                    <Link href={uri} target="_blank" style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                        {uri}
+                    </Link>
+                </Text>
 
-                        <TabsPanel value="bookmarks" pt="xs">
-                            <Stack my="md">
+                {tags.length > 0 &&
+                    <Stack my='xs'>
+                        <TagBadge tags={tags} locale={locale} />
+                        <ModerationBadges moderations={moderations} />
+                    </Stack>
+                }
+            </Stack>
 
-                                {otherBookmarks.length === 0 &&
-                                    <Text c="dimmed">{t('detail.nocomment')}</Text>
-                                }
-                                <Timeline bulletSize={20} lineWidth={4}>
-                                    {otherBookmarks.map((bookmark, idx) => {
-                                        const comment =
-                                            bookmark.comments?.find((c) => c.lang === locale) ||
-                                            bookmark.comments?.[0] ||
-                                            { title: '', comment: '', moderation_result: [] };
-                                        return (
-                                            <TimelineItem key={idx}>
+            <Stack my="md">
+                <Tabs defaultValue="bookmarks" keepMounted={false}>
+                    <TabsList>
+                        <TabsTab value="bookmarks" leftSection={<BookmarkIcon size={16} />}>
+                            {t('detail.rito')}({otherBookmarks.length})
+                        </TabsTab>
+                        <TabsTab value="posts" leftSection={<FaBluesky size={16} />}>
+                            {t('detail.bluesky')}({postDataArray.length})
+                        </TabsTab>
+                        {tags.some(tag => tag.toLowerCase().includes('atprotocol')) &&
+                            <TabsTab value="resolver" leftSection={<Library size={16} />}>{t('detail.resolver')}</TabsTab>
+                        }
+                    </TabsList>
 
-                                                {comment.comment &&
-                                                    <Text component="div" >
-                                                        <BlurReveal
-                                                            moderated={Array.isArray(comment.moderations) && comment.moderations.length > 0}
-                                                            blurAmount={6}
-                                                            overlayText={t('detail.view')}
-                                                        >
-                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                                <Markdown
-                                                                    components={{
-                                                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                                    }}
-                                                                >
-                                                                    {comment.comment || t('detail.nocomment')}
-                                                                </Markdown>
-                                                            </Spoiler>
-                                                        </BlurReveal>
-                                                    </Text>
-                                                }
-
-                                                <ModerationBadges moderations={comment.moderations} />
-                                                <Text c="dimmed" size="sm">
-                                                    <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`}
-                                                        prefetch={false}
-                                                        style={{
-                                                            textDecoration: 'none',
-                                                            color: 'inherit',
-                                                            wordBreak: 'break-all',   // 単語途中でも改行
-                                                            overflowWrap: 'anywhere', // 長いURLを折り返す
-                                                        }} >
-                                                        {"by @" + bookmark.handle + " "}
-
-                                                    </Link>
-                                                    <TimeAgo date={bookmark.indexedAt} locale={locale} />
+                    <TabsPanel value="bookmarks" pt="xs">
+                        <Stack my="md">
+                            {otherBookmarks.length === 0 &&
+                                <Text c="dimmed">{t('detail.nocomment')}</Text>
+                            }
+                            <Timeline bulletSize={20} lineWidth={4}>
+                                {otherBookmarks.map((bookmark, idx) => {
+                                    const comment = bookmark.comments?.find(c => c.lang === locale) || bookmark.comments?.[0] || { title: '', comment: '', moderations: [] };
+                                    return (
+                                        <TimelineItem key={idx}>
+                                            {comment.comment &&
+                                                <Text component="div">
+                                                    <BlurReveal moderated={comment.moderations?.length > 0} blurAmount={6} overlayText={t('detail.view')}>
+                                                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                                {comment.comment || t('detail.nocomment')}
+                                                            </Markdown>
+                                                        </Spoiler>
+                                                    </BlurReveal>
                                                 </Text>
-                                            </TimelineItem>
-                                        );
-                                    })}
+                                            }
+                                            <ModerationBadges moderations={comment.moderations} />
+                                            <Text c="dimmed" size="sm">
+                                                <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} prefetch={false} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                                                    {"by @" + bookmark.handle + " "}
+                                                </Link>
+                                                <TimeAgo date={bookmark.indexedAt} locale={locale} />
+                                            </Text>
+                                        </TimelineItem>
+                                    );
+                                })}
+                            </Timeline>
+                        </Stack>
+                    </TabsPanel>
 
+                    <TabsPanel value="posts" pt="xs">
+                        <Stack my="md">
+                            {!isLoggedIn &&
+                                <Text c="dimmed">{t('detail.needlogin')}</Text>
+                            }
+                            {isLoggedIn && postDataArray.length === 0 &&
+                                <Text c="dimmed">{t('detail.nocomment')}</Text>
+                            }
+                            {isLoggedIn && postDataArray.length > 0 &&
+                                <Timeline bulletSize={20} lineWidth={4}>
+                                    {postDataArray.map((post, idx) => (
+                                        <TimelineItem key={idx}>
+                                            <Text component="div">
+                                                <BlurReveal moderated={post.moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
+                                                    <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                        <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                            {post.text || 'No description available'}
+                                                        </Markdown>
+                                                    </Spoiler>
+                                                </BlurReveal>
+                                            </Text>
+                                            <ModerationBadges moderations={post.moderations} />
+                                            <Text c="dimmed" size="sm">
+                                                <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                                                    {"by @" + post.handle + " "}
+                                                </Link>
+                                                <TimeAgo date={post.indexedAt} locale={locale} />
+                                            </Text>
+                                        </TimelineItem>
+                                    ))}
                                 </Timeline>
-                            </Stack>
-                        </TabsPanel>
+                            }
+                        </Stack>
+                    </TabsPanel>
 
-                        <TabsPanel value="posts" pt="xs">
-                            <Stack my="md">
-
-                                {!isLoggedIn &&
-                                    <Text c="dimmed">{t('detail.needlogin')}</Text>
-                                }
-
-                                {isLoggedIn &&
-                                    <>
-                                        {postDataArray.length === 0 &&
-                                            <Text c="dimmed">{t('detail.nocomment')}</Text>
-                                        }
-                                        <Timeline bulletSize={20} lineWidth={4}>
-                                            {postDataArray.map((post, idx) => (
-                                                <TimelineItem key={idx}>
-                                                    <Text component="div">
-                                                        <BlurReveal
-                                                            moderated={Array.isArray(post.moderations) && post.moderations.length > 0}
-                                                            blurAmount={6}
-                                                            overlayText={t('detail.view')}
-                                                        >
-                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                                <Markdown
-                                                                    components={{
-                                                                        p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} />,
-                                                                    }}
-                                                                >
-                                                                    {post.text || 'No description available'}
-                                                                </Markdown>
-                                                            </Spoiler>
-                                                        </BlurReveal>
-                                                    </Text>
-
-                                                    <ModerationBadges moderations={post.moderations} />
-                                                    <Text c="dimmed" size="sm">
-                                                        <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{
-                                                            textDecoration: 'none',
-                                                            color: 'inherit',
-                                                            wordBreak: 'break-all',   // 単語途中でも改行
-                                                            overflowWrap: 'anywhere', // 長いURLを折り返す
-                                                        }}>
-                                                            {"by @" + post.handle + " "}
-                                                        </Link>
-                                                        <TimeAgo date={post.indexedAt} locale={locale} />
-                                                    </Text>
-                                                </TimelineItem>
-                                            ))}
-                                        </Timeline>
-                                    </>
-                                }
-                            </Stack>
-                        </TabsPanel>
-
-                        <TabsPanel value="resolver" pt="xs">
-                            <SchemaEditor nsid={getNsid(uri || '')} domain={getDomain(uri || '')} />
-                        </TabsPanel>
-                    </Tabs>
-                </Stack>
-            </Container>
-        </>
+                    <TabsPanel value="resolver" pt="xs">
+                        <SchemaEditor nsid={getNsid(uri)} domain={getDomain(uri)} />
+                    </TabsPanel>
+                </Tabs>
+            </Stack>
+        </Container>
     );
 }

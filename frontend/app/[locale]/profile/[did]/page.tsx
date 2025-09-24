@@ -2,49 +2,48 @@
 import { Article } from '@/components/bookmarkcard/Article';
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { prisma } from '@/logic/HandlePrismaClient';
-import { Bookmark, normalizeBookmarks } from '@/type/ApiTypes';
-import { Container, SimpleGrid, Stack, Text } from '@mantine/core';
-import { getTranslations } from "next-intl/server";
+import { SimpleGrid, Stack, Container, Text } from '@mantine/core';
+import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
+import PaginationWrapper from '../../bookmark/search/latestbookmark/PaginationWrapper';
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from 'next';
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };
+  searchParams?: { page?: string; comment?: string };
 };
 
-
 export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
-  const { locale, did } = await params;
-
-  // 翻訳を取得
+  const { locale, did } = params;
   const t = await getTranslations({ locale });
-
-  // 親ページの metadata をそのままコピーする場合
-  // ここでは必要な部分だけ上書き
   return {
     openGraph: {
-      title: t('profile.title'),           // og:title
-      description: t('profile.description', { 0: did }), // og:description
-      url: `https://rito.blue/${locale}/profile/${did}`,  // og:url
+      title: t('profile.title'),
+      description: t('profile.description', { 0: did }),
+      url: `https://rito.blue/${locale}/profile/${did}`,
       type: 'website',
     },
   };
 }
 
-const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
-  const { locale, did } = await params;
+const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) => {
+  const { locale, did } = params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
-  const take = 10;
-  const skip = 0;
+  const query = searchParams ?? {};
+  const useComment = query.comment === 'true';
 
-  const where: any = {};
-  const decodedDid = decodeURIComponent(did); // URLデコード
+  const page = query.page
+    ? parseInt(Array.isArray(query.page) ? query.page[0] : query.page, 10)
+    : 1;
+  const take = 12;
+  const skip = (page - 1) * take;
 
-  if (decodedDid && decodedDid.startsWith('did')) {
-    where.did = decodedDid;
-  } else {
-    where.handle = decodedDid;
+  const paginationQuery = { page: page.toString() };
 
-  }
+  const decodedDid = decodeURIComponent(did);
+
+  const where: any = decodedDid.startsWith('did') ? { did: decodedDid } : { handle: decodedDid };
 
   const bookmarks = await prisma.bookmark.findMany({
     where,
@@ -53,52 +52,59 @@ const ProfileBookmarks = async ({ params }: ProfileBookmarkProps) => {
     skip,
     include: {
       comments: true,
-      tags: {
-        include: {
-          tag: true,
-        },
-      },
+      tags: { include: { tag: true } },
     },
   });
 
+  const totalCount = await prisma.bookmark.count({ where });
+  const totalPages = Math.ceil(totalCount / take);
 
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
   return (
-    <Container size="md" mx="auto" >
+    <Container size="md" mx="auto">
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
-      <Stack>
-        {normalized.length === 0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-          {normalized.map((b) => {
-            const comment =
-              b.comments?.find(c => c.lang === locale) || b.comments?.[0] ||
-              { title: '', comment: '', moderation_result: [] };
+      {normalized.length === 0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
 
-            const moderationList: string[] = [
-              ...(b.moderations || []),
-              ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
-            ];
+      {normalized.length > 0 &&
+        <Stack>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+            {normalized.map((b) => {
+              const comment =
+                b.comments?.find((c) => c.lang === locale) ||
+                b.comments?.[0] || { title: '', comment: '', moderations: [] };
 
-            const displayDate = new Date(b.indexedAt);
+              const displayTitle = useComment ? comment.title : b.ogpTitle || comment.title || '';
+              const displayComment = useComment ? comment.comment : b.ogpDescription || comment.comment || '';
 
-            return (
-              <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <Article
-                  url={b.subject}
-                  title={comment.title || b.ogpTitle || ''}
-                  handle={b.handle}
-                  comment={comment.comment || b.ogpDescription || ''}
-                  tags={b.tags}
-                  image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
-                  date={displayDate}
-                  moderations={moderationList}
-                />
-              </div>
-            );
-          })}
-        </SimpleGrid>
-      </Stack>
+              const moderationList: string[] = useComment
+                ? comment.moderations || []
+                : [
+                  ...(b.moderations || []),
+                  ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
+                ];
+
+              const displayDate = new Date(b.indexedAt);
+
+              return (
+                <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                  <Article
+                    url={b.subject}
+                    title={displayTitle}
+                    handle={b.handle}
+                    comment={displayComment}
+                    tags={b.tags}
+                    image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
+                    date={displayDate}
+                    moderations={moderationList}
+                  />
+                </div>
+              );
+            })}
+          </SimpleGrid>
+          <PaginationWrapper total={totalPages} page={page} query={paginationQuery} />
+        </Stack>
+      }
     </Container>
   );
 };

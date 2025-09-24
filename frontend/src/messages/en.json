@@ -193,6 +193,7 @@
 		"nocomment": "No comment",
 		"needlogin": "You need to log in to view comments",
 		"owner": "Owner",
+		"original": "Original",
 		"field": {
 			"developer": {
 				"title": "Developer Mode"

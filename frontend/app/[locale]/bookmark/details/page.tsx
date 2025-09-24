@@ -242,9 +242,11 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         <TabsTab value="bookmarks" leftSection={<BookmarkIcon size={16} />}>
                             {t('detail.rito')}({otherBookmarks.length})
                         </TabsTab>
+                        {/* 
                         <TabsTab value="posts" leftSection={<FaBluesky size={16} />}>
                             {t('detail.bluesky')}({postDataArray.length})
-                        </TabsTab>
+                        </TabsTab> 
+                        */}
                         {tags.some(tag => tag.toLowerCase().includes('atprotocol')) &&
                             <TabsTab value="resolver" leftSection={<Library size={16} />}>{t('detail.resolver')}</TabsTab>
                         }

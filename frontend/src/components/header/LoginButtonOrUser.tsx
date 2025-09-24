@@ -1,15 +1,15 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
-import { useLocale } from 'next-intl';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
-import { BookmarkPlus, LogOut } from 'lucide-react';
-import { useMessages } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { notifications } from '@mantine/notifications';
+import { BookmarkPlus, LogOut, X } from 'lucide-react';
+import { useLocale, useMessages } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -90,11 +90,28 @@ export function LoginButtonOrUser() {
 
         (async () => {
             try {
-                if (tagRanking.length===0) {
+                if (tagRanking.length === 0) {
                     const res2 = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag`);
                     if (res2.ok) {
                         const data: TagRanking[] = await res2.json();
                         setTagRanking(data);
+                    }
+                }
+
+
+                const res3 = await fetch(`/api/status`);
+                if (res3.ok) {
+                    const data = await res3.json();
+                    if (data.diffMinutes !== 0) {
+                        // 遅延ありの処理
+                        notifications.show({
+                            title: 'Error',
+                            message: messages.error.delay,
+                            color: 'red',
+                            icon: <X />,
+                            autoClose: 20000, // 20秒
+                        });
+
                     }
                 }
 

@@ -10,6 +10,9 @@
 		"title": "Rito",
 		"description": "A social bookmarking platform connecting users and developers."
 	},
+	"error": {
+		"delay": "Currently, Rito is experiencing delays, and it may take longer to register or update bookmarks. Please try again after some time."
+	},
 	"header": {
 		"home": "Home",
 		"bookmark": "My Bookmarks",

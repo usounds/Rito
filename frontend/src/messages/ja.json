@@ -192,6 +192,7 @@
 		"nocomment": "コメントはありません",
 		"needlogin": "コメントを参照するにはログインが必要です",
 		"owner": "オーナー",
+		"original": "引用元",
 		"field": {
 			"developer": {
 				"title": "開発者モード"

@@ -77,7 +77,7 @@ export function MyBookmark() {
                             title={b.comments[0]?.title ?? ""}
                             comment={b.comments[0]?.comment ?? ""}
                             tags={b.tags}
-                            image={b.ogpImage}
+                            image={b.ogpImage|| "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
                             date={new Date(b.indexedAt)}
                             atUri={b.uri}
                             moderations={b.moderations ?? []}

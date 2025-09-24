@@ -89,7 +89,7 @@ export async function getBookmarkDisplayData(uri: string, locale: string): Promi
         displayImage = `https://${domain}/${displayImage}`;
     }
 
-    return { displayTitle, displayComment, moderations, bookmarks, displayImage ,domain};
+    return { displayTitle, displayComment, moderations, bookmarks, displayImage, domain };
 }
 
 /** OGP 用 generateMetadata */
@@ -120,10 +120,10 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
 
     return {
-        title: displayTitle + " | " + t('title') || t('detail.inform.nobookmark'),
+        title: t('title') + " - " + displayTitle || t('detail.inform.nobookmark'),
         openGraph: {
-            title: displayTitle + " | " + t('title') || t('detail.inform.nobookmark'),
-            description: t('detail.original') + ":"+domain+ ' | ' +  (displayComment || t('detail.inform.nobookmark')),
+            title: t('title') + " - " + displayTitle || t('detail.inform.nobookmark'),
+            description: t('detail.original') + ":" + domain + ' | ' + (displayComment || t('detail.inform.nobookmark')),
             url: `https://rito.blue/${locale}/bookmark/details?uri=${encodeURIComponent(uri)}`,
             images: displayImage ? [displayImage] : undefined,
             type: 'website',

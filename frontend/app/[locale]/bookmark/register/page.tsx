@@ -385,7 +385,6 @@ export default function RegistBookmarkPage() {
             setTitleError("activeDid is null");
             return;
         }
-        setIsSubmit(true)
         if (url.startsWith('https://')) {
             const urlLocal = new URL(url)
             const domain = urlLocal.hostname
@@ -398,6 +397,9 @@ export default function RegistBookmarkPage() {
             }
 
         }
+
+        setIsSubmit(true)
+
         let ogpTitleLocal = ogpTitle
         let ogpDescriptionLocal = ogpDescription
         let ogpImageLocal = ogpImage

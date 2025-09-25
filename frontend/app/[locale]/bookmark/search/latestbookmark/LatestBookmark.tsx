@@ -87,6 +87,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
                 image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
                 date={displayDate}
                 moderations={moderationList}
+                key={new Date().getTime().toString()} 
               />
             </div>
           );

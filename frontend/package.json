@@ -14,7 +14,7 @@
     "update:publicsuffix": "curl -s https://publicsuffix.org/list/public_suffix_list.dat | grep -vE '(^//|^$)' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/publicSuffixList.json"
   },
   "dependencies": {
-    "@atcute/bluesky": "^3.2.2",
+    "@atcute/bluesky": "^3.2.3",
     "@atcute/bluesky-richtext-builder": "^2.0.3",
     "@atcute/client": "^4.0.3",
     "@atcute/lexicons": "^1.1.1",
@@ -27,28 +27,28 @@
     "@tabler/icons-react": "^3.35.0",
     "jose": "^6.1.0",
     "lucide-react": "^0.542.0",
-    "next": "15.5.2",
+    "next": "^15.5.2",
     "next-intl": "^4.3.9",
     "nextjs-toploader": "^3.9.17",
     "open-graph-scraper": "^6.10.0",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
     "react-icons": "^5.5.0",
     "react-markdown": "^10.1.0",
-    "sass": "^1.93.0",
+    "sass": "^1.93.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@atcute/lex-cli": "^2.2.0",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
+    "@tailwindcss/postcss": "^4.1.13",
+    "@types/node": "^20.19.17",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
     "postcss": "^8.5.6",
     "postcss-preset-mantine": "^1.18.0",
     "postcss-simple-vars": "^7.0.1",
     "prisma": "^6.16.2",
-    "tailwindcss": "^4",
-    "typescript": "^5"
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2"
   }
 }

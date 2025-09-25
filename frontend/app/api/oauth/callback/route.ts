@@ -5,7 +5,7 @@ const AIP_BASE = process.env.OIDC_PROVIDER!;
 const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
 
-const ACCESS_TOKEN_MAX_AGE = 24 * 60 * 60;      // 1日
+const ACCESS_TOKEN_MAX_AGE = 12 * 60 * 60;      // 半日
 const REFRESH_TOKEN_MAX_AGE = 60 * 24 * 60 * 60; // 60日
 
 export async function GET(req: NextRequest) {

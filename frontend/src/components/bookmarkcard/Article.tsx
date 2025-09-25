@@ -33,15 +33,15 @@ type ArticleCardProps = {
     date: Date,
     atUri?: string,
     moderations: string[]
+    key?: string
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key }: ArticleCardProps) {
     const messages = useMessages();
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
     const [modalSize, setModalSize] = useState('70%')
     const locale = useLocale();
-    const router = useRouter();
     const [imgSrc, setImgSrc] = useState(image || '');
 
     useEffect(() => {
@@ -53,6 +53,11 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         window.addEventListener('resize', updateSize);
         return () => window.removeEventListener('resize', updateSize);
     }, []);
+    
+    useEffect(() => {
+ setIsClicked(false)
+    }, [key]);
+
 
     const localUrl = (() => {
         if (url.startsWith('https://')) return url;
@@ -99,7 +104,6 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                             </Link>
                         </Card.Section>
                     }
-
                     <Text fw={500} c="inherit" >
                         <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
                             style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>

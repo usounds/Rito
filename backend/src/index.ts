@@ -96,7 +96,6 @@ async function init() {
       if (!jetstream.cursor) return;
 
       const currentCursor = jetstream.cursor.toString();
-      logger.info(`wait db update: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
 
       // DB 更新はキュー経由で
       queue.add(async () => {

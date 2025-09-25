@@ -77,7 +77,7 @@ export async function getBookmarkDisplayData(uri: string, locale: string): Promi
         displayTitle = o.ogpTitle || comment?.title || "";
         displayComment = o.ogpDescription || comment?.comment || "";
         displayImage = o.ogpImage || "";
-        moderations = comment?.moderations || o.moderations || [];
+        moderations = o.moderations || comment.moderations || [];
     }
 
     const domain = (() => {

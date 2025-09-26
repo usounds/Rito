@@ -1,0 +1,40 @@
+body {
+  width: 240px;
+  /* height: 2.5rem; ← これを外す */
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 10px;
+  background: white;
+  display: flex;
+  flex-direction: column;
+  gap: 12px; /* ボタンと切り替えの間の余白 */
+}
+
+/* ボタン */
+button {
+  width: 100%;
+  padding: 8px 12px; /* 高さ固定ではなく内側余白で調整 */
+  background: #228be6;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: #1976d2;
+}
+
+/* 言語切り替え */
+#lang-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  font-size: 13px;
+}

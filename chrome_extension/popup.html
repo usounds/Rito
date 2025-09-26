@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rito Extension</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- ブックマークボタン -->
+  <button id="bookmarkButton">
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+         viewBox="0 0 24 24" fill="white" stroke="white"
+         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+    </svg>
+    <span id="bookmarkText">リトでブックマーク</span>
+  </button>
+
+
+  <!-- 言語切り替え -->
+  <div id="lang-switcher">
+    <label for="langSelect">🌐 Language:</label>
+    <select id="langSelect">
+      <option value="ja">Japanese</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+
+  <script src="popup.js"></script>
+</body>
+</html>

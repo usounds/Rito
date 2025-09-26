@@ -43,14 +43,25 @@ interface DisplayData {
 
 /** 共通：displayTitle / displayComment / moderations を決定 */
 export async function getBookmarkDisplayData(uri: string, locale: string): Promise<DisplayData> {
+    function withTrailingSlashVariants(uri: string) {
+        return uri.endsWith("/")
+            ? [uri, uri.slice(0, -1)]
+            : [uri, uri + "/"];
+    }
+
+    const [uri1, uri2] = withTrailingSlashVariants(uri);
+
     const bookmarksRaw = await prisma.bookmark.findMany({
-        where: { subject: uri },
-        orderBy: { indexed_at: 'desc' },
+        where: {
+            OR: [
+                { subject: uri1 },
+                { subject: uri2 }
+            ],
+        },
+        orderBy: { indexed_at: "desc" },
         include: {
             comments: true,
-            tags: {
-                include: { tag: true },
-            },
+            tags: { include: { tag: true } },
         },
     });
 

@@ -1,6 +1,7 @@
 // frontend/app/[locale]/profile/[did]/page.tsx
 import { Article } from '@/components/bookmarkcard/Article';
 import Breadcrumbs from "@/components/Breadcrumbs";
+import { SearchForm } from "./SearchForm";
 import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack, Container, Text } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
@@ -10,7 +11,7 @@ import type { Metadata } from 'next';
 
 type ProfileBookmarkProps = {
   params: { locale: string; did: string };
-  searchParams?: { page?: string; comment?: string };
+  searchParams?: { page?: string; tag?: string };
 };
 
 export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
@@ -31,7 +32,6 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
   const query = searchParams ?? {};
-  const useComment = query.comment === 'true';
 
   const page = query.page
     ? parseInt(Array.isArray(query.page) ? query.page[0] : query.page, 10)
@@ -43,7 +43,26 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
 
   const decodedDid = decodeURIComponent(did);
 
-  const where: any = decodedDid.startsWith('did') ? { did: decodedDid } : { handle: decodedDid };
+
+  const tags = query.tag ? (Array.isArray(query.tag) ? query.tag : (query.tag as string).split(',')).map(t => t.trim()).filter(Boolean) : undefined;
+  const whereBase = decodedDid.startsWith("did")
+    ? { did: decodedDid }
+    : { handle: decodedDid };
+
+  const where: any = {
+    ...whereBase,
+    ...(tags && tags.length > 0
+      ? {
+        tags: {
+          some: {
+            tag: {
+              name: { in: tags },
+            },
+          },
+        },
+      }
+      : {}),
+  };
 
   const bookmarks = await prisma.bookmark.findMany({
     where,
@@ -56,6 +75,19 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     },
   });
 
+
+  const allBookmarks = await prisma.bookmark.findMany({
+    where: whereBase,
+    include: {
+      tags: { include: { tag: true } },
+    },
+  });
+
+  // すべてのタグをまとめてユニーク化したリスト
+  const allTags: string[] = Array.from(
+    new Set(allBookmarks.flatMap((b) => b.tags.map((bt) => bt.tag.name)))
+  );
+
   const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
 
@@ -64,6 +96,9 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
   return (
     <Container size="md" mx="auto">
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
+
+      <SearchForm locale={locale} defaultTags={tags} userTags={allTags} did={decodedDid} />
+
       {normalized.length === 0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
 
       {normalized.length > 0 &&
@@ -74,16 +109,10 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
                 b.comments?.find((c) => c.lang === locale) ||
                 b.comments?.[0] || { title: '', comment: '', moderations: [] };
 
-              const displayTitle = useComment ? comment.title : b.ogpTitle || comment.title || '';
-              const displayComment = useComment ? comment.comment : b.ogpDescription || comment.comment || '';
+              const displayTitle = comment.title || '';
+              const displayComment = comment.comment || '';
 
-              const moderationList: string[] = useComment
-                ? comment.moderations || []
-                : [
-                  ...(b.moderations || []),
-                  ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
-                ];
-
+              const moderationList: string[] = comment.moderations || []
               const displayDate = new Date(b.indexedAt);
 
               return (

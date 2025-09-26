@@ -53,13 +53,15 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     ...whereBase,
     ...(tags && tags.length > 0
       ? {
-        tags: {
-          some: {
-            tag: {
-              name: { in: tags },
+        AND: tags.map(tagName => ({
+          tags: {
+            some: {
+              tag: {
+                name: tagName,
+              },
             },
           },
-        },
+        })),
       }
       : {}),
   };

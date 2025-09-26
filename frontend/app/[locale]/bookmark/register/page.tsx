@@ -97,6 +97,7 @@ export default function RegistBookmarkPage() {
     const [isSettingUp, setIsSettingUp] = useState(true);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const [myTag, setMyTag] = useState<string[]>([]);
+    const tagRanking = useMyBookmark(state => state.tagRanking);
 
     useEffect(() => {
         if (myTag.length > 0) return;
@@ -523,7 +524,7 @@ export default function RegistBookmarkPage() {
                     external: {
                         uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}` as unknown as ResourceUri,
                         title: ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title,
-                        description: ogpMessage||'',
+                        description: ogpMessage || '',
                     },
                 };
 
@@ -672,7 +673,7 @@ export default function RegistBookmarkPage() {
                         />
 
                         <TagSuggestion
-                            tags={myTag}
+                            tags={myTag && myTag.length > 0 ? myTag : tagRanking.map(t => t.tag)}
                             selectedTags={tags}
                             setTags={setTags}
                         />

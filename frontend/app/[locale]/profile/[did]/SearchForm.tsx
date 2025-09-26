@@ -72,30 +72,32 @@ export function SearchForm({
     return (
         <form onSubmit={handleSubmit}>
             <Group grow mb="xs" align="top" gap={16}>
-                {/* 左側: User */}
-                <User did={did} />
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
+                    {/* 左側: User */}
+                    <User did={did} />
 
-                {/* 右側: タグ入力とサジェッション */}
-                <SimpleGrid spacing="md">
-                    <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        <TagsInput
-                            label={messages.search.field.tag.title}
-                            placeholder={messages.search.field.tag.placeholder}
-                            value={tags}
-                            onChange={(newTags) => {
-                                const filtered = newTags.map(tag => tag.replace(/#/g, ""));
-                                setTags(filtered);
-                            }}
-                            styles={{ input: { fontSize: 16 } }}
-                            clearable
-                        />
+                    {/* 右側: タグ入力とサジェッション */}
+                    <SimpleGrid spacing="md">
+                        <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            <TagsInput
+                                label={messages.search.field.tag.title}
+                                placeholder={messages.search.field.tag.placeholder}
+                                value={tags}
+                                onChange={(newTags) => {
+                                    const filtered = newTags.map(tag => tag.replace(/#/g, ""));
+                                    setTags(filtered);
+                                }}
+                                styles={{ input: { fontSize: 16 } }}
+                                clearable
+                            />
 
-                        <TagSuggestion
-                            tags={myTag}
-                            selectedTags={tags}
-                            setTags={setTags}
-                        />
-                    </Box>
+                            <TagSuggestion
+                                tags={myTag}
+                                selectedTags={tags}
+                                setTags={setTags}
+                            />
+                        </Box>
+                    </SimpleGrid>
                 </SimpleGrid>
             </Group>
 

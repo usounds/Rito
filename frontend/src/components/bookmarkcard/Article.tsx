@@ -16,7 +16,7 @@ import {
     Modal,
     Text
 } from '@mantine/core';
-import { SquarePen, Trash2 } from 'lucide-react';
+import { Space, SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -53,9 +53,9 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         window.addEventListener('resize', updateSize);
         return () => window.removeEventListener('resize', updateSize);
     }, []);
-    
+
     useEffect(() => {
- setIsClicked(false)
+        setIsClicked(false)
     }, [key]);
 
 
@@ -116,7 +116,9 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         </Markdown>
                     </Text>
 
-                    <TagBadge tags={tags} locale={locale} />
+                    <Group mb='xs'>
+                        <TagBadge tags={tags} locale={locale} />
+                    </Group>
                 </BlurReveal>
             </Box>
 

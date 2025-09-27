@@ -11,6 +11,7 @@ export interface Bookmark {
   moderations: string[] | null; // DB では string? なので null もあり得る
   comments: Comment[];
   tags: string[];
+  likes?: string[];
 }
 
 export interface Comment {

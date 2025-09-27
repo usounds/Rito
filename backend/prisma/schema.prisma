@@ -113,3 +113,13 @@ model OAuthState {
 
   @@map("OAuthState") // PostgreSQL 上のテーブル名を変更
 }
+
+model Like {
+  aturi      String   @id       // ← 主キーを at-uri に変更
+  subject     String   // subject(URL) or uri(ATURI)
+  did        String   // Likeしたユーザー
+  created_at DateTime @default(now()) @db.Timestamptz
+
+  @@index([subject])
+  @@map("Like") // PostgreSQL 上のテーブル名
+}

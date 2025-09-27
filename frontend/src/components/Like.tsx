@@ -5,7 +5,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { AppBskyActorDefs } from '@atcute/bluesky';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { ActionIcon, Avatar, Box, HoverCard, Text } from '@mantine/core';
+import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Heart, X } from 'lucide-react';
 import { useMessages } from 'next-intl';
@@ -14,9 +14,10 @@ import { useMemo, useState } from 'react';
 interface LikeButtonProps {
     subject: string; // いいね対象のURI
     likedBy: string[]; // DID の配列 (like レコード URI が入っている)
+    actionDisabled?: boolean; // 追加: アクションを無効化するためのプロップ
 }
 
-const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
+const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) => {
     const messages = useMessages();
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [isSubmit, setIsSubmit] = useState(false);
@@ -37,7 +38,14 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
 
     const handleSubmit = async () => {
         if (!activeDid) return;
+        if (actionDisabled) return;
         setIsSubmit(true);
+
+        const id = notifications.show({
+            title: 'Process',
+            message: messages.detail.inform.process,
+            loading: true,
+        });
 
         //新規
         if (!isLiked) {
@@ -65,6 +73,7 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                     },
                 });
 
+                notifications.hide(id);
                 if (ret.ok) {
                     notifications.show({
                         title: 'Success',
@@ -84,6 +93,7 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                     });
                 }
             } catch {
+                notifications.hide(id);
                 notifications.show({
                     title: 'Error',
                     message: messages.create.error.unknownError,
@@ -111,6 +121,7 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                     writes,
                 },
             });
+            notifications.hide(id);
 
             if (ret.ok) {
                 notifications.show({
@@ -126,6 +137,7 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                 );
 
             } else {
+                notifications.hide(id);
                 notifications.show({
                     title: 'Error',
                     message: messages.delete.inform.error ?? 'Failed to unlike',
@@ -141,7 +153,9 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
     const fetchProfiles = async () => {
         // localLikedBy から DID を抽出
         const dids = localLikedBy.map(uri => uri.split('/')[2]); // 'at://did:plc:xxxx/blue.rito.feed.like/xxxx' → 'did:plc:xxxx'
-        const limitedDids = dids.slice(0, 5); // 最大5件
+
+        // 重複を排除して最大5件
+        const limitedDids = Array.from(new Set(dids)).slice(0, 5);
 
         try {
             const res = await publicAgent.get(`app.bsky.actor.getProfiles`, {
@@ -163,7 +177,17 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                 color="gray"
                 aria-label="Like"
                 onClick={handleSubmit}
-                disabled={isSubmit}
+                disabled={isSubmit || actionDisabled}
+                styles={{
+                    root: {
+                        backgroundColor: 'white',       // 通常時の背景
+                        '&:disabled': {
+                            backgroundColor: 'white',     // disabled でも背景を白に
+                            opacity: 1,                    // 透過を防ぐ
+                            cursor: 'default',             // 必要に応じて
+                        },
+                    },
+                }}
             >
                 <Heart
                     style={{
@@ -183,11 +207,13 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy }) => {
                     <HoverCard.Dropdown>
                         <Avatar.Group>
                             {profiles.map((p) => (
-                                <Avatar key={p.did} src={p.avatar}>
-                                    {p.displayName?.[0] || '?'}
-                                </Avatar>
+                                <Tooltip label={p.displayName + " @" + p.handle} key={p.did}>
+                                    <Avatar key={p.did} src={p.avatar}>
+                                        {p.displayName?.[0] || '?'}
+                                    </Avatar>
+                                </Tooltip>
                             ))}
-                            {localLikedBy.length > 5 && <Avatar>+{localLikedBy.length - 5}</Avatar>}
+                            {profiles.length > 5 && <Avatar>+{profiles.length - 5}</Avatar>}
                         </Avatar.Group>
                     </HoverCard.Dropdown>
                 }

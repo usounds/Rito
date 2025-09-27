@@ -14,9 +14,10 @@ import { useRouter } from "next/navigation";
 type Props = {
     subject: string;
     title: string;
+    tags?: string[];
 };
 
-export default function EditMenu({ subject, title }: Props) {
+export default function EditMenu({ subject, title, tags }: Props) {
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [shareOnBluesky, setShareOnBluesky] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -73,10 +74,12 @@ export default function EditMenu({ subject, title }: Props) {
                 size="md"
                 title={messages.share.title}
                 centered
+                closeOnClickOutside={false}
             >
                 <ShareOnBluesky
                     subject={typeof window !== "undefined" ? window.location.href : ""}
                     title={title}
+                    tags={tags}
                     onClose={() => setShareOnBluesky(false)}
                 />
             </Modal>

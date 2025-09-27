@@ -5,12 +5,13 @@ import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput } from '@mantine/core';
-import { useMessages } from 'next-intl';
+import { useLocale, useMessages } from 'next-intl';
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const messages = useMessages();
+    const locale = useLocale();
 
     // --- フックは必ず最初に ---
     const [tags, setTags] = useState<string[]>([]);
@@ -70,20 +71,26 @@ export function MyBookmark() {
             </SimpleGrid>
 
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filteredBookmarks.map((b) => (
-                    <div key={b.uri}>
-                        <Article
-                            url={b.subject}
-                            title={b.comments[0]?.title ?? ""}
-                            comment={b.comments[0]?.comment ?? ""}
-                            tags={b.tags}
-                            image={b.ogpImage|| "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
-                            date={new Date(b.indexedAt)}
-                            atUri={b.uri}
-                            moderations={b.moderations ?? []}
-                        />
-                    </div>
-                ))}
+                {filteredBookmarks.map((b) => {
+                    // 現在の locale に一致するコメントを優先
+                    const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
+
+                    return (
+                        <div key={b.uri}>
+                            <Article
+                                url={b.subject}
+                                title={selectedComment?.title ?? ""}
+                                comment={selectedComment?.comment ?? ""}
+                                tags={b.tags}
+                                image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
+                                date={new Date(b.indexedAt)}
+                                atUri={b.uri}
+                                moderations={[]}
+                                likes={b.likes || []}
+                            />
+                        </div>
+                    );
+                })}
             </SimpleGrid>
         </Stack>
     );

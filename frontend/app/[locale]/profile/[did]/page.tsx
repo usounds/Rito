@@ -77,18 +77,19 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     },
   });
 
+const allBookmarks = (await prisma.bookmark.findMany({
+  where: whereBase,
+  include: {
+    tags: { include: { tag: true } },
+  },
+})) as Array<{
+  tags: { tag: { name: string } }[];
+}>;
 
-  const allBookmarks = await prisma.bookmark.findMany({
-    where: whereBase,
-    include: {
-      tags: { include: { tag: true } },
-    },
-  });
-
-  // すべてのタグをまとめてユニーク化したリスト
-  const allTags: string[] = Array.from(
-    new Set(allBookmarks.flatMap((b) => b.tags.map((bt) => bt.tag.name)))
-  );
+// これで b, bt の any 警告は消える
+const allTags: string[] = Array.from(
+  new Set(allBookmarks.flatMap(b => b.tags.map(bt => bt.tag.name)))
+);
 
   const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);

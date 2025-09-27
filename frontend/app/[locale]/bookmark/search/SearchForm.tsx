@@ -25,7 +25,7 @@ export function SearchForm({
   const [myTag, setMyTag] = useState<string[]>([]);
   const [handles, setHandles] = useState<string[]>(defaultHandles);
   const tagRanking = useMyBookmark(state => state.tagRanking);
-  const [commentPriority, setCommentPriority] = useState(false);
+  const [commentPriority, setCommentPriority] = useState('comment');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const messages = useMessages();
@@ -53,7 +53,7 @@ export function SearchForm({
 
     setMyTag(rankingTags);
 
-    setCommentPriority(searchParams.get('comment') === 'true');
+    setCommentPriority(searchParams.get('comment') || 'comment');
     setTags(tagParam ? tagParam.split(',') : []);
     setHandles(handleParam ? handleParam.split(',') : []);
   }, [searchParams, tagRanking]);
@@ -65,7 +65,7 @@ export function SearchForm({
     const params = new URLSearchParams();
     if (tags.length) params.set('tag', tags.join(','));
     if (handles.length) params.set('handle', handles.join(','));
-    if (commentPriority) params.set('comment', 'true');
+    if (commentPriority==='ogp') params.set('comment', commentPriority);
 
     loader.start();
     router.push(`/${locale}/bookmark/search?${params.toString()}`);
@@ -124,8 +124,10 @@ export function SearchForm({
 
         <Checkbox
           label={messages.search.field.commentpriority.title}
-          checked={commentPriority}
-          onChange={(e) => setCommentPriority(e.currentTarget.checked)}
+          checked={commentPriority === 'ogp'}
+          onChange={() =>
+            setCommentPriority(commentPriority === 'ogp' ? 'comment' : 'ogp')
+          }
         />
       </Box>
 

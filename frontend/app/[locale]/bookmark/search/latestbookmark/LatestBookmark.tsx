@@ -18,7 +18,7 @@ type PageProps = {
 export async function LatestBookmark({ params, searchParams }: PageProps) {
   const locale = params.locale;
   const query = searchParams ?? {};
-  const useComment = query.comment === 'true'; // ← コメント優先フラグ
+  const useComment = query.comment == null || query.comment === 'comment';
 
   const page = query.page ? parseInt(query.page) : 1;
   const take = 12;
@@ -52,22 +52,116 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
 
+  function withTrailingSlashVariants(uri: string) {
+    return uri.endsWith("/")
+      ? [uri, uri.slice(0, -1)]
+      : [uri, uri + "/"];
+  }
+
   const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
+
+
+  // 1. normalized の Bookmark.subject の末尾スラッシュ有無バリエーションを作成
+  const subjectVariants = normalized.flatMap(b => withTrailingSlashVariants(b.subject))
+
+  // 2. Bookmark テーブルから URL を検索（両方のバリエーションを targets に渡す）
+  const bookmarksFromDb: { uri: string; subject: string }[] = await prisma.bookmark.findMany({
+    where: { subject: { in: subjectVariants } },
+    select: { uri: true, subject: true },
+  });
+  const subjectCountMap: Record<string, number> = {};
+  bookmarksFromDb.forEach(b => {
+    if (!subjectCountMap[b.subject]) subjectCountMap[b.subject] = 0;
+    subjectCountMap[b.subject]++;
+  });
+
+  // 3. URL ↔ Bookmark.uri マッピング（末尾スラッシュあり・なし両方をキーに）
+  const urlToUriMap: Record<string, string> = {};
+  bookmarksFromDb.forEach(b => {
+    const variants = withTrailingSlashVariants(b.subject);
+    variants.forEach(v => {
+      urlToUriMap[v] = b.uri;
+    });
+  });
+
+  // 4. Likes を検索（targets は URL バリエーション + Bookmark.uri）
+  const targets = [
+    ...Object.keys(urlToUriMap),      // URLバリエーション
+    ...bookmarksFromDb.map(b => b.uri)     // Bookmark URI
+  ];
+  const likes: { subject: string; aturi: string }[] = await prisma.like.findMany({
+    where: { subject: { in: targets } },
+    select: { subject: true, aturi: true },
+  });
+
+  // URL ↔ Bookmark.uri マッピング（複数 URI 対応、末尾スラッシュ有無両方）
+  const urlToUrisMap: Record<string, string[]> = {};
+  bookmarksFromDb.forEach(b => {
+    const variants = withTrailingSlashVariants(b.subject);
+    variants.forEach(v => {
+      if (!urlToUrisMap[v]) urlToUrisMap[v] = [];
+      urlToUrisMap[v].push(b.uri);
+    });
+  });
+
+  // Bookmark.uri ごとに Like を集計
+  const uriLikesMap: Record<string, string[]> = {};
+  likes.forEach(like => {
+    let matchedUris: string[] = [];
+
+    if (like.subject.startsWith('http')) {
+      // URL Like の場合
+      const variants = withTrailingSlashVariants(like.subject);
+      variants.forEach(v => {
+        const uris = urlToUrisMap[v];
+        if (uris) matchedUris.push(...uris);
+      });
+    } else {
+      // AT URI Like の場合、Bookmark.uri に直接マッピング
+      // ただし、その URI が urlToUrisMap の value に含まれている Bookmark.uri なら URL Like と同じ場所に集約
+      Object.values(urlToUrisMap).forEach(uris => {
+        if (uris.includes(like.subject)) matchedUris.push(...uris);
+      });
+      // 上記にマッチしなかった場合はそのまま push
+      if (matchedUris.length === 0) matchedUris.push(like.subject);
+    }
+
+    const uniqueUris = Array.from(new Set(matchedUris));
+    uniqueUris.forEach(uri => {
+      if (!uriLikesMap[uri]) uriLikesMap[uri] = [];
+      uriLikesMap[uri].push(like.aturi);
+    });
+  });
+  // normalized に likes をマージ
+  const bookmarksWithLikes = normalized.map(bookmark => {
+    const variants = withTrailingSlashVariants(bookmark.subject);
+    // variants の合計件数を取得
+    const count = variants.reduce((acc, v) => acc + (subjectCountMap[v] || 0), 0);
+
+    return {
+      ...bookmark,
+      likes: [...new Set(uriLikesMap[bookmark.uri] || [])],
+      commentCount: count,
+    };
+  });
 
   return (
     <Stack>
       <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-        {normalized.map((b) => {
+        {bookmarksWithLikes.map((b) => {
           // コメント優先フラグが true の場合は locale に対応したコメントを優先表示
           const comment =
             b.comments?.find((c) => c.lang === locale) ||
             b.comments?.[0] || { title: '', comment: '', moderations: [] };
 
           const displayTitle = useComment ? comment.title : b.ogpTitle || comment.title || '';
-          const displayComment = useComment ? comment.comment : b.ogpDescription || comment.comment || '';
+          const displayComment = useComment ? comment.comment || b.ogpDescription : b.ogpDescription || comment.comment || '';
 
           const moderationList: string[] = useComment
-            ? comment.moderations || []
+            ? [
+              ...(comment.moderations  || []),
+              ...((!comment.title || !comment.comment) ? (b.moderations || []) : []),
+            ]
             : [
               ...(b.moderations || []),
               ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
@@ -82,12 +176,13 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
                 url={b.subject}
                 title={displayTitle}
                 handle={b.handle}
-                comment={displayComment}
+                comment={displayComment || ''}
                 tags={b.tags}
                 image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
                 date={displayDate}
                 moderations={moderationList}
-                key={new Date().getTime().toString()} 
+                key={new Date().getTime().toString()}
+                likes={b.likes||[]}
               />
             </div>
           );

@@ -4,25 +4,36 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { AppBskyFeedPost } from '@atcute/bluesky';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, Textarea,Text } from '@mantine/core';
+import { Button, Group, Stack, Textarea, Text, TagsInput } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { Check, Share, X } from 'lucide-react';
+import { Check, Share, X, Tag } from 'lucide-react';
 import { useMessages } from 'next-intl';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 type ShareOnBlueskyProps = {
     subject: string;
     title: string;
+    tags?: string[];
     onClose: () => void;
 };
+const MAX_TOTAL_LENGTH = 300;
 
-export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, onClose }) => {
+export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, tags, onClose }) => {
     const messages = useMessages();
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [shareComment, setShareComment] = useState<string>(messages.share.post);
+    const [tagsLocal, setTags] = useState<string[]>(
+        (tags || []).map(tag => tag.replace(/#/g, "").replace(/\s+/g, ""))
+    );
     const thisClient = useXrpcAgentStore(state => state.thisClient);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [loading, setLoading] = useState(false);
+    const tagsLength = useMemo(() => {
+        return tagsLocal.reduce((sum, tag) => sum + 1 + tag.length + 1, 0); // # + tag + 半角スペース
+    }, [tagsLocal]);
+    const remainingLength = MAX_TOTAL_LENGTH - tagsLength - 10;
+    const truncatedComment = shareComment.slice(0, remainingLength); // もし既に超えていたら切り捨て
+
     const handleShare = async () => {
         if (!thisClient) return
 
@@ -34,11 +45,13 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                 via?: string;
             };
 
+            let tagsObj: string[] = tagsLocal
+            tagsObj.push('rito.blue')
+
             const appBskyFeedPost: MyPost = {
-                ...(buildPost(shareComment, ['rito.blue'], messages) as Omit<MyPost, "via">),
+                ...(buildPost(shareComment, tagsObj, messages) as Omit<MyPost, "via">),
                 via: messages.title
             };
-
 
             let ogpMessage = messages.share.ogpdecription
 
@@ -101,13 +114,35 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
             <Text>{messages.share.description}</Text>
             <Textarea
                 label={messages.share.field.comment}
-                value={shareComment}
-                onChange={(event) => setShareComment(event.currentTarget.value)}
+                value={truncatedComment}
+                onChange={(event) => {
+                    const newValue = event.currentTarget.value;
+                    setShareComment(newValue.slice(0, remainingLength)); // 超えた分は切り捨て
+                }}
                 withAsterisk
                 autosize
+                maxLength={remainingLength > 0 ? remainingLength : 0} // ← number を渡す
                 disabled={loading}
                 styles={{ input: { fontSize: 16 } }}
             />
+            <TagsInput
+                data={[]}
+                value={tagsLocal}
+                onChange={(newTags) => {
+                    const cleaned = newTags
+                        .map(tag => tag.replace(/#/g, ""))  // # を除去
+                        .map(tag => tag.replace(/\s+/g, "")); // 空白をすべて除去
+                    setTags(cleaned);
+                }}
+                label={messages.share.field.tag}
+                maxTags={5}
+                maxLength={25}
+                disabled={!activeDid}
+                leftSection={<Tag size={16} />}
+                clearable
+                styles={{ input: { fontSize: 16 } }}
+            />
+
             <Group justify="right">
                 <Button variant="default" onClick={onClose}>
                     {messages.share.button.close}

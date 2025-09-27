@@ -12,8 +12,9 @@ import {
     Box,
     Card,
     Group,
-    Image,
+    Stack,
     Modal,
+    Spoiler,
     Text
 } from '@mantine/core';
 import { Space, SquarePen, Trash2 } from 'lucide-react';
@@ -21,6 +22,7 @@ import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
+import Like from "@/components/Like";
 import classes from './Article.module.scss';
 
 type ArticleCardProps = {
@@ -33,10 +35,11 @@ type ArticleCardProps = {
     date: Date,
     atUri?: string,
     moderations: string[]
+    likes?: string[];
     key?: string
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes }: ArticleCardProps) {
     const messages = useMessages();
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
@@ -104,17 +107,22 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                             </Link>
                         </Card.Section>
                     }
-                    <Text fw={500} c="inherit" >
-                        <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
-                            style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                            {title}
-                        </Link>
-                    </Text>
-                    <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
-                        <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
-                            {comment}
-                        </Markdown>
-                    </Text>
+                    <Spoiler maxHeight={120} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
+                        <Text fw={500} c="inherit" >
+                            <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                                {title}
+                            </Link>
+                        </Text>
+                    </Spoiler>
+
+                    <Spoiler maxHeight={120} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
+                        <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                                {comment}
+                            </Markdown>
+                        </Text>
+                    </Spoiler>
 
                     <Group mb='xs'>
                         <TagBadge tags={tags} locale={locale} />
@@ -124,33 +132,56 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
             <ModerationBadges moderations={moderations} />
 
-            <Group className={classes.footer} gap='xs'>
-                {atUri && (
-                    <>
-                        <Link href={`/${locale}/bookmark/register?aturi=${encodeURIComponent(atUri)}`}>
-                            <ActionIcon variant="transparent" color="gray" aria-label="Edit">
-                                <SquarePen size={16} />
+            <Stack className={classes.footer} gap={4}>
+                {/* 1行目：アイコン群 */}
+                <Group align="center" style={{ width: '100%' }}>
+                    {
+                        <Like subject={url} likedBy={likes || []} />
+                    }
+                    {atUri && (
+                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                            <Link href={`/${locale}/bookmark/register?aturi=${encodeURIComponent(atUri)}`}>
+                                <ActionIcon variant="transparent" color="gray" aria-label="Edit">
+                                    <SquarePen size={16} />
+                                </ActionIcon>
+                            </Link>
+                            <ActionIcon variant="transparent" color="red" aria-label="Delete" onClick={() => setDeleteBookmark(true)}>
+                                <Trash2 size={16} />
                             </ActionIcon>
-                        </Link>
-                        <ActionIcon variant="transparent" color="red" aria-label="Delete" onClick={() => setDeleteBookmark(true)}>
-                            <Trash2 size={16} />
-                        </ActionIcon>
 
-                        <Modal opened={deleteBookmark} onClose={() => setDeleteBookmark(false)} size="md" title={messages.delete.title} centered>
-                            <DeleteBookmark aturi={atUri} onClose={() => setDeleteBookmark(false)} />
-                        </Modal>
-                    </>
-                )}
+                            <Modal
+                                opened={deleteBookmark}
+                                onClose={() => setDeleteBookmark(false)}
+                                size="md"
+                                title={messages.delete.title}
+                                centered
+                            >
+                                <DeleteBookmark aturi={atUri} onClose={() => setDeleteBookmark(false)} />
+                            </Modal>
+                        </div>
+                    )}
+                </Group>
+
+                {/* 2行目：Text */}
                 <Text fz="xs" c="dimmed">
-                    <Link href={localUrl || ''} target="_blank" style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    <Link
+                        href={localUrl || ''}
+                        target="_blank"
+                        style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+                    >
                         {domain + ' '}
                     </Link>
-                    <Link href={`/${locale}/profile/${encodeURIComponent(handle || '')}`} prefetch={false} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                    <Link
+                        href={`/${locale}/profile/${encodeURIComponent(handle || '')}`}
+                        prefetch={false}
+                        style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}
+                    >
                         {handle ? "by @" + handle + ' ' : ""}
                     </Link>
-                    <TimeAgo date={date} locale={locale} />
+                     <TimeAgo date={date} locale={locale} />
                 </Text>
-            </Group>
+            </Stack>
+
         </Card>
     );
 }

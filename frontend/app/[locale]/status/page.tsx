@@ -25,7 +25,10 @@ export default async function StatusPage({ params }: StatusProps) {
     const uniqueDids = await prisma.bookmark.groupBy({
         by: ['did'],
         _count: true,
-    }); const record = await prisma.jetstreamIndex.findUnique({
+    });
+    const like = await prisma.like.count({});
+    
+    const record = await prisma.jetstreamIndex.findUnique({
         where: { service: 'rito' },
     });
 
@@ -60,6 +63,7 @@ export default async function StatusPage({ params }: StatusProps) {
                     { title: t('status.field.bookmark'), icon: 'bookmark', value: bookmarks, diff: 0 },
                     { title: t('status.field.tag'), icon: 'tag', value: tags, diff: 0 },
                     { title: t('status.field.user'), icon: 'user', value: uniqueDids.length, diff: 0 },
+                    { title: t('status.field.like'), icon: 'like', value: like, diff: 0 },
                     { title: t('status.field.server'), icon: 'server', value: comment, diff: diffMinutes * -1 || 0 },
                 ]}
             />

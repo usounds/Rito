@@ -5,13 +5,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
-    "build": "npm run prisma:generate && next build --turbopack",
+    "build": "npm run prisma:generate && npm run update:blocklist && npm run update:publicsuffix && next build --turbopack",
     "prisma:copy": " cp ../backend/prisma/schema.prisma ./prisma/schema.prisma",
     "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma",
     "start": "next start",
     "lex-gen": "npx lex-cli generate -c ./lex.config.js",
-    "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/blocklist.json",
-    "update:publicsuffix": "curl -s https://publicsuffix.org/list/public_suffix_list.dat | grep -vE '(^//|^$)' | jq -R -s -c 'split(\"\\n\")[:-1]' > src/data/publicSuffixList.json"
+    "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | grep -v '^$' | jq -R -s 'split(\"\\n\") | map(select(. != \"\"))' > src/data/blocklist.json",
+    "update:publicsuffix": "curl -s https://publicsuffix.org/list/public_suffix_list.dat | grep -vE '(^//|^$)' | grep -v '^$' | jq -R -s 'split(\"\\n\") | map(select(. != \"\"))' > src/data/publicSuffixList.json"
   },
   "dependencies": {
     "@atcute/bluesky": "^3.2.3",

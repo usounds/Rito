@@ -1,7 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
 import WebSocket from 'ws';
-import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION } from './config';
+import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION, LIKE } from './config';
 import { BlueRitoFeedBookmark } from './lexicons';
 import logger from './logger';
 import OpenAI from "openai";
@@ -83,7 +83,7 @@ async function init() {
   cursor = await loadCursor();
 
   const jetstream = new Jetstream({
-    wantedCollections: [BOOKMARK, SERVICE],
+    wantedCollections: [BOOKMARK, SERVICE, LIKE],
     endpoint: JETSREAM_URL,
     cursor: Number(cursor),
     ws: WebSocket,
@@ -516,6 +516,9 @@ async function init() {
   jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
   jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
 
+  jetstream.onCreate(LIKE, event => queue.add(() => upsertLike(event)));
+  jetstream.onUpdate(LIKE, event => queue.add(() => upsertLike(event)));
+
   // TXT レコード取得関数
   const fetchTxtRecords = async (subDomain: string): Promise<string | null> => {
     try {
@@ -611,6 +614,70 @@ async function init() {
     }
   }
 
+  async function upsertLike(
+    event: CommitCreateEvent<"blue.rito.feed.like"> | CommitUpdateEvent<"blue.rito.feed.like">
+  ) {
+    const record = event.commit.record as any;
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    const subject = record?.subject;
+    if (!subject) return;
+
+    let handle = 'no handle';
+    const maxAttempts = 2;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch(`https://plc.directory/${event.did}`);
+        if (res.ok) {
+          const didData = await res.json();
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+          logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
+          break; // 成功したらループを抜ける
+        } else {
+          logger.warn(`Attempt ${attempt}: plc.directory fetch failed with status ${res.status}`);
+        }
+      } catch (err) {
+        logger.warn(`Attempt ${attempt}: plc.directory fetch error for DID: ${event.did}`);
+      }
+
+    }
+
+    if (!handle) {
+      logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
+      try {
+        const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+          params: { actor: event.did },
+        });
+        if (userProfile.ok && userProfile.data.handle) {
+          handle = userProfile.data.handle;
+        } else {
+          logger.error(`Error fetching handle from publicAgent: ${event.did}`);
+          return;
+        }
+      } catch (err) {
+        logger.error(`Error fetching handle from publicAgent: ${err}`);
+      }
+    }
+
+    await dbLimit(() =>
+      prisma.userDidHandle.upsert({
+        where: { did: event.did },
+        update: { handle: handle },
+        create: { did: event.did, handle: handle },
+      })
+    );
+
+    await dbLimit(() =>
+      prisma.like.upsert({
+        where: { aturi },
+        update: { created_at: new Date(record.createdAt) },
+        create: { aturi, subject: subject, did: event.did, created_at: new Date(record.createdAt) },
+      })
+    );
+
+    logger.info(`Upserted like: ${aturi}, subject=${subject}, did=${event.did}`);
+  }
+
   jetstream.onDelete(BOOKMARK, event =>
     queue.add(async () => {
       cursor = event.time_us.toString();
@@ -625,6 +692,23 @@ async function init() {
         }
       } catch (err) {
         logger.error(`Error in onDelete bookmark: ${err}`);
+      }
+    })
+  );
+
+  jetstream.onDelete(LIKE, event =>
+    queue.add(async () => {
+      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+      try {
+        const result = await dbLimit(() =>
+          prisma.like.deleteMany({ where: { aturi } })
+        );
+
+        if (result.count > 0) {
+          logger.info(`Deleted like: ${aturi} (${result.count} records)`);
+        }
+      } catch (err) {
+        logger.error(`Error in onDelete like: ${err}`);
       }
     })
   );

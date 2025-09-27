@@ -1,9 +1,10 @@
 // frontend/app/[locale]/bookmark/details/page.tsx
 import { prisma } from '@/logic/HandlePrismaClient';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
-import { Container, Stack, Text, Spoiler, Flex, Title, Tabs, TabsList, TabsPanel, TabsTab, Timeline, TimelineItem } from "@mantine/core";
+import { Container, Stack, Text, Spoiler, Flex, Title, Tabs, TabsList, TabsPanel, TabsTab, Timeline, TimelineItem, Group } from "@mantine/core";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { BlurReveal } from "@/components/BlurReveal";
+import Like from "@/components/Like";
 import { ModerationBadges } from "@/components/ModerationBadges";
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
@@ -14,7 +15,6 @@ import Markdown from 'react-markdown';
 import { SchemaEditor } from "./SchemaEditor";
 import EditMenu from '@/components/EditMenu';
 import { Bookmark as BookmarkIcon } from 'lucide-react';
-import { FaBluesky } from "react-icons/fa6";
 import { Library } from 'lucide-react';
 import publicSuffixList from '@/data/publicSuffixList.json';
 import type { Metadata } from "next";
@@ -39,6 +39,8 @@ interface DisplayData {
     domain: string;
     moderations: string[];
     bookmarks: Bookmark[];
+    subjectLikes?: string[];
+    bookmarksLikes?: Bookmark[];
 }
 
 /** 共通：displayTitle / displayComment / moderations を決定 */
@@ -66,9 +68,47 @@ export async function getBookmarkDisplayData(uri: string, locale: string): Promi
     });
 
     const bookmarks = normalizeBookmarks(bookmarksRaw);
+    // 1. 対象 subject と末尾スラッシュバリエーションをまとめる
+    const targetMap: Record<string, string[]> = {}; // bm.subject -> [対象URIリスト]
+    const allTargets: string[] = [];
 
-    const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
-    const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
+    for (const bm of bookmarks) {
+        const [uri1, uri2] = withTrailingSlashVariants(bm.subject);
+        const targets = [uri1, uri2].filter(Boolean);
+        targetMap[bm.subject] = targets;
+        allTargets.push(...targets);
+        allTargets.push(bm.uri);
+    }
+
+    // 2. 重複を削除
+    const uniqueTargets = Array.from(new Set(allTargets));
+
+    // 3. 一括で Like レコードを取得
+    const likes: { subject: string; aturi: string }[] = await prisma.like.findMany({
+        where: { subject: { in: uniqueTargets } },
+        select: { subject: true, aturi: true },
+    });
+
+    // 4. すべての aturi をまとめた配列にする
+    const subjectLikes: string[] = likes
+        .filter(like => like.subject === uri1 || like.subject === uri2)
+        .map(like => like.aturi);
+
+
+    // 5. bookmarks 配列に bookmarkLikes を埋め込む
+    const bookmarksWithLikes = bookmarks.map(bm => {
+        const bookmarkLikes = likes
+            .filter(like => like.subject === bm.uri) // bm.uri と比較
+            .map(like => like.aturi);
+
+        return {
+            ...bm,
+            likes: bookmarkLikes,
+        };
+    });
+
+    const verifiedBookmarks = bookmarksWithLikes.filter(b => b.tags.includes("Verified"));
+    const otherBookmarks = bookmarksWithLikes.filter(b => !b.tags.includes("Verified"));
 
     let displayTitle = "";
     let displayComment = "";
@@ -100,7 +140,7 @@ export async function getBookmarkDisplayData(uri: string, locale: string): Promi
         displayImage = `https://${domain}/${displayImage}`;
     }
 
-    return { displayTitle, displayComment, moderations, bookmarks, displayImage, domain };
+    return { displayTitle, displayComment, moderations, bookmarks: bookmarksWithLikes, displayImage, domain, subjectLikes };
 }
 
 /** OGP 用 generateMetadata */
@@ -181,7 +221,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     const uri = typeof search.uri === "string" ? search.uri : undefined;
     if (!uri) return <Container><Text c="dimmed">{t('detail.error.uriRequired')}</Text></Container>;
 
-    const { displayTitle, displayComment, moderations, bookmarks } = await getBookmarkDisplayData(uri, locale);
+    const { displayTitle, displayComment, moderations, bookmarks, subjectLikes } = await getBookmarkDisplayData(uri, locale);
 
     if (bookmarks.length === 0) return (
         <Container size="md" mx="auto">
@@ -190,30 +230,11 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     );
 
     const tags: string[] = Array.from(new Set(bookmarks.flatMap(b => b.tags || [])));
-    const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
+    //const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
     const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
 
     // Post 情報取得
     let postDataArray: PostData[] = [];
-    if (isLoggedIn) {
-        const postUriRecords = await prisma.postUri.findMany({
-            where: { uri: { equals: uri, mode: "insensitive" } },
-            include: { post: { include: { uris: true } } },
-            orderBy: { post: { indexed_at: 'desc' } },
-        });
-        postDataArray = postUriRecords
-            .filter(r => r.post)
-            .map(r => {
-                const post = r.post!;
-                return {
-                    uri: post.uris[0]?.uri || '',
-                    text: post.text,
-                    moderations: post.moderation_result?.split(',') || [],
-                    indexedAt: post.indexed_at,
-                    handle: post.handle,
-                };
-            });
-    }
 
     return (
         <Container size="md" mx="auto">
@@ -222,7 +243,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                 <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
                     <Flex justify="space-between" align="center" style={{ width: '100%' }}>
                         <Title order={4}>{displayTitle}</Title>
-                        <EditMenu subject={uri} />
+                        <EditMenu subject={uri} title={displayTitle}/>
                     </Flex>
                     <Text size="md" component="div">
                         <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
@@ -245,6 +266,9 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         <ModerationBadges moderations={moderations} />
                     </Stack>
                 }
+
+                <Like subject={uri} likedBy={subjectLikes || []} />
+
             </Stack>
 
             <Stack my="md">
@@ -285,12 +309,22 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                 </Text>
                                             }
                                             <ModerationBadges moderations={comment.moderations} />
-                                            <Text c="dimmed" size="sm">
-                                                <Link href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`} prefetch={false} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                                                    {"by @" + bookmark.handle + " "}
-                                                </Link>
-                                                <TimeAgo date={bookmark.indexedAt} locale={locale} />
-                                            </Text>
+
+                                            <Group align="center" style={{ whiteSpace: 'nowrap' }}>
+                                                <Like subject={bookmark.uri} likedBy={bookmark.likes || []} />
+                                                <Text c="dimmed" size="sm">
+                                                    <Link
+                                                        href={`/${locale}/profile/${encodeURIComponent(bookmark.handle || '')}`}
+                                                        prefetch={false}
+                                                        style={{ textDecoration: 'none', color: 'inherit' }}
+                                                    >
+                                                        {"by @" + bookmark.handle}
+                                                    </Link>
+
+                                                    <TimeAgo date={bookmark.indexedAt} locale={locale} />
+                                                </Text>
+                                            </Group>
+
                                         </TimelineItem>
                                     );
                                 })}

@@ -3,6 +3,14 @@ const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
 export const ACCESS_TOKEN_COOKIE = "access_token";
 export const REFRESH_TOKEN_COOKIE = "refresh_token";
+export const SCOPE = [
+  "atproto",
+  "repo:app.bsky.feed.post",
+  "repo:blue.rito.feed.bookmark",
+  "repo:blue.rito.feed.like",
+  "repo:blue.rito.service.schema",
+  "blob:*/*",
+];
 
 export const ACCESS_TOKEN_MAX_AGE = 60 * 60 * 12; // 半日
 export const REFRESH_TOKEN_MAX_AGE = 60 * 60 * 24 * 60; // 60日

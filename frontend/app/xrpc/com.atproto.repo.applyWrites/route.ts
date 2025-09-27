@@ -57,6 +57,7 @@ const AIP_BASE_URL = process.env.OIDC_PROVIDER!;
 
 export async function POST(req: NextRequest) {
   const { accessToken, updatedCookies } = await getAccessToken(req);
+  const previousAccessToken = req.cookies.get("access_token")?.value;
   if (!accessToken) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
   const res = NextResponse.next();
@@ -121,7 +122,7 @@ export async function POST(req: NextRequest) {
     }, { status: pdsRes.status });
 
 
-    if (updatedCookies) {
+    if (updatedCookies && accessToken !== previousAccessToken) {
       updatedCookies.forEach((c) =>
         response.cookies.set(c.key, c.value, {
           httpOnly: true,

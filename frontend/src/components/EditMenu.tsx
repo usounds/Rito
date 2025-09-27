@@ -6,16 +6,19 @@ import { BookmarkPlus, CircleEllipsis, SquarePen, Trash2 } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { DeleteBookmark } from '@/components/DeleteBookmark';
-import Link from 'next/link';
+import { ShareOnBluesky } from '@/components/ShareOnBluesky';
+import { Share } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { useRouter } from "next/navigation";
 
 type Props = {
     subject: string;
+    title: string;
 };
 
-export default function EditMenu({ subject }: Props) {
+export default function EditMenu({ subject, title }: Props) {
     const [deleteBookmark, setDeleteBookmark] = useState(false);
+    const [shareOnBluesky, setShareOnBluesky] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const locale = useLocale();
@@ -63,8 +66,27 @@ export default function EditMenu({ subject }: Props) {
                 <DeleteBookmark aturi={matchedBookmark?.uri} onClose={() => setDeleteBookmark(false)} />
             </Modal>
 
+
+            <Modal
+                opened={shareOnBluesky}
+                onClose={() => setShareOnBluesky(false)}
+                size="md"
+                title={messages.share.title}
+                centered
+            >
+                <ShareOnBluesky
+                    subject={typeof window !== "undefined" ? window.location.href : ""}
+                    title={title}
+                    onClose={() => setShareOnBluesky(false)}
+                />
+            </Modal>
+
             <Menu.Dropdown>
                 <Menu.Label>{messages.detail.menu.title}</Menu.Label>
+
+                <Menu.Item leftSection={<Share size={14} />} onClick={() => setShareOnBluesky(true)} >
+                    {messages.detail.menu.share.title}
+                </Menu.Item>
 
                 {matchedBookmark ? (
                     <>
@@ -77,7 +99,7 @@ export default function EditMenu({ subject }: Props) {
                     </>
                 ) : (
                     <Menu.Item leftSection={<BookmarkPlus size={14} />} onClick={handleRegister} >
-                            {messages.detail.menu.regist.title}
+                        {messages.detail.menu.regist.title}
                     </Menu.Item>
                 )}
             </Menu.Dropdown>

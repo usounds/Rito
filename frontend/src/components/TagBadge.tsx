@@ -12,7 +12,7 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
   if (tags.length === 0) return null;
 
   return (
-    <Group mb="xs" gap={3}>
+    <Group gap={3}>
       {tags.map((tag, idx) => (
         <Badge
           key={idx}

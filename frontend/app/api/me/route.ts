@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAccessToken } from "@/logic/HandleOauth";
+const AIP_BASE = process.env.OIDC_PROVIDER!;
 
 export async function GET(req: NextRequest) {
   const referer = req.headers.get("referer");
 
-  // Referer が存在して、自サイトのURLで始まらない場合は403
   if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
@@ -12,14 +12,16 @@ export async function GET(req: NextRequest) {
   try {
     let accessToken: string | null | undefined = null;
     let updatedCookies: { key: string; value: string; maxAge?: number }[] | null | undefined;
+    let previousAccessToken: string | undefined;
 
     // --- アクセストークン取得 ---
     try {
       const result = await getAccessToken(req);
       accessToken = result.accessToken;
       updatedCookies = result.updatedCookies;
+      previousAccessToken = req.cookies.get("access_token")?.value;
       if (!accessToken) {
-      console.warn("accessToken is null");
+        console.warn("accessToken is null");
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       }
     } catch (err: any) {
@@ -27,7 +29,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
-    // --- userinfo 取得関数 ---
     const fetchUserInfo = async (token: string) => {
       const res = await fetch(`${process.env.OIDC_PROVIDER}/oauth/userinfo`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,11 +38,10 @@ export async function GET(req: NextRequest) {
 
     let userInfoRes = await fetchUserInfo(accessToken);
 
-    // --- userinfo が 401/403/500 → アクセストークン取り直し ---
     if ([401, 403, 500].includes(userInfoRes.status)) {
       console.warn(`userinfo ${userInfoRes.status} → アクセストークン取り直し`);
       try {
-        const retry = await getAccessToken(req, true); // 第二引数 true でリフレッシュ
+        const retry = await getAccessToken(req, true);
         accessToken = retry.accessToken;
         updatedCookies = retry.updatedCookies;
         if (accessToken) {
@@ -61,16 +61,21 @@ export async function GET(req: NextRequest) {
 
     const userInfo = await userInfoRes.json();
 
-    // --- レスポンス作成 ---
+    const sessionRes = await fetch(`${AIP_BASE}/api/atprotocol/session`, {
+      headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    });
+
+    const sessionResJson = await sessionRes.json();
+
     const res = NextResponse.json({
       did: userInfo.sub,
       handle: userInfo.handle,
+      scope: sessionResJson.scopes,
       ...userInfo,
     });
 
-    // --- 更新したクッキーをレスポンスに追加 ---
-    if (updatedCookies) {
-    console.log("updatedCookies");
+    // --- アクセストークンが変動した場合のみクッキーをセット ---
+    if (updatedCookies && accessToken !== previousAccessToken) {
       updatedCookies.forEach((c) =>
         res.cookies.set(c.key, c.value, {
           httpOnly: true,

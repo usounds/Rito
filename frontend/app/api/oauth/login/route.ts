@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from '@/logic/HandlePrismaClient';
+import { SCOPE } from "@/logic/HandleOauth";
 
 const AIP_BASE = process.env.OIDC_PROVIDER!;
 const CLIENT_ID = process.env.RITO_CLIENT_ID!;
 const REDIRECT_URI = `${process.env.NEXT_PUBLIC_URL}/api/oauth/callback`;
+
 
 // URLセーフな Base64
 function base64URLEncode(str: Buffer) {
@@ -48,18 +50,18 @@ export async function GET(req: NextRequest) {
   });
 
   // /oauth/authorize へ直接リダイレクト
-  const authParams = new URLSearchParams({
-    response_type: "code",
-    client_id: CLIENT_ID,
-    redirect_uri: REDIRECT_URI,
-    scope: "atproto repo:blue.rito.feed.bookmark repo:blue.rito.service.schema repo:app.bsky.feed.post",
-    state,
-    code_challenge: codeChallenge,
-    code_challenge_method: "S256",
-    policy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/tos`,
-    privacy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/privacy`,
-    ...(handle && { login_hint: handle }),
-  });
+const authParams = new URLSearchParams({
+  response_type: "code",
+  client_id: CLIENT_ID,
+  redirect_uri: REDIRECT_URI,
+  scope: SCOPE.join(" "), // 空白で結合
+  state,
+  code_challenge: codeChallenge,
+  code_challenge_method: "S256",
+  policy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/tos`,
+  privacy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/privacy`,
+  ...(handle && { login_hint: handle }),
+});
 
   const authUrl = `${AIP_BASE}/oauth/authorize?${authParams.toString()}`;
   return NextResponse.redirect(authUrl);

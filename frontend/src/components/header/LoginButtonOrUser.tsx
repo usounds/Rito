@@ -1,6 +1,7 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
 import { useMyBookmark } from "@/state/MyBookmark";
+import { SCOPE } from "@/logic/HandleOauth";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
@@ -129,7 +130,25 @@ export function LoginButtonOrUser() {
                 console.log(`${did} was successfully resumed session.`);
                 if (!did) return;
 
+                if (meData.scope && !SCOPE.every(s => meData.scope!.includes(s))) {
+
+                    notifications.show({
+                        title: 'Error',
+                        message: messages.error.missingscope,
+                        color: 'red',
+                        icon: <X />,
+                        autoClose: 5000,
+                    });
+
+                }
+
                 setActiveDid(did);
+
+                // ユーザープロフィール取得
+                const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
+                    params: { actor: did },
+                });
+                if (userProfile.ok) setUserProf(userProfile.data);
 
                 // ブックマーク取得
                 const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmarks?actor=${encodeURIComponent(did)}`);
@@ -138,11 +157,13 @@ export function LoginButtonOrUser() {
                     setMyBookmark(data);
                 }
 
-                // ユーザープロフィール取得
-                const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-                    params: { actor: did },
-                });
-                if (userProfile.ok) setUserProf(userProfile.data);
+                // Like取得
+                const like = await fetch(`/xrpc/blue.rito.feed.getActorLikes?actor=${encodeURIComponent(did)}`);
+                if (like.ok) {
+                    const data = await like.json();
+                    console.log(data)
+                }
+
 
             } catch (err) {
                 console.error("Error initializing user session:", err);

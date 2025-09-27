@@ -11,7 +11,8 @@
 		"description": "A social bookmarking platform connecting users and developers."
 	},
 	"error": {
-		"delay": "Currently, Rito is experiencing delays, and it may take longer to register or update bookmarks. Please try again after some time."
+		"delay": "Currently, Rito is experiencing delays, and it may take longer to register or update bookmarks. Please try again after some time.",
+		"missingscope": "A new feature has been added in Rito. Please log out and log in once more."
 	},
 	"header": {
 		"home": "Home",
@@ -225,6 +226,9 @@
 			},
 			"delete": {
 				"title": "Delete"
+			},
+			"share": {
+				"title": "Share on Bluesky"
 			}
 		},
 		"inform": {
@@ -288,6 +292,23 @@
 		"inform": {
 			"fine": "Fine",
 			"delay": "Delay"
+		}
+	},
+	"share": {
+		"title": "Share on Bluesky",
+		"description": "Do you want to share this Rito URL in a Bluesky post?",
+		"post": "Shared from Rito!",
+		"ogpdecription": "Check out the bookmark shared by {0}",
+		"button": {
+			"share": "Share",
+			"close": "Close"
+		},
+		"field": {
+			"comment": "コメント"
+		},
+		"inform": {
+			"success": "Post shared successfully",
+			"error": "A system error occurred"
 		}
 	}
 }

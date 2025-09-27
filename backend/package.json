@@ -18,7 +18,7 @@
   "type": "module",
   "dependencies": {
     "@atcute/client": "^4.0.3",
-    "@prisma/client": "^6.16.1",
+    "@prisma/client": "^6.16.2",
     "@skyware/jetstream": "^0.2.5",
     "openai": "^5.19.1",
     "p-limit": "^7.1.1",
@@ -31,6 +31,6 @@
   "devDependencies": {
     "@types/node": "^24.3.1",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.16.1"
+    "prisma": "^6.16.2"
   }
 }

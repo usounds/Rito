@@ -1,9 +1,10 @@
 import { Button, Container, Group, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core';
-import { AtSign, Bookmark, FileText, Search, SquareArrowOutUpRight } from 'lucide-react';
+import { AtSign, Bookmark, FileText, Search, Star } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import classes from './Features.module.scss';
 import { BookmarkCheck } from 'lucide-react';
+import { FaChrome } from "react-icons/fa6";
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
@@ -14,21 +15,36 @@ interface FeatureProps {
   icon: React.ElementType;
   title: React.ReactNode;
   description: React.ReactNode;
+  href?: string
 }
 
-export function Features({ icon: Icon, title, description }: FeatureProps) {
+export function Features({ icon: Icon, title, description, href }: FeatureProps) {
 
   return (
     <div>
       <ThemeIcon variant="light" size={40} radius={40}>
         <Icon size={18} strokeWidth={1.5} /> {/* 👈 strokeWidth に修正 */}
       </ThemeIcon>
-      <Text mt="sm" mb={7}>
-        {title}
-      </Text>
-      <Text size="sm" c="dimmed" lh={1.6}>
-        {description}
-      </Text>
+      {href ? (
+        <>
+          <Text component={Link} href={href} target="_blank" mt="sm" mb={7} style={{ display: 'block' }} >
+            {title}
+          </Text>
+          <Text component={Link} href={href} target="_blank" size="sm" c="dimmed" lh={1.6}>
+            {description}
+          </Text>
+        </>
+      ) :
+        <>
+          <Text mt="sm" mb={7} style={{ display: 'block' }} >
+            {title}
+          </Text>
+
+          <Text size="sm" c="dimmed" lh={1.6}>
+            {description}
+          </Text>
+        </>
+      }
     </div>
   );
 }
@@ -50,6 +66,18 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
       icon: FileText,
       title: t('header.feature.ownerbenefit.title'),
       description: t('header.feature.ownerbenefit.longdescription'),
+    },
+    {
+      icon: FaChrome,
+      title: t('header.feature.chrome.title'),
+      href: 'https://chromewebstore.google.com/detail/blfdajpbkfgdoecglhkbdbaafbgikmph',
+      description: t('header.feature.chrome.longdescription'),
+    },
+    {
+      icon: Star,
+      title: t('header.feature.bookmarklet.title'),
+      href: t('header.feature.bookmarklet.href'),
+      description: t('header.feature.bookmarklet.longdescription'),
     },
   ];
 

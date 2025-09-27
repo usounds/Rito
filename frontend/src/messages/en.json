@@ -35,6 +35,15 @@
 				"title": "Owner Verified Comments",
 				"description": "Owner of ATProtocol-based products can add descriptions to their products",
 				"longdescription": "Product owners can create special bookmarks that display their service description at the top of the bookmark list."
+			},
+			"chrome": {
+				"title": "Chrome Extension",
+				"longdescription": "You can quickly bookmark to Rito from the extension tab. Tab here for details."
+			},
+			"bookmarklet": {
+				"title": "Bookmarklet",
+				"href":"https://blog.usounds.work/posts/rito-update-20250923-en",
+				"longdescription": "You can quickly bookmark to Rito directly from your bookmarks. Tab here for details."
 			}
 		},
 		"termofuse": "Terms of Use",
@@ -95,7 +104,7 @@
 				"placeholder": "Search user handle"
 			},
 			"commentpriority": {
-				"title": "Prioritize displaying comments"
+				"title": "Prioritize Website Description"
 			}
 		},
 		"button": {
@@ -234,7 +243,8 @@
 		"inform": {
 			"error": "A system error has occurred",
 			"success": "Successfully registered",
-			"nobookmark": "No bookmarks"
+			"nobookmark": "No bookmarks",
+			"process": "Processing..."
 		},
 		"error": {
 			"uriRequired": "URI is required"
@@ -287,7 +297,8 @@
 			"bookmark": "Bookmark",
 			"tag": "Tag",
 			"user": "User",
-			"server": "Backend"
+			"server": "Backend",
+			"like": "Like"
 		},
 		"inform": {
 			"fine": "Fine",
@@ -297,14 +308,15 @@
 	"share": {
 		"title": "Share on Bluesky",
 		"description": "Do you want to share this Rito URL in a Bluesky post?",
-		"post": "Shared from Rito!",
+		"post": "Shared bookmark from Rito.",
 		"ogpdecription": "Check out the bookmark shared by {0}",
 		"button": {
 			"share": "Share",
 			"close": "Close"
 		},
 		"field": {
-			"comment": "コメント"
+			"comment": "Comment",
+			"tag": "Tag"
 		},
 		"inform": {
 			"success": "Post shared successfully",

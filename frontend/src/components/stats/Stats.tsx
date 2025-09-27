@@ -8,7 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { Group, Paper, SimpleGrid, Text } from '@mantine/core';
 import classes from './Stats.module.scss';
-import { Bookmark, Server, Tag } from 'lucide-react';
+import { Bookmark, Server, Tag, Heart } from 'lucide-react';
 
 const icons = {
   user: IconUserPlus,
@@ -17,7 +17,8 @@ const icons = {
   coin: IconCoin,
   bookmark: Bookmark,
   tag: Tag,
-  server: Server
+  server: Server,
+  like:Heart,
 };
 
 type StatItem = {

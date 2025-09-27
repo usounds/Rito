@@ -26,7 +26,7 @@ type PageProps = {
     sort?: 'created' | 'indexed';
     tag?: string[];
     handle?: string[];
-    comment?: string;
+    comment?: 'comment' | 'ogp';
   }>;
 };
 
@@ -64,7 +64,7 @@ export default async function BookmarksPage(props: PageProps) {
   //const sort = searchParams.sort === 'created' ? 'created' : 'indexed';
 
   // --- コメントフラグ ---
-  const comment = searchParams.comment === 'true' ? 'true' : undefined;
+  const comment = searchParams.comment;
 
   // --- LatestBookmark に渡す query ---
   const query: Record<string, string | string[]> = { page: pageStr };

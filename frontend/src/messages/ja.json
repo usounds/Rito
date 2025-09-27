@@ -35,6 +35,15 @@
 				"title": "オーナーコメント",
 				"description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
 				"longdescription": "プロダクトのオーナーは、特殊なブックマークを作成できます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
+			},
+			"chrome": {
+				"title": "Chrome機能拡張",
+				"longdescription": "拡張タブからすぐにリトにブックマークすることができます。タップして詳細を参照してください。"
+			},
+			"bookmarklet": {
+				"title": "ブックマークレット",
+				"href":"https://blog.usounds.work/posts/rito-update-20250923-ja",
+				"longdescription": "ブックマークからすぐにブックマークすることができます。タップして詳細を参照してください。"
 			}
 		},
 		"termofuse": "利用規約",
@@ -94,7 +103,7 @@
 				"placeholder": "検索するハンドル"
 			},
 			"commentpriority": {
-				"title": "コメントを優先して表示する"
+				"title": "Webサイトが提供する説明を優先する"
 			}
 		},
 		"button": {
@@ -233,7 +242,8 @@
 		"inform": {
 			"error": "システムエラーが発生しました",
 			"success": "登録しました",
-			"nobookmark": "ブックマークはありません"
+			"nobookmark": "ブックマークはありません",
+			"process": "処理中です..."
 		},
 		"error": {
 			"uriRequired": "URIは必須です"
@@ -286,7 +296,8 @@
 			"bookmark": "ブックマーク",
 			"tag": "タグ",
 			"user": "ユーザー",
-			"server": "バックエンド"
+			"server": "バックエンド",
+			"like": "いいね"
 		},
 		"inform": {
 			"fine": "遅延なし",
@@ -296,14 +307,15 @@
 	"share": {
 		"title": "Blueskyで共有",
 		"description": "このリトのURLをBlueskyの投稿で共有しますか？",
-		"post": "リトからシェアしました！",
+		"post": "ブックマークをシェアしました",
 		"ogpdecription": "{0} さんが共有したブックマークを参照する",
 		"button": {
 			"share": "共有",
 			"close": "閉じる"
 		},
 		"field": {
-			"comment": "コメント"
+			"comment": "コメント",
+			"tag": "タグ"
 		},
 		"inform": {
 			"success": "共有しました",

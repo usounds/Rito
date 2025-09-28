@@ -26,7 +26,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const orderField = query.sort === 'updated' ? 'indexed_at' : 'created_at';
 
   // --- Prisma where 条件 ---
-  const where: any = {};
+  const where: Record<string, unknown> = {};
 
   if (query.handle?.length) {
     where.handle = { in: query.handle };
@@ -107,7 +107,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   // Bookmark.uri ごとに Like を集計
   const uriLikesMap: Record<string, string[]> = {};
   likes.forEach(like => {
-    let matchedUris: string[] = [];
+    const matchedUris: string[] = [];
 
     if (like.subject.startsWith('http')) {
       // URL Like の場合
@@ -159,7 +159,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
 
           const moderationList: string[] = useComment
             ? [
-              ...(comment.moderations  || []),
+              ...(comment.moderations || []),
               ...((!comment.title || !comment.comment) ? (b.moderations || []) : []),
             ]
             : [
@@ -182,7 +182,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
                 date={displayDate}
                 moderations={moderationList}
                 key={new Date().getTime().toString()}
-                likes={b.likes||[]}
+                likes={b.likes || []}
               />
             </div>
           );

@@ -26,31 +26,55 @@ export interface TagRanking {
   count: number;
 }
 
-export function normalizeBookmarks(raw: any[]): Bookmark[] {
+interface RawComment {
+  lang: string;                  // ← ここを string にする
+  title: string | null;
+  comment: string | null;
+  moderation_result?: string | null;
+  bookmark_uri?: string;
+}
+
+
+interface RawBookmark {
+  uri: string;
+  handle: string | null;
+  subject: string;
+  ogp_title?: string | null;
+  ogp_description?: string | null;
+  ogp_image?: string | null;
+  created_at: string | Date;      // ← Date も許容
+  indexed_at: string | Date;      // ← Date も許容
+  moderation_result?: string | null;
+  comments: RawComment[];
+  tags?: { tag: { name: string } }[];
+}
+
+export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
   return raw.map(b => ({
     uri: b.uri,
-    handle: b.handle,
+    handle: b.handle ?? '',   // ← null の場合は空文字に変換
     subject: b.subject,
-    ogpTitle: b.ogp_title,
-    ogpDescription: b.ogp_description,
-    ogpImage: b.ogp_image,
-    createdAt: b.created_at,
-    indexedAt: b.indexed_at,
-    moderations: typeof b.moderation_result === 'string'
-      ? b.moderation_result.split(',').map((s: string) => s.trim())
+    ogpTitle: b.ogp_title ?? '',
+    ogpDescription: b.ogp_description ?? '',
+    ogpImage: b.ogp_image ?? null,
+createdAt: typeof b.created_at === 'string' ? b.created_at : b.created_at.toISOString(),
+indexedAt: typeof b.indexed_at === 'string' ? b.indexed_at : b.indexed_at.toISOString(),
+    moderations: b.moderation_result
+      ? b.moderation_result.split(',').map(s => s.trim())
       : [],
-    comments: b.comments.map((c: any) => ({
-      lang: c.lang,
-      title: c.title,
-      comment: c.comment,
-      moderations: typeof c.moderation_result === 'string'
-        ? c.moderation_result.split(',').map((s: string) => s.trim())
+    comments: b.comments.map(c => ({
+  lang: c.lang === 'en' ? 'en' : 'ja', // string -> "ja" | "en"
+      title: c.title ?? '',
+      comment: c.comment ?? '',
+      moderations: c.moderation_result
+        ? c.moderation_result.split(',').map(s => s.trim())
         : [],
     })),
     tags: Array.isArray(b.tags)
       ? b.tags
-          .map((t: any) => t.tag.name)
-          .sort((a: string, _b: string) => (a === 'Verified' ? -1 : 0))
+          .map(t => t.tag.name)
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          .sort((a, _b) => (a === 'Verified' ? -1 : 0))
       : [],
   }));
 }

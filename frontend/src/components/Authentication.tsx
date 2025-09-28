@@ -1,12 +1,10 @@
 "use client";
 import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import type { Did } from '@atcute/lexicons';
 import {
   Anchor,
   Button,
   Group,
-  PaperProps,
   Stack,
   Switch,
   TextInput,
@@ -20,7 +18,7 @@ import Link from 'next/link';
 import { FaBluesky } from "react-icons/fa6";
 import { useTopLoader } from 'nextjs-toploader';
 
-export function Authentication(props: PaperProps) {
+export function Authentication() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [checked, setChecked] = useState(false);
   const handle = useXrpcAgentStore(state => state.handle);
@@ -28,10 +26,6 @@ export function Authentication(props: PaperProps) {
   const messages = useMessages();
   const locale = useLocale();
   const loader = useTopLoader();
-
-  function sleep(ms: number) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
 
   const form = useForm({
     initialValues: {
@@ -58,8 +52,6 @@ export function Authentication(props: PaperProps) {
     console.log('handleSubmit')
     setIsLoading(true);
 
-    let did: Did | null = null;
-
     notifications.show({
       id: 'login-process',
       title: messages.login.title,
@@ -73,12 +65,12 @@ export function Authentication(props: PaperProps) {
 
       try {
         //　HTTP 解決
-        did = await resolveHandleViaHttp(values.handle);
+        await resolveHandleViaHttp(values.handle);
       } catch (e) {
         console.warn('HTTP resolve failed, trying DoH:', e);
         try {
           // DoH 解決
-          did = await resolveHandleViaDoH(values.handle);
+          await resolveHandleViaDoH(values.handle);
         } catch (e2) {
           console.error('DoH resolve failed:', e2);
           // 両方ダメなら通知出して終了

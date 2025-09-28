@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Badge, Group, Button, ActionIcon } from "@mantine/core";
+import { Badge, Group, ActionIcon } from "@mantine/core";
 import { BadgeCheck } from "lucide-react";
 import { RefreshCcw } from 'lucide-react';
 

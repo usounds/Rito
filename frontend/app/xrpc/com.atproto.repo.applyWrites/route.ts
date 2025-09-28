@@ -35,12 +35,24 @@ async function generateDPoPProof(
   const key = await jose.importJWK({ ...dpopJwk, alg: "ES256", use: "sig" }, "ES256");
 
   // 公開鍵抽出
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { d, ...publicJwk } = dpopJwk;
 
   // URL 正規化（末尾スラッシュを削除）
   const normalizedUrl = url; // そのまま
 
-  const payload: Record<string, any> = {
+  interface DpopPayload {
+    htm: string;
+    htu: string;
+    iat: number;
+    jti: string;
+    ath: string;
+    nonce?: string;
+
+    [key: string]: string | number | undefined; // ← これで JWTPayload と互換
+  }
+
+  const payload: DpopPayload = {
     htm: method.toUpperCase(),
     htu: normalizedUrl,
     iat: Math.floor(Date.now() / 1000),
@@ -48,6 +60,7 @@ async function generateDPoPProof(
     ath: createHash('sha256').update(access_token).digest('base64url'),
     ...(dpopNonce ? { nonce: dpopNonce } : {}),
   };
+
   return await new jose.SignJWT(payload)
     .setProtectedHeader({ alg: "ES256", typ: "dpop+jwt", jwk: publicJwk })
     .sign(key);
@@ -93,7 +106,7 @@ export async function POST(req: NextRequest) {
     // 初回 DPoP proof 生成
     let dpopProof = await generateDPoPProof("POST", xrpcUrl, session.dpop_jwk, session.access_token, undefined);
 
-    let headers = {
+    const headers = {
       Authorization: `DPoP ${session.access_token}`, // ← Bearer → DPoP
       DPoP: dpopProof,
       "Content-Type": "application/json",
@@ -111,7 +124,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    let data: any;
+    let data;
     try { data = await pdsRes.json(); } catch { data = { error: "Failed to parse response" }; }
 
     const response = NextResponse.json({
@@ -136,7 +149,18 @@ export async function POST(req: NextRequest) {
 
     return response
 
-  } catch (err: any) {
-    return NextResponse.json({ success: false, error: `Internal server error: ${err.message || err}` }, { status: 500 });
+  } catch (err: unknown) {
+    let message: string;
+
+    if (err instanceof Error) {
+      message = err.message;
+    } else {
+      message = String(err);
+    }
+
+    return NextResponse.json(
+      { success: false, error: `Internal server error: ${message}` },
+      { status: 500 }
+    );
   }
 }

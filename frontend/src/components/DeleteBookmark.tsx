@@ -54,7 +54,7 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
             });
             setIsNeedReload(true)
             onClose(); // モーダルを閉じる
-        } catch (err) {
+        } catch {
             notifications.show({
                 title: 'Error',
                 message: messages.delete.error.error,

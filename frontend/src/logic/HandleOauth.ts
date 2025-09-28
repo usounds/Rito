@@ -45,14 +45,24 @@ export async function getAccessToken(
   req: Request | { cookies: Map<string, string> | { get: (key: string) => { value?: string } } },
   forceRefresh: boolean = false
 ) {
-  let accessToken: string | undefined = (req as any).cookies.get?.(ACCESS_TOKEN_COOKIE)?.value;
-  let refreshToken: string | undefined = (req as any).cookies.get?.(REFRESH_TOKEN_COOKIE)?.value;
+  interface Cookie {
+    get(name: string): { value: string } | undefined;
+  }
+
+  interface RequestWithCookies extends Request {
+    cookies?: Cookie;
+  }
+
+  const reqWithCookies = req as RequestWithCookies;
+
+  let accessToken = reqWithCookies.cookies?.get(ACCESS_TOKEN_COOKIE)?.value;
+  let refreshToken = reqWithCookies.cookies?.get(REFRESH_TOKEN_COOKIE)?.value;
 
   if (!accessToken && !refreshToken) {
     return { accessToken: null, refreshToken: null, updatedCookies: null };
   }
 
-  let updatedCookies: { key: string; value: string; maxAge: number }[] = [];
+  const updatedCookies: { key: string; value: string; maxAge: number }[] = [];
 
   // forceRefresh が true またはアクセストークンがない場合にリフレッシュ
   if ((forceRefresh || !accessToken) && refreshToken) {

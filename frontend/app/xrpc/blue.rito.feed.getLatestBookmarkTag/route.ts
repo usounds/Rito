@@ -1,7 +1,7 @@
 import { prisma } from '@/logic/HandlePrismaClient';
 import { NextResponse } from "next/server";
 
-export async function GET(_req: Request) {
+export async function GET() {
   try {
     // 直近 40 件のブックマークを取得
     const recentBookmarks = await prisma.bookmark.findMany({

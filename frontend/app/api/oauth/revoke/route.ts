@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AIP_BASE = process.env.OIDC_PROVIDER!;
-const CLIENT_ID = process.env.RITO_CLIENT_ID!;
-const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
-
 export async function GET(req: NextRequest) {
     const referer = req.headers.get("referer");
 
@@ -13,15 +9,20 @@ export async function GET(req: NextRequest) {
     }
 
     try {
+
+        // アクセストークンを無効化
+        /*
+
         // クッキーからアクセストークンとリフレッシュトークンを取得
+        const CLIENT_ID = process.env.RITO_CLIENT_ID!;
+        const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
+
         const accessToken = req.cookies.get("access_token")?.value;
         const refreshToken = req.cookies.get("refresh_token")?.value;
 
         // OIDC /revoke エンドポイント呼び出し
         const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64");
 
-        // アクセストークンを無効化
-        /*
         if (accessToken) {
             const ret = await fetch(`${AIP_BASE}/oauth/revoke`, {
                 method: "POST",
@@ -64,8 +65,20 @@ export async function GET(req: NextRequest) {
         res.cookies.set("refresh_token", "", { httpOnly: true, path: "/", sameSite: "lax", maxAge: 0 });
 
         return res;
-    } catch (err: any) {
-        console.error("Logout error:", err);
-        return NextResponse.json({ error: "Internal Server Error", detail: err.message }, { status: 500 });
+    } catch (err: unknown) {
+        if (err instanceof Error) {
+            console.error("Logout error:", err);
+            return NextResponse.json(
+                { error: "Internal Server Error", detail: err.message },
+                { status: 500 }
+            );
+        } else {
+            console.error("Logout error:", err);
+            return NextResponse.json(
+                { error: "Internal Server Error", detail: String(err) },
+                { status: 500 }
+            );
+        }
     }
+
 }

@@ -24,8 +24,12 @@ export async function GET(req: NextRequest) {
         console.warn("accessToken is null");
         return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       }
-    } catch (err: any) {
-      console.warn("getAccessToken failed:", err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.warn("getAccessToken failed:", err.message);
+      } else {
+        console.warn("getAccessToken failed:", err);
+      }
       return NextResponse.json({ error: "Authentication failed" }, { status: 401 });
     }
 
@@ -88,9 +92,18 @@ export async function GET(req: NextRequest) {
     }
 
     return res;
-  } catch (err: any) {
+  } catch (err: unknown) {
+    let detail: string;
+
+    if (err instanceof Error) {
+      detail = err.message;
+    } else {
+      // 文字列やその他オブジェクトの場合に対応
+      detail = String(err);
+    }
+
     return NextResponse.json(
-      { error: "Internal Server Error", detail: err.message },
+      { error: "Internal Server Error", detail },
       { status: 500 }
     );
   }

@@ -141,17 +141,26 @@ export default function RegistBookmarkPage() {
                 );
 
                 if (localBookmark) {
-                    // ここで localBookmark を初期値としてセット
-                    setUrl(localBookmark.subject); // subject が Bookmark にある前提
-                    setTags(localBookmark.tags?.filter((t: string) => t !== "Verified") ?? []);
-                    setComments(
-                        (["ja", "en"] as ("ja" | "en")[]).map((lang) => ({
-                            lang,
-                            title: "",
-                            comment: "",
-                            moderations: [],
-                        }))
-                    );
+                    setUrl(localBookmark.subject);
+                    setTags(localBookmark.tags?.filter((t) => t !== "Verified") ?? []);
+
+                    const existingComments: Comment[] = localBookmark.comments ?? [];
+
+                    const commentLangs: Comment[] = (["ja", "en"] as ("ja" | "en")[]).map((lang) => {
+                        const existing = existingComments.find((c) => c.lang === lang);
+                        return existing
+                            ? { ...existing, moderations: existing.moderations ?? [] }
+                            : { lang, title: "", comment: "", moderations: [] };
+                    });
+
+                    setComments(commentLangs);
+
+                    const activeLangs = existingComments.map((c) => c.lang);
+                    if (activeLangs.length === 1) {
+                        setActiveTab(activeLangs[0]);
+                    } else {
+                        setActiveTab(locale);
+                    }
                 }
 
                 // 念の為サーバーの最新値を

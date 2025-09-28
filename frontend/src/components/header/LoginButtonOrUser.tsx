@@ -70,7 +70,7 @@ export function LoginButtonOrUser() {
         handleScroll(); // 初回チェック
 
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [pathname, activeDid]);
+    }, [pathname, activeDid, modalSize]);
 
     useEffect(() => {
         const updateSize = () => {

@@ -45,7 +45,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                 via?: string;
             };
 
-            let tagsObj: string[] = tagsLocal
+            const tagsObj: string[] = tagsLocal
             tagsObj.push('rito.blue')
 
             const appBskyFeedPost: MyPost = {
@@ -96,7 +96,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                     icon: <X />
                 });
             }
-        } catch (err) {
+        } catch {
             notifications.show({
                 title: 'Error',
                 message: messages.share.error.error,

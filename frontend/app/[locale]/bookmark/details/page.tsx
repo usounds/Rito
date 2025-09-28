@@ -234,7 +234,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
 
     // Post 情報取得
-    let postDataArray: PostData[] = [];
+    const postDataArray: PostData[] = [];
 
     return (
         <Container size="md" mx="auto">
@@ -247,7 +247,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     </Flex>
                     <Text size="md" component="div">
                         <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                            <Markdown components={{ p: ({  ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
                                 {displayComment}
                             </Markdown>
                         </Spoiler>
@@ -302,7 +302,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                                     {comment.title !== displayTitle && <Text fw={500}>{comment.title}</Text>}
                                                     {comment.comment &&
                                                         <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                            <Markdown components={{ p: ({  ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
                                                                 {comment.comment || t('detail.nocomment')}
                                                             </Markdown>
                                                         </Spoiler>
@@ -347,7 +347,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                             <Text component="div">
                                                 <BlurReveal moderated={post.moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
                                                     <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                        <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                        <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
                                                             {post.text || 'No description available'}
                                                         </Markdown>
                                                     </Spoiler>

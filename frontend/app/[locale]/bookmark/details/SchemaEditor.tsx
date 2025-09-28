@@ -67,8 +67,12 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
           return { ...match, owner, others };
         });
         setData(merged);
-      } catch (e: any) {
-        setError(e.message);
+      } catch (e) {
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError(String(e));
+        }
       } finally {
         setLoading(false);
       }
@@ -202,7 +206,7 @@ export function SchemaEditor({ nsid, domain }: SchemaEditorProps) {
         onClose={close}
         title={messages.editschema.title}
         size="lg"
-        closeOnClickOutside={false} 
+        closeOnClickOutside={false}
         centered
       >
         {selectedNsid && (

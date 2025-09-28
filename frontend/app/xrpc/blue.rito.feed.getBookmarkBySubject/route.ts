@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "subject and did parameter is required" }, { status: 400 });
     }
 
-    const where: any = {};
+    const where: Record<string, unknown>  = {};
     if (subject) where.subject = subject;
     if (did) where.did = did;
 

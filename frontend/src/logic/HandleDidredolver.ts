@@ -3,17 +3,26 @@ import { isDid } from '@atcute/lexicons/syntax';
 import type { Did } from '@atcute/lexicons';
 
 export class ResolverError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = 'ResolverError';
-  }
+	constructor(message: string) {
+		super(message);
+		this.name = 'ResolverError';
+	}
+}
+
+interface PdsService {
+	type: string;
+	serviceEndpoint: string;
+}
+
+interface PlcDirectoryResponse {
+	service: PdsService[];
 }
 
 export async function getPdsUrl(did: string) {
-  const res = await fetch(`https://plc.directory/${did}`);
-  const data = await res.json();
+	const res = await fetch(`https://plc.directory/${did}`);
+	const data: PlcDirectoryResponse = await res.json();
 
-  return data.service.find((s: any) => s.type === "AtprotoPersonalDataServer")?.serviceEndpoint;
+	return data.service.find(s => s.type === "AtprotoPersonalDataServer")?.serviceEndpoint;
 }
 
 export const resolveHandleViaHttp = async (handle: string): Promise<Did> => {

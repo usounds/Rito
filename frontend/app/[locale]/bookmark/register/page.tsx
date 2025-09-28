@@ -66,7 +66,7 @@ export default function RegistBookmarkPage() {
             .filter((t) => t !== "Verified");
         setMyTag(allMyTags);
 
-    }, [myBookmark]);
+    }, [myBookmark, myTag]);
 
     useEffect(() => {
 
@@ -185,8 +185,6 @@ export default function RegistBookmarkPage() {
                     const parse = parseCanonicalResourceUri(aturi)
                     if (parse.ok) {
                         setRkey(parse.value.rkey)
-                        parse.value.repo
-                        parse.value.rkey
                     }
 
                 } else {
@@ -203,7 +201,7 @@ export default function RegistBookmarkPage() {
 
         fetchBookmark();
 
-    }, [subjectParam, titleParam, locale, aturi]);
+    }, [subjectParam, titleParam, locale, aturi, myBookmark]);
 
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {

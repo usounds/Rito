@@ -594,6 +594,7 @@ export default function RegistBookmarkPage() {
                             withAsterisk
                             error={urlError}
                             autoFocus={aturi == null}
+                            disabled={!activeDid || isSubmit}
                             styles={{ input: { fontSize: 16 } }}
                         />
 
@@ -625,7 +626,7 @@ export default function RegistBookmarkPage() {
                             placeholder={messages.create.field.tag.placeholder}
                             maxTags={10}
                             maxLength={25}
-                            disabled={!activeDid}
+                            disabled={!activeDid || isSubmit}
                             leftSection={<Tag size={16} />}
                             clearable
                             styles={{ input: { fontSize: 16 } }}
@@ -653,7 +654,7 @@ export default function RegistBookmarkPage() {
                                     maxLength={50}
                                     onChange={(e) => handleChange("ja", "title", e.currentTarget.value)}
                                     withAsterisk
-                                    disabled={!activeDid}
+                                    disabled={!activeDid || isSubmit}
                                     styles={{ input: { fontSize: 16 } }}
                                 />
                                 <Textarea
@@ -663,7 +664,7 @@ export default function RegistBookmarkPage() {
                                     value={comments.find((c) => c.lang === "ja")?.comment || ""}
                                     maxLength={2000}
                                     autosize
-                                    disabled={!activeDid}
+                                    disabled={!activeDid || isSubmit}
                                     onChange={(e) => handleChange("ja", "comment", e.currentTarget.value)}
                                     styles={{ input: { fontSize: 16 } }}
                                 />
@@ -679,7 +680,7 @@ export default function RegistBookmarkPage() {
                                     maxLength={50}
                                     onChange={(e) => handleChange("en", "title", e.currentTarget.value)}
                                     withAsterisk
-                                    disabled={!activeDid}
+                                    disabled={!activeDid || isSubmit}
                                     styles={{ input: { fontSize: 16 } }}
                                 />
                                 <Textarea
@@ -689,7 +690,7 @@ export default function RegistBookmarkPage() {
                                     value={comments.find((c) => c.lang === "en")?.comment || ""}
                                     maxLength={2000}
                                     autosize
-                                    disabled={!activeDid}
+                                    disabled={!activeDid || isSubmit}
                                     onChange={(e) => handleChange("en", "comment", e.currentTarget.value)}
                                     styles={{ input: { fontSize: 16 } }}
                                 />

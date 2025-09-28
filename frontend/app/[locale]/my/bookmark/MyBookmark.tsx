@@ -87,6 +87,7 @@ export function MyBookmark() {
                                 atUri={b.uri}
                                 moderations={[]}
                                 likes={b.likes || []}
+                                likeDisabled={true}
                             />
                         </div>
                     );

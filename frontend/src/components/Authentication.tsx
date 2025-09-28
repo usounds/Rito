@@ -193,6 +193,10 @@ export function Authentication(props: PaperProps) {
           placeholder={messages.login.field.handle.placeholder}
           value={form.values.handle}
           disabled={isLoading}
+          autoCapitalize={"none"}
+          autoCorrect={"off"}
+          autoComplete={"off"}
+          spellCheck={false}
           onChange={(event) => form.setFieldValue('handle', event.currentTarget.value)}
           error={form.errors.handle}
           radius="md"

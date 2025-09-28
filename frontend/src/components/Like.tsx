@@ -5,11 +5,12 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { AppBskyActorDefs } from '@atcute/bluesky';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip,Modal } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Heart, X } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useMemo, useState } from 'react';
+import { Authentication } from "@/components/Authentication";
 
 interface LikeButtonProps {
     subject: string; // いいね対象のURI
@@ -19,6 +20,7 @@ interface LikeButtonProps {
 
 const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) => {
     const messages = useMessages();
+    const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [isSubmit, setIsSubmit] = useState(false);
     const thisClient = useXrpcAgentStore(state => state.thisClient);
@@ -37,7 +39,11 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
     }, [activeDid, localLikedBy]);
 
     const handleSubmit = async () => {
-        if (!activeDid) return;
+        if (!activeDid) {
+            setLoginOpened(true) 
+            return
+        }
+            
         if (actionDisabled) return;
         setIsSubmit(true);
 
@@ -172,31 +178,52 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
 
     return (
         <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <ActionIcon
-                color="gray"
-                aria-label="Like"
-                onClick={handleSubmit}
-                variant="subtle"
-                disabled={isSubmit || actionDisabled}
-                styles={{
-                    root: {
-                        '&:disabled': {
-                            opacity: 1,                    // 透過を防ぐ
-                            cursor: 'default',             // 必要に応じて
-                        },
-                    },
-                }}
-            >
-                <Heart
-                    style={{
-                        width: '20px',
-                        height: '20px',
-                        strokeWidth: 1.5,
-                        fill: isLiked ? 'red' : 'none', // ここで赤にする
-                        stroke: isLiked ? 'red' : 'currentColor',
-                    }}
-                />
-            </ActionIcon>
+                                    <Modal
+                                        opened={loginOpened}
+                                        onClose={() => setLoginOpened(false)}
+                                        size="md"
+                                        title={messages.login.titleDescription}
+                                        closeOnClickOutside={false}
+                                        centered
+                                    >
+                                        <Authentication />
+                                    </Modal>
+
+            <HoverCard>
+                <HoverCard.Target>
+                    <ActionIcon
+                        color="gray"
+                        aria-label="Like"
+                        onClick={handleSubmit}
+                        variant="subtle"
+                        disabled={isSubmit || actionDisabled}
+                        styles={{
+                            root: {
+                                '&:disabled': {
+                                    opacity: 1,                    // 透過を防ぐ
+                                    cursor: 'default',             // 必要に応じて
+                                },
+                            },
+                        }}
+                    >
+                        <Heart
+                            style={{
+                                width: '20px',
+                                height: '20px',
+                                strokeWidth: 1.5,
+                                fill: isLiked ? 'red' : 'none', // ここで赤にする
+                                stroke: isLiked ? 'red' : 'currentColor',
+                            }}
+                        />
+                    </ActionIcon>
+                </HoverCard.Target>
+                {!activeDid &&
+                    <HoverCard.Dropdown>
+                        {messages.detail.inform.needlogin}
+                    </HoverCard.Dropdown>
+                }
+            </HoverCard>
+
             <HoverCard onOpen={fetchProfiles}>
                 <HoverCard.Target>
                     <Text size="sm" c="dimmed">{localLikedBy.length}</Text>

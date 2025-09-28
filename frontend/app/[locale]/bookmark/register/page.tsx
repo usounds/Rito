@@ -339,17 +339,21 @@ export default function RegistBookmarkPage() {
     const handleSubmit = async () => {
         setUrlError('')
         setTitleError('')
+        setIsSubmit(true)
         if (!url) {
             setUrlError(messages.create.error.urlMandatory)
+            setIsSubmit(false)
             return
         }
         const current = comments.find((c) => c.lang === activeTab);
         if (!current?.title) {
             setTitleError(messages.create.error.titleMandatory);
+            setIsSubmit(false)
             return;
         }
         if (!activeDid) {
             setTitleError("activeDid is null");
+            setIsSubmit(false)
             return;
         }
         if (url.startsWith('https://')) {
@@ -359,13 +363,13 @@ export default function RegistBookmarkPage() {
             const data = await res.json() as { result: boolean }
             if (data.result) {
                 setUrlError(messages.create.error.blockUrl)
+                setIsSubmit(false)
                 return
 
             }
 
         }
 
-        setIsSubmit(true)
 
         let ogpTitleLocal = ogpTitle
         let ogpDescriptionLocal = ogpDescription
@@ -718,6 +722,7 @@ export default function RegistBookmarkPage() {
                                         leftSection={<BookmarkPlus size={16} />}
                                         onClick={handleSubmit}
                                         loading={isSubmit}
+                                        disabled={!activeDid || isSubmit}
                                     >
                                         {messages.create.button.regist}
                                     </Button>

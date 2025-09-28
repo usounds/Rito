@@ -3,6 +3,7 @@ import { prisma } from '@/logic/HandlePrismaClient';
 import { SimpleGrid, Stack } from '@mantine/core';
 import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
 import PaginationWrapper from './PaginationWrapper';
+import { Prisma } from "@prisma/client";
 
 type PageProps = {
   params: { locale: string };
@@ -26,7 +27,11 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const orderField = query.sort === 'updated' ? 'indexed_at' : 'created_at';
 
   // --- Prisma where 条件 ---
-  const where: Record<string, unknown> = {};
+  const where: Prisma.BookmarkWhereInput = {
+    NOT: [
+      { subject: '' },
+    ],
+  };
 
   if (query.handle?.length) {
     where.handle = { in: query.handle };

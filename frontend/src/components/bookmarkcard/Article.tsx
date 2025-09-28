@@ -37,9 +37,10 @@ type ArticleCardProps = {
     moderations: string[]
     likes?: string[];
     key?: string
+    likeDisabled?: boolean
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes,likeDisabled = false }: ArticleCardProps) {
     const messages = useMessages();
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [isClicked, setIsClicked] = useState(false);
@@ -136,7 +137,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 {/* 1行目：アイコン群 */}
                 <Group align="center" style={{ width: '100%' }}>
                     {
-                        <Like subject={url} likedBy={likes || []} />
+                        <Like subject={url} likedBy={likes || []}  actionDisabled={likeDisabled}/>
                     }
                     {atUri && (
                         <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>

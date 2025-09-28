@@ -173,16 +173,14 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
     return (
         <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
             <ActionIcon
-                variant="white"
                 color="gray"
                 aria-label="Like"
                 onClick={handleSubmit}
+                variant="subtle"
                 disabled={isSubmit || actionDisabled}
                 styles={{
                     root: {
-                        backgroundColor: 'white',       // 通常時の背景
                         '&:disabled': {
-                            backgroundColor: 'white',     // disabled でも背景を白に
                             opacity: 1,                    // 透過を防ぐ
                             cursor: 'default',             // 必要に応じて
                         },

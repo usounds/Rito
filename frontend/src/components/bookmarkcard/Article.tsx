@@ -116,8 +116,8 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         </Text>
                     </Spoiler>
 
-                    <Spoiler maxHeight={120} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
-                        <Text component="div" fz="sm" c="dimmed" lineClamp={4} mb="sm">
+                    <Spoiler maxHeight={110} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
+                        <Text component="div" fz="sm" c="dimmed" mb="sm">
                             <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
                                 {comment}
                             </Markdown>

@@ -254,6 +254,8 @@ async function init() {
         })
       );
 
+      const existingLangs = (record.comments ?? []).map(c => c.lang);
+
       // コメントの upsert（個別に moderation）
       for (const c of record.comments ?? []) {
         const commentTexts: string[] = [];
@@ -288,6 +290,16 @@ async function init() {
           })
         );
       }
+
+      // record.comments に存在しない言語は削除
+await prisma.comment.deleteMany({
+  where: {
+    bookmark_uri: aturi,
+    NOT: {
+      lang: { in: existingLangs },
+    },
+  },
+});
 
       async function safeUpsertTag(name: string) {
         try {

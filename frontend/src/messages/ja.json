@@ -243,7 +243,8 @@
 			"error": "システムエラーが発生しました",
 			"success": "登録しました",
 			"nobookmark": "ブックマークはありません",
-			"process": "処理中です..."
+			"process": "処理中です...",
+			"needlogin": "いいねをするには先にログインしてください"
 		},
 		"error": {
 			"uriRequired": "URIは必須です"

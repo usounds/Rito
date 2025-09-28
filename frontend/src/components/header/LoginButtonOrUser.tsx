@@ -158,11 +158,13 @@ export function LoginButtonOrUser() {
                 }
 
                 // Like取得
+                /*
                 const like = await fetch(`/xrpc/blue.rito.feed.getActorLikes?actor=${encodeURIComponent(did)}`);
                 if (like.ok) {
                     const data = await like.json();
                     console.log(data)
                 }
+                    */
 
 
             } catch (err) {

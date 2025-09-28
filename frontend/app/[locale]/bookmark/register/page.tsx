@@ -66,7 +66,7 @@ export default function RegistBookmarkPage() {
             .filter((t) => t !== "Verified");
         setMyTag(allMyTags);
 
-    }, [myBookmark, myTag]);
+    }, [myBookmark]);
 
     useEffect(() => {
 

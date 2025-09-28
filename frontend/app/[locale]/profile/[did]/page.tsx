@@ -49,7 +49,7 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     ? { did: decodedDid }
     : { handle: decodedDid };
 
-  const where: any = {
+  const where: Record<string, unknown> = {
     ...whereBase,
     ...(tags && tags.length > 0
       ? {
@@ -100,7 +100,7 @@ const allTags: string[] = Array.from(
     <Container size="md" mx="auto">
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
 
-      <SearchForm locale={locale} defaultTags={tags} userTags={allTags} did={decodedDid} />
+      <SearchForm defaultTags={tags} userTags={allTags} did={decodedDid} />
 
       {normalized.length === 0 && <Text c="dimmed">{t('profile.inform.nobookmark')}</Text>}
 

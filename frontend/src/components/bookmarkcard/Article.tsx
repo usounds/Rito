@@ -5,7 +5,6 @@ import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
-import { useRouter } from 'next/navigation';
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
     ActionIcon,
@@ -17,7 +16,7 @@ import {
     Spoiler,
     Text
 } from '@mantine/core';
-import { Space, SquarePen, Trash2 } from 'lucide-react';
+import { SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -56,7 +55,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         updateSize();
         window.addEventListener('resize', updateSize);
         return () => window.removeEventListener('resize', updateSize);
-    }, []);
+    }, [modalSize]);
 
     useEffect(() => {
         setIsClicked(false)
@@ -119,7 +118,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
                     <Spoiler maxHeight={110} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
                         <Text component="div" fz="sm" c="dimmed" mb="sm">
-                            <Markdown components={{ p: ({ node, ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                            <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
                                 {comment}
                             </Markdown>
                         </Text>

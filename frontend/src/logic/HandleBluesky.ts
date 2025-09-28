@@ -1,11 +1,12 @@
 
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
+import { Messages } from 'next-intl';
 const MAX_TEXT_LENGTH = 300;
 
 export function buildPost(
     activeComment: string | undefined,
     tags: string[],
-    messages: any
+    messages: Messages
 ) {
     const builder = new RichtextBuilder();
 

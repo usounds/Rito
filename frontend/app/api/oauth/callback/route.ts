@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
 
 
     // トークンをクッキーに保存してリダイレクト
-    const res = NextResponse.redirect(returnTo||'');
+    const res = NextResponse.redirect(returnTo || '');
     res.cookies.set("access_token", tokenData.access_token, {
       httpOnly: true,
       secure: true,
@@ -72,8 +72,19 @@ export async function GET(req: NextRequest) {
     }
 
     return res;
-  } catch (err: any) {
-    console.error("OAuth callback error:", err);
-    return NextResponse.json({ error: "Internal Server Error", detail: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      console.error("OAuth callback error:", err);
+      return NextResponse.json(
+        { error: "Internal Server Error", detail: err.message },
+        { status: 500 }
+      );
+    } else {
+      console.error("OAuth callback error:", err);
+      return NextResponse.json(
+        { error: "Internal Server Error", detail: String(err) },
+        { status: 500 }
+      );
+    }
   }
 }

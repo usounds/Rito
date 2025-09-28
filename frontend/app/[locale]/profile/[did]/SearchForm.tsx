@@ -1,5 +1,5 @@
 'use client';
-import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box } from '@mantine/core';
+import { Button, Group, TagsInput, SimpleGrid, Box } from '@mantine/core';
 import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -12,14 +12,12 @@ import { TagSuggestion } from "@/components/TagSuggest";
 import User from "@/components/user/User";
 
 type SearchFormProps = {
-    locale: string;
     defaultTags?: string[];
     userTags?: string[];
     did: string;
 };
 
 export function SearchForm({
-    locale,
     defaultTags = [],
     userTags = [],
     did,

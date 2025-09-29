@@ -31,7 +31,6 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
     // activeDid が likedBy に含まれているかを判定
     const isLiked = useMemo(() => {
         if (!activeDid) return false;
-        console.log("localLikedBy", localLikedBy);
         return localLikedBy.some(uri =>
             uri.startsWith(`at://${activeDid}/blue.rito.feed.like/`)
         );

@@ -9,18 +9,23 @@ interface TagBadgeProps {
 }
 
 export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
-  if (tags.length === 0) return null;
+  const uniqueTags = Array.from(new Set(tags)); // 重複削除
+
+  if (uniqueTags.length === 0) return null;
 
   return (
     <Group gap={3}>
-      {tags.map((tag, idx) => (
+      {uniqueTags.map((tag, idx) => (
         <Badge
           key={idx}
           variant="light"
           color={tag === 'Verified' ? 'orange' : 'blue'}
           styles={{ root: { textTransform: 'none' } }}
         >
-          <Link href={`/${locale}/bookmark/search?tag=${encodeURIComponent(tag || '')}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+          <Link
+            href={`/${locale}/bookmark/search?tag=${encodeURIComponent(tag || '')}`}
+            style={{ textDecoration: 'none', color: 'inherit' }}
+          >
             <span
               style={{
                 display: 'flex',

@@ -247,7 +247,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                     </Flex>
                     <Text size="md" component="div">
                         <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                            <Markdown components={{ p: ({  ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                            <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
                                 {displayComment}
                             </Markdown>
                         </Spoiler>
@@ -297,19 +297,23 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                     const comment = bookmark.comments?.find(c => c.lang === locale) || bookmark.comments?.[0] || { title: '', comment: '', moderations: [] };
                                     return (
                                         <TimelineItem key={idx}>
-                                            <Text component="div">
-                                                <BlurReveal moderated={comment.moderations?.length > 0} blurAmount={6} overlayText={t('detail.view')}>
-                                                    {comment.title !== displayTitle && <Text fw={500}>{comment.title}</Text>}
-                                                    {comment.comment &&
-                                                        <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                            <Markdown components={{ p: ({  ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
-                                                                {comment.comment || t('detail.nocomment')}
-                                                            </Markdown>
-                                                        </Spoiler>
-                                                    }
-                                                </BlurReveal>
-                                            </Text>
-                                            <ModerationBadges moderations={comment.moderations} />
+                                            {comment.comment?.trim() || comment.title !== displayTitle ? (
+                                                <>
+                                                    <Text component="div">
+                                                        <BlurReveal moderated={comment.moderations?.length > 0} blurAmount={6} overlayText={t('detail.view')}>
+                                                            {comment.title !== displayTitle && <Text fw={500}>{comment.title}</Text>}
+                                                            {comment.comment &&
+                                                                <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                                    <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                                        {comment.comment || t('detail.nocomment')}
+                                                                    </Markdown>
+                                                                </Spoiler>
+                                                            }
+                                                        </BlurReveal>
+                                                    </Text>
+                                                    <ModerationBadges moderations={comment.moderations} />
+                                                </>
+                                            ) : null}
                                             <Group align="center" style={{ whiteSpace: 'nowrap' }}>
                                                 <Like subject={bookmark.uri} likedBy={bookmark.likes || []} />
                                                 <Text c="dimmed" size="sm">
@@ -344,16 +348,20 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                                 <Timeline bulletSize={20} lineWidth={4}>
                                     {postDataArray.map((post, idx) => (
                                         <TimelineItem key={idx}>
-                                            <Text component="div">
-                                                <BlurReveal moderated={post.moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
-                                                    <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                        <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
-                                                            {post.text || 'No description available'}
-                                                        </Markdown>
-                                                    </Spoiler>
-                                                </BlurReveal>
-                                            </Text>
-                                            <ModerationBadges moderations={post.moderations} />
+                                            {post.text?.trim() ? (
+                                                <>
+                                                    <Text component="div">
+                                                        <BlurReveal moderated={post.moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
+                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
+                                                                <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
+                                                                    {post.text}
+                                                                </Markdown>
+                                                            </Spoiler>
+                                                        </BlurReveal>
+                                                    </Text>
+                                                    <ModerationBadges moderations={post.moderations} />
+                                                </>
+                                            ) : null}
                                             <Text c="dimmed" size="sm">
                                                 <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
                                                     {"by @" + post.handle + " "}

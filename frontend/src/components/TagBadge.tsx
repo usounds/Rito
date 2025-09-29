@@ -13,9 +13,15 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
 
   if (uniqueTags.length === 0) return null;
 
+  const sortedTags = uniqueTags.sort((a, b) => {
+    if (a === 'Verified') return -1;
+    if (b === 'Verified') return 1;
+    return a.localeCompare(b);
+  });
+
   return (
     <Group gap={3}>
-      {uniqueTags.map((tag, idx) => (
+      {sortedTags.map((tag, idx) => (
         <Badge
           key={idx}
           variant="light"

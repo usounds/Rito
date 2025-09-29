@@ -308,7 +308,9 @@
 	"share": {
 		"title": "Blueskyで共有",
 		"description": "このリトのURLをBlueskyの投稿で共有しますか？",
-		"post": "ブックマークをシェアしました",
+		"posta": "ブックマークをシェアしました",
+		"postb": "ブックマークを共有しました",
+		"postc": "お気に入りをシェアしました",
 		"ogpdecription": "{0} さんが共有したブックマークを参照する",
 		"button": {
 			"share": "共有",

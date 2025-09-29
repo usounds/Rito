@@ -18,10 +18,19 @@ type ShareOnBlueskyProps = {
 };
 const MAX_TOTAL_LENGTH = 300;
 
+
+
 export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, tags, onClose }) => {
     const messages = useMessages();
+    const postMessages = [
+        messages.share.posta,
+        messages.share.postb,
+        messages.share.postc,
+    ];
     const userProf = useXrpcAgentStore(state => state.userProf);
-    const [shareComment, setShareComment] = useState<string>(messages.share.post);
+    const [shareComment, setShareComment] = useState<string>(
+        postMessages[Math.floor(Math.random() * postMessages.length)]
+    );
     const [tagsLocal, setTags] = useState<string[]>(
         (tags || []).map(tag => tag.replace(/#/g, "").replace(/\s+/g, ""))
     );

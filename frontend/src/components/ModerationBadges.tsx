@@ -12,9 +12,11 @@ export const ModerationBadges: React.FC<ModerationBadgesProps> = ({ moderations 
     return null;
   }
 
+  const uniqueModerations = Array.from(new Set(moderations)); // 重複削除
+
   return (
     <Group mb="xs" gap={3}>
-      {moderations.map((mod) => (
+      {uniqueModerations.map((mod) => (
         <Badge
           key={mod}
           color="gray"

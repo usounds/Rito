@@ -7,7 +7,7 @@ import {
   Group,
   Stack,
   Switch,
-  TextInput,
+  Autocomplete,
 } from '@mantine/core';
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
@@ -20,6 +20,8 @@ import { useTopLoader } from 'nextjs-toploader';
 
 export function Authentication() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const publicAgent = useXrpcAgentStore(state => state.publicAgent);
   const [checked, setChecked] = useState(false);
   const handle = useXrpcAgentStore(state => state.handle);
   const setHandle = useXrpcAgentStore(state => state.setHandle);
@@ -166,6 +168,34 @@ export function Authentication() {
     </Link>
   );
 
+
+  const handleInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = event.currentTarget.value;
+
+    console.log(val)
+
+    if (!val) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await publicAgent.get("app.bsky.actor.searchActorsTypeahead", {
+        params: {
+          q: val,
+          limit: 5,
+        },
+      });
+
+      if (res.ok) {
+        // actor.handle を候補として表示
+        setSuggestions(res.data.actors.map((a) => a.handle));
+      }
+    } catch (err) {
+      console.error("searchActorsTypeahead error", err);
+    }
+  };
+
   return (
     <form onSubmit={form.onSubmit(handleSubmit)}>
       <Stack>
@@ -179,23 +209,26 @@ export function Authentication() {
           }
         />
 
-        <TextInput
+        <Autocomplete
           required
           label={messages.login.field.handle.title}
           placeholder={messages.login.field.handle.placeholder}
           value={form.values.handle}
           disabled={isLoading}
-          autoCapitalize={"none"}
-          autoCorrect={"off"}
-          autoComplete={"off"}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
           spellCheck={false}
-          onChange={(event) => form.setFieldValue('handle', event.currentTarget.value)}
+          onChange={(value) => {
+            form.setFieldValue("handle", value);
+            setSuggestions([]);
+          }}
           error={form.errors.handle}
+          onInput={handleInput}
+          data={suggestions}
           radius="md"
           styles={{
-            input: {
-              fontSize: 16,  // 16pxに設定
-            },
+            input: { fontSize: 16 },
           }}
         />
       </Stack>

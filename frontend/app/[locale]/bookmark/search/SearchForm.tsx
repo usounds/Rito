@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { ClipboardPaste } from 'lucide-react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { TagSuggestion } from "@/components/TagSuggest";
+import { useXrpcAgentStore } from "@/state/XrpcAgent";
 
 type SearchFormProps = {
   locale: string;
@@ -24,7 +25,9 @@ export function SearchForm({
   const [tags, setTags] = useState<string[]>(defaultTags);
   const [myTag, setMyTag] = useState<string[]>([]);
   const [handles, setHandles] = useState<string[]>(defaultHandles);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const tagRanking = useMyBookmark(state => state.tagRanking);
+  const publicAgent = useXrpcAgentStore(state => state.publicAgent);
   const [commentPriority, setCommentPriority] = useState('comment');
   const [isLoading, setIsLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -65,7 +68,7 @@ export function SearchForm({
     const params = new URLSearchParams();
     if (tags.length) params.set('tag', tags.join(','));
     if (handles.length) params.set('handle', handles.join(','));
-    if (commentPriority==='ogp') params.set('comment', commentPriority);
+    if (commentPriority === 'ogp') params.set('comment', commentPriority);
 
     loader.start();
     router.push(`/${locale}/bookmark/search?${params.toString()}`);
@@ -80,6 +83,31 @@ export function SearchForm({
       setTimeout(() => setCopied(false), 2000); // 2秒後にリセット
     } catch (err) {
       console.error("Failed to copy: ", err);
+    }
+  };
+
+  const handleInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const val = event.currentTarget.value;
+
+    if (!val) {
+      setSuggestions([]);
+      return;
+    }
+
+    try {
+      const res = await publicAgent.get("app.bsky.actor.searchActorsTypeahead", {
+        params: {
+          q: val,
+          limit: 5,
+        },
+      });
+
+      if (res.ok) {
+        // actor.handle を候補として表示
+        setSuggestions(res.data.actors.map((a) => a.handle));
+      }
+    } catch (err) {
+      console.error("searchActorsTypeahead error", err);
     }
   };
 
@@ -113,7 +141,12 @@ export function SearchForm({
             label={messages.search.field.user.title}
             placeholder={messages.search.field.user.placeholder}
             value={handles}
-            onChange={setHandles}
+            data={suggestions}
+            onChange={(value) => {
+              setHandles(value);
+              setSuggestions([]);
+            }}
+            onInput={handleInput}
             styles={{ input: { fontSize: 16 } }}
             clearable
           />

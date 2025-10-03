@@ -119,7 +119,7 @@ export function LoginButtonOrUser() {
                 if (activeDid) return
 
                 // まず /api/me から activeDid を取得
-                const meRes = await fetch("/api/me");
+                const meRes = await fetch("/api/me", { credentials: "include" })
                 if (!meRes.ok) {
                     console.warn("Not authenticated yet");
                     setActiveDid(null);

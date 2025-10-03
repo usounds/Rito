@@ -64,8 +64,14 @@ export async function getAccessToken(
 
   const updatedCookies: { key: string; value: string; maxAge: number }[] = [];
 
-  // forceRefresh が true またはアクセストークンがない場合にリフレッシュ
-  if ((forceRefresh || !accessToken) && refreshToken) {
+  // forceRefresh が true の場合はアクセストークンの有無に関係なく更新
+  // アクセストークンがない場合も refreshToken があれば更新
+  if (forceRefresh || !accessToken) {
+    if (!refreshToken) {
+      // 更新できないので null を返す
+      return { accessToken: null, refreshToken: null, updatedCookies: null };
+    }
+
     const tokenData = await refreshAccessToken(refreshToken);
     accessToken = tokenData.access_token;
     refreshToken = tokenData.refresh_token; // 新しいリフレッシュトークンも更新

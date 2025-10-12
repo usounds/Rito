@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react';
 import Markdown from 'react-markdown';
 import Like from "@/components/Like";
 import classes from './Article.module.scss';
+import ArticleImage from "@/components/ArticleImage";
 
 type ArticleCardProps = {
     url: string;
@@ -90,51 +91,16 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         }
     }, [image, domain]);
 
-    function extractYoutubeId(url: string): string {
-        const match = url.match(
-            /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/
-        );
-        return match ? match[1] : '';
-    }
-
     return (
         <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
             <Box style={{ position: 'relative' }} onClick={() => setIsClicked(!isClicked)}>
                 <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={messages.detail.view}>
-                    {imgSrc &&
-                        <Card.Section>
-                            <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}>
-                                {url.match(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be)\//) ? (
-                                    // YouTubeの場合はiframeで埋め込み
-                                    <div style={{ position: 'relative', width: '100%', height: 180 }}>
-                                        <iframe
-                                            width="100%"
-                                            height="100%"
-                                            src={`https://www.youtube.com/embed/${extractYoutubeId(url)}`}
-                                            title="YouTube video player"
-                                            frameBorder="0"
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                            style={{ objectFit: 'cover' }}
-                                        />
-                                    </div>
-                                ) : (
-                                    // それ以外は画像表示
-                                    <img
-                                        src={imgSrc}
-                                        alt="Article Image"
-                                        height={180}
-                                        style={{ width: '100%', objectFit: 'cover' }}
-                                        onError={(e) => {
-                                            e.currentTarget.onerror = null;
-                                            e.currentTarget.src = "https://dummyimage.com/360x180/999/fff.png?text=No+Image";
-                                        }}
-                                    />
-                                )}
-                            </Link>
-                        </Card.Section>
+                    <Card.Section>
+                        <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}>
+                            <ArticleImage url={url} src={imgSrc} />
+                        </Link>
+                    </Card.Section>
 
-                    }
                     <Spoiler maxHeight={120} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
                         <Text fw={500} c="inherit" >
                             <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}

@@ -32,6 +32,7 @@ export function LoginButtonOrUser() {
     const pathname = usePathname(); // 現在のパスを取得
     const [isRegist, setIsRegist] = useState(true)
 
+
     useEffect(() => {
         // パスに /register が含まれていたら非表示
         if (pathname?.includes('/register')) {
@@ -44,6 +45,7 @@ export function LoginButtonOrUser() {
             return;
 
         }
+
 
         const handleScroll = () => {
             const scrollY = window.scrollY;
@@ -86,8 +88,13 @@ export function LoginButtonOrUser() {
         return () => window.removeEventListener('resize', updateSize)
     }, [])
 
+
+    let duplicate = false
+
     useEffect(() => {
 
+        if(duplicate) return
+        duplicate = true;
 
         (async () => {
             try {

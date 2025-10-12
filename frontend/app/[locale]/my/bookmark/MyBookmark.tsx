@@ -82,7 +82,7 @@ export function MyBookmark() {
                                 title={selectedComment?.title ?? ""}
                                 comment={selectedComment?.comment ?? ""}
                                 tags={b.tags}
-                                image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
+                                image={b.ogpImage}
                                 date={new Date(b.indexedAt)}
                                 atUri={b.uri}
                                 moderations={[]}

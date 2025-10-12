@@ -77,19 +77,19 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     },
   });
 
-const allBookmarks = (await prisma.bookmark.findMany({
-  where: whereBase,
-  include: {
-    tags: { include: { tag: true } },
-  },
-})) as Array<{
-  tags: { tag: { name: string } }[];
-}>;
+  const allBookmarks = (await prisma.bookmark.findMany({
+    where: whereBase,
+    include: {
+      tags: { include: { tag: true } },
+    },
+  })) as Array<{
+    tags: { tag: { name: string } }[];
+  }>;
 
-// これで b, bt の any 警告は消える
-const allTags: string[] = Array.from(
-  new Set(allBookmarks.flatMap(b => b.tags.map(bt => bt.tag.name)))
-);
+  // これで b, bt の any 警告は消える
+  const allTags: string[] = Array.from(
+    new Set(allBookmarks.flatMap(b => b.tags.map(bt => bt.tag.name)))
+  );
 
   const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
@@ -126,7 +126,7 @@ const allTags: string[] = Array.from(
                     handle={b.handle}
                     comment={displayComment}
                     tags={b.tags}
-                    image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
+                    image={b.ogpImage}
                     date={displayDate}
                     moderations={moderationList}
                   />

@@ -25,34 +25,75 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
   const take = 12;
   const skip = (page - 1) * take;
   const orderField = query.sort === 'updated' ? 'indexed_at' : 'created_at';
+// --- Prisma where 条件 ---
+const where: Prisma.BookmarkWhereInput = {
+  NOT: [{ subject: '' }],
+};
 
-  // --- Prisma where 条件 ---
-  const where: Prisma.BookmarkWhereInput = {
-    NOT: [
-      { subject: '' },
-    ],
-  };
+if (query.handle?.length) {
+  const includeHandles = query.handle.filter((h) => !h.startsWith('-'));
+  const excludeHandles = query.handle.filter((h) => h.startsWith('-')).map((h) => h.slice(1));
 
-  if (query.handle?.length) {
-    where.handle = { in: query.handle };
+  if (includeHandles.length) {
+    where.handle = { in: includeHandles };
+  }
+  if (excludeHandles.length) {
+    (where.NOT as Prisma.BookmarkWhereInput[]).push({
+      handle: { in: excludeHandles },
+    });
+  }
+}
+
+if (query.tag?.length) {
+  const includeTags = query.tag.filter((t) => !t.startsWith('-'));
+  const excludeTags = query.tag.filter((t) => t.startsWith('-')).map((t) => t.slice(1));
+
+  const andConditions: Prisma.BookmarkWhereInput[] = [];
+
+  if (includeTags.length) {
+    andConditions.push(
+      ...includeTags.map((t) => ({
+        tags: {
+          some: {
+            tag: {
+              name: { equals: t, mode: 'insensitive' as const },
+            },
+          },
+        },
+      })),
+    );
   }
 
-  if (query.tag?.length) {
-    where.AND = query.tag.map((t) => ({
-      tags: { some: { tag: { name: { equals: t, mode: 'insensitive' } } } },
-    }));
+  if (excludeTags.length) {
+    (where.NOT as Prisma.BookmarkWhereInput[]).push(
+      ...excludeTags.map((t) => ({
+        tags: {
+          some: {
+            tag: {
+              name: { equals: t, mode: 'insensitive' as const },
+            },
+          },
+        },
+      })),
+    );
   }
 
-  const bookmarks = await prisma.bookmark.findMany({
-    where,
-    orderBy: { [orderField]: 'desc' },
-    take,
-    skip,
-    include: {
-      comments: true,
-      tags: { include: { tag: true } },
-    },
-  });
+  if (andConditions.length) {
+    where.AND = andConditions;
+  }
+}
+
+const bookmarks = await prisma.bookmark.findMany({
+  where,
+  orderBy: { [orderField]: 'desc' },
+  take,
+  skip,
+  include: {
+    comments: true,
+    tags: { include: { tag: true } },
+  },
+});
+
 
   const totalCount = await prisma.bookmark.count({ where });
   const totalPages = Math.ceil(totalCount / take);
@@ -183,7 +224,7 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
                 handle={b.handle}
                 comment={displayComment || ''}
                 tags={b.tags}
-                image={b.ogpImage || "https://dummyimage.com/360x180/999/fff.png?text=No+Image"}
+                image={b.ogpImage }
                 date={displayDate}
                 moderations={moderationList}
                 key={new Date().getTime().toString()}

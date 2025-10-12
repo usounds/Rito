@@ -1,5 +1,5 @@
 import { useComputedColorScheme } from "@mantine/core";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 interface ArticleImageProps {
   src?: string | null; // OGP画像など
@@ -8,13 +8,13 @@ interface ArticleImageProps {
 }
 
 const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Image" }) => {
-  const computedColorScheme = useComputedColorScheme("light", {
-    getInitialValueInEffect: true,
-  });
+  const computedColorScheme = useComputedColorScheme("light");
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   // 🎨 テーマごとのダミー画像設定
   const dummyUrl =
-    computedColorScheme === "dark"
+    mounted && computedColorScheme === "dark"
       ? "https://dummyimage.com/360x180/333/ccc.png&text=++no+image++"
       : "https://dummyimage.com/360x180/ced4da/ffffff.png&text=++no+image++";
 

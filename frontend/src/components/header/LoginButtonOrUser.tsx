@@ -11,6 +11,7 @@ import { BookmarkPlus, LogOut, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useTopLoader } from 'nextjs-toploader';
 
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
@@ -18,6 +19,7 @@ export function LoginButtonOrUser() {
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const userProf = useXrpcAgentStore(state => state.userProf);
+    const handle = useXrpcAgentStore(state => state.handle);
     const publicAgent = useXrpcAgentStore(state => state.publicAgent);
     const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const isNeedReload = useMyBookmark(state => state.isNeedReload);
@@ -29,6 +31,7 @@ export function LoginButtonOrUser() {
     const [modalSize, setModalSize] = useState('70%')
     const router = useRouter();
     const locale = useLocale();
+    const loader = useTopLoader();
     const pathname = usePathname(); // 現在のパスを取得
     const [isRegist, setIsRegist] = useState(true)
 
@@ -88,12 +91,11 @@ export function LoginButtonOrUser() {
         return () => window.removeEventListener('resize', updateSize)
     }, [])
 
-
     let duplicate = false
 
     useEffect(() => {
 
-        if(duplicate) return
+        if (duplicate) return
         duplicate = true;
 
         (async () => {
@@ -129,8 +131,27 @@ export function LoginButtonOrUser() {
                 const meRes = await fetch("/api/me", { credentials: "include" })
                 if (!meRes.ok) {
                     console.warn("Not authenticated yet");
-                    setActiveDid(null);
-                    return;
+                    if (handle) {
+                        notifications.show({
+                            id: 'login-process',
+                            title: messages.login.title,
+                            message: messages.login.redirect,
+                            color: 'blue',
+                            loading: true,
+                            autoClose: false
+                        });
+
+                        const returnTo = window.location.href;
+                        loader.start()
+                        const url = `/api/oauth/login?handle=${encodeURIComponent(handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
+                        window.location.href = url;
+                        return
+
+                    } else {
+                        setActiveDid(null);
+                        return;
+
+                    }
                 }
                 const meData = await meRes.json();
                 const did = meData.did as ActorIdentifier;
@@ -179,7 +200,7 @@ export function LoginButtonOrUser() {
                 setActiveDid(null);
             }
         })();
-    }, []);
+    }, [handle]);
 
     useEffect(() => {
         if (!isNeedReload || !activeDid) return;

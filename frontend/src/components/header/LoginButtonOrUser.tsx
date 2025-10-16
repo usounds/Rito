@@ -18,6 +18,7 @@ export function LoginButtonOrUser() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
+    const setHandle = useXrpcAgentStore(state => state.setHandle);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const handle = useXrpcAgentStore(state => state.handle);
     const publicAgent = useXrpcAgentStore(state => state.publicAgent);
@@ -244,6 +245,7 @@ export function LoginButtonOrUser() {
 
             setActiveDid(null)
             setUserProf(null)
+            setHandle(null)
         } catch (err) {
             console.error("Logout error:", err);
         }

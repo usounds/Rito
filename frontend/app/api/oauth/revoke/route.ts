@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
 
 export async function GET(req: NextRequest) {
     const referer = req.headers.get("referer");
@@ -8,77 +9,35 @@ export async function GET(req: NextRequest) {
         return new NextResponse("Forbidden", { status: 403 });
     }
 
-    try {
-
-        // アクセストークンを無効化
-        /*
-
-        // クッキーからアクセストークンとリフレッシュトークンを取得
-        const CLIENT_ID = process.env.RITO_CLIENT_ID!;
-        const CLIENT_SECRET = process.env.RITO_CLIENT_SECRET!;
-
-        const accessToken = req.cookies.get("access_token")?.value;
-        const refreshToken = req.cookies.get("refresh_token")?.value;
-
-        // OIDC /revoke エンドポイント呼び出し
-        const basicAuth = Buffer.from(`${CLIENT_ID}:${CLIENT_SECRET}`).toString("base64");
-
-        if (accessToken) {
-            const ret = await fetch(`${AIP_BASE}/oauth/revoke`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization": `Basic ${basicAuth}`,
-                },
-                body: new URLSearchParams({
-                    token: accessToken,
-                    token_type_hint: "access_token",
-                }),
-            });
-            console.log(ret)
-        }
-        */
-
-        // リフレッシュトークンを無効化
-        /*
-        if (refreshToken) {
-            const ret = await fetch(`${AIP_BASE}/oauth/revoke`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                    "Authorization": `Basic ${basicAuth}`,
-                },
-                body: new URLSearchParams({
-                    token: refreshToken,
-                    token_type_hint: "refresh_token",
-                }),
-            });
-            console.log(ret)
-        }
-        */
-
-        // クッキー削除
-        const res = NextResponse.json({ ok: true, message: "Logged out" });
-
-        // クッキー削除
-        res.cookies.set("access_token", "", { httpOnly: true, path: "/", sameSite: "lax", maxAge: 0 });
-        res.cookies.set("refresh_token", "", { httpOnly: true, path: "/", sameSite: "lax", maxAge: 0 });
-
-        return res;
-    } catch (err: unknown) {
-        if (err instanceof Error) {
-            console.error("Logout error:", err);
-            return NextResponse.json(
-                { error: "Internal Server Error", detail: err.message },
-                { status: 500 }
-            );
-        } else {
-            console.error("Logout error:", err);
-            return NextResponse.json(
-                { error: "Internal Server Error", detail: String(err) },
-                { status: 500 }
-            );
-        }
+    // USER_DID クッキーを取得
+    const signedDid = req.cookies.get("USER_DID")?.value;
+    if (!signedDid) {
+        return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const did = verifySignedDid(signedDid);
+    if (!did) {
+        return new NextResponse("Invalid signature", { status: 401 });
+    }
+
+    try {
+        // DID からセッションを復元
+        const session = await client.restore(did);
+
+        // サインアウト
+        await session.signOut();
+
+        // クッキーも削除してログアウト完了
+        const response = NextResponse.json({ ok: true });
+        response.cookies.delete("USER_DID");
+        response.cookies.delete("REDIRECT_TO");
+
+        return response;
+    } catch (err: unknown) {
+        console.error("Sign out error:", err);
+        return NextResponse.json(
+            { error: "Internal Server Error", detail: err instanceof Error ? err.message : String(err) },
+            { status: 500 }
+        );
+    }
 }

@@ -1,21 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from '@/logic/HandlePrismaClient';
-import { SCOPE } from "@/logic/HandleOauth";
-
-const AIP_BASE = process.env.OIDC_PROVIDER!;
-const CLIENT_ID = process.env.RITO_CLIENT_ID!;
-const REDIRECT_URI = `${process.env.NEXT_PUBLIC_URL}/api/oauth/callback`;
-
-
-// URLセーフな Base64
-function base64URLEncode(str: Buffer) {
-  return str.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-// SHA256 ハッシュ
-async function sha256(buffer: string) {
-  return await crypto.subtle.digest("SHA-256", new TextEncoder().encode(buffer));
-}
+import { client } from "@/logic/HandleOauthClientNode";
 
 export async function GET(req: NextRequest) {
   const referer = req.headers.get("referer");
@@ -27,42 +11,39 @@ export async function GET(req: NextRequest) {
 
   const handle = req.nextUrl.searchParams.get("handle") || "";
   const returnTo = req.nextUrl.searchParams.get("returnTo") || "/";
-  const locale = req.nextUrl.searchParams.get("locale") || "ja"; // デフォルトは ja
 
   if (!returnTo.startsWith("/") && !returnTo.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Invalid Return To", { status: 403 });
   }
 
   // PKCE code_verifier と state を生成
-  const codeVerifier = crypto.randomUUID();
-  const state = crypto.randomUUID();
-  const hashBuffer = await sha256(codeVerifier);
-  const codeChallenge = base64URLEncode(Buffer.from(hashBuffer));
-
-  // Prismaに保存
-  await prisma.oAuthState.create({
-    data: {
-      state,
-      code_verifier: codeVerifier,
-      redirect_uri: REDIRECT_URI,
-      return_to: returnTo,  // ここで戻るURLを保存
-    },
-  });
+  const state = `${crypto.randomUUID()}`;
 
   // /oauth/authorize へ直接リダイレクト
-const authParams = new URLSearchParams({
-  response_type: "code",
-  client_id: CLIENT_ID,
-  redirect_uri: REDIRECT_URI,
-  scope: SCOPE.join(" "), // 空白で結合
-  state,
-  code_challenge: codeChallenge,
-  code_challenge_method: "S256",
-  policy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/tos`,
-  privacy_uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/privacy`,
-  ...(handle && { login_hint: handle }),
-});
+  const url = await client.authorize(handle, {
+    prompt: 'none',
+    state,
+  })
 
-  const authUrl = `${AIP_BASE}/oauth/authorize?${authParams.toString()}`;
-  return NextResponse.redirect(authUrl);
+  // レスポンス作成
+  const response = NextResponse.redirect(url);
+
+  // returnTo をクッキーに保存（HTTP Only & Secure）
+  response.cookies.set("REDIRECT_TO", returnTo, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/", // 全ページで参照可能
+    maxAge: 60 * 5, // 5分で期限切れ
+  });
+  response.cookies.set("HANDLE", handle, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/", // 全ページで参照可能
+    maxAge: 60 * 5, // 5分で期限切れ
+  });
+
+
+  return response;
 }

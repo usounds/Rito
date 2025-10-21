@@ -1,7 +1,9 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
 import { useMyBookmark } from "@/state/MyBookmark";
-import { SCOPE } from "@/logic/HandleOauth";
+import { SCOPE } from "@/type/OauthConstants";
+//import { SCOPE } from "@/logic/HandleOauth";
+//import { SCOPE } from "@/logic/HandleOauthClientNode";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
@@ -13,6 +15,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useTopLoader } from 'nextjs-toploader';
 
+
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -21,7 +24,6 @@ export function LoginButtonOrUser() {
     const setHandle = useXrpcAgentStore(state => state.setHandle);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const handle = useXrpcAgentStore(state => state.handle);
-    const publicAgent = useXrpcAgentStore(state => state.publicAgent);
     const setMyBookmark = useMyBookmark(state => state.setMyBookmark);
     const isNeedReload = useMyBookmark(state => state.isNeedReload);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
@@ -155,29 +157,39 @@ export function LoginButtonOrUser() {
                     }
                 }
                 const meData = await meRes.json();
-                const did = meData.did as ActorIdentifier;
+                const profile = meData.profile
+                setUserProf(profile)
+                const did = meData.profile.did as ActorIdentifier;
                 console.log(`${did} was successfully resumed session.`);
                 if (!did) return;
 
-                if (meData.scope && !SCOPE.every(s => meData.scope!.includes(s))) {
+                // meData.scope を配列化（空白区切り文字列 → 配列）
+                const scopeList = Array.isArray(meData.scope)
+                    ? meData.scope
+                    : meData.scope.split(/\s+/).filter(Boolean); // 連続空白を除去
 
+                // replacedScope は "include:..." 置き換え済みのスコープ配列
+                const replacedScope = SCOPE.map(scope =>
+                    scope === "include:blue.rito.permissionSet"
+                        ? "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema"
+                        : scope
+                );
+
+                // すべての必要スコープが含まれているか判定
+                const missing = replacedScope.filter(s => !scopeList.includes(s));
+
+                if (missing.length > 0) {
+                    console.error("Missing scopes:", missing);
                     notifications.show({
-                        title: 'Error',
+                        title: "Error",
                         message: messages.error.missingscope,
-                        color: 'red',
+                        color: "red",
                         icon: <X />,
                         autoClose: 5000,
                     });
-
                 }
 
                 setActiveDid(did);
-
-                // ユーザープロフィール取得
-                const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-                    params: { actor: did },
-                });
-                if (userProfile.ok) setUserProf(userProfile.data);
 
                 // ブックマーク取得
                 const res = await fetch(`/xrpc/blue.rito.feed.getActorBookmarks?actor=${encodeURIComponent(did)}`);

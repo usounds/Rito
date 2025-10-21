@@ -114,6 +114,20 @@ model OAuthState {
   @@map("OAuthState") // PostgreSQL 上のテーブル名を変更
 }
 
+model NodeOAuthState {
+  key         String   @id
+  state       String
+
+  @@map("NodeOAuthState")
+}
+
+model NodeOAuthSession {
+  key         String   @id
+  session     String
+
+  @@map("NodeOAuthSession") 
+}
+
 model Like {
   aturi      String   @id       // ← 主キーを at-uri に変更
   subject     String   // subject(URL) or uri(ATURI)

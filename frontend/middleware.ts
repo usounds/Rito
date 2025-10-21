@@ -24,6 +24,6 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     // 言語プレフィックスを自動付与する対象のパス
-    '/((?!api|xrpc|trpc|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|callback).*)',
+    '/((?!api|xrpc|.well-known|trpc|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|callback).*)',
   ],
 };

@@ -17,12 +17,10 @@ export async function GET(req: NextRequest) {
   }
 
   // PKCE code_verifier と state を生成
-  const state = `${crypto.randomUUID()}`;
 
   // /oauth/authorize へ直接リダイレクト
   const url = await client.authorize(handle, {
     prompt: 'none',
-    state,
   })
 
   // レスポンス作成

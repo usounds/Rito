@@ -18,12 +18,11 @@ export async function GET(req: NextRequest) {
   const error = params.get("error");
 if (error === "consent_required" || error === "login_required") {
   // サイレントサインインのリトライ
-  const state = crypto.randomUUID();
 const handle = req.cookies.get("HANDLE")?.value;
 
   if (!handle) return NextResponse.redirect("/");
 
-  const url = await client.authorize(handle, { state });
+  const url = await client.authorize(handle);
   return NextResponse.redirect(url);
 }
 

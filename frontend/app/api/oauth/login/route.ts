@@ -15,9 +15,6 @@ export async function GET(req: NextRequest) {
   if (!returnTo.startsWith("/") && !returnTo.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Invalid Return To", { status: 403 });
   }
-
-  // PKCE code_verifier と state を生成
-
   // /oauth/authorize へ直接リダイレクト
   const url = await client.authorize(handle, {
     prompt: 'none',
@@ -34,6 +31,8 @@ export async function GET(req: NextRequest) {
     path: "/", // 全ページで参照可能
     maxAge: 60 * 5, // 5分で期限切れ
   });
+
+  //  prompt: 'none'失敗時にハンドルをクッキーに保存
   response.cookies.set("HANDLE", handle, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",

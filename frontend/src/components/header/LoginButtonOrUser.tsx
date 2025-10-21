@@ -179,7 +179,6 @@ export function LoginButtonOrUser() {
                 const missing = replacedScope.filter(s => !scopeList.includes(s));
 
                 if (missing.length > 0) {
-                    console.error("Missing scopes:", missing);
                     notifications.show({
                         title: "Error",
                         message: messages.error.missingscope,
@@ -197,16 +196,6 @@ export function LoginButtonOrUser() {
                     const data: Bookmark[] = await res.json();
                     setMyBookmark(data);
                 }
-
-                // Like取得
-                /*
-                const like = await fetch(`/xrpc/blue.rito.feed.getActorLikes?actor=${encodeURIComponent(did)}`);
-                if (like.ok) {
-                    const data = await like.json();
-                    console.log(data)
-                }
-                    */
-
 
             } catch (err) {
                 console.error("Error initializing user session:", err);

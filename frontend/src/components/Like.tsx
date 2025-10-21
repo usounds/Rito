@@ -162,6 +162,8 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
         // 重複を排除して最大5件
         const limitedDids = Array.from(new Set(dids)).slice(0, 5);
 
+        if(limitedDids.length===0) return
+
         try {
             const res = await publicAgent.get(`app.bsky.actor.getProfiles`, {
                 params: { actors: limitedDids as ActorIdentifier[] },

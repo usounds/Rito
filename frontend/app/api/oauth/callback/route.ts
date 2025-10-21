@@ -47,9 +47,6 @@ const handle = req.cookies.get("HANDLE")?.value;
       });
       response.cookies.delete({ name: "REDIRECT_TO", path: "/" });
       response.cookies.delete({ name: "HANDLE", path: "/" });
-
-      NextResponse.redirect(redirectTo);
-
       return response
 
   } catch {

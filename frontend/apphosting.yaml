@@ -15,6 +15,8 @@ env:
     secret: projects/743932493666/secrets/NEXT_PUBLIC_URL/versions/1
   - variable: DATABASE_URL
     secret: projects/743932493666/secrets/DATABASE_URL/versions/3
+  - variable: COOKIE_SECRET
+    secret: projects/743932493666/secrets/COOKIE_SECRET/versions/1
   - variable: PRIVATE_KEY
     secret: projects/743932493666/secrets/PRIVATE_KEY/versions/1
   #  availability:

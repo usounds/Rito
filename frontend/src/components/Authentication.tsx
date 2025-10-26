@@ -219,6 +219,7 @@ export function Authentication() {
           placeholder={messages.login.field.handle.placeholder}
           value={form.values.handle}
           disabled={isLoading}
+          leftSection="@"
           autoCapitalize="none"
           autoCorrect="off"
           autoComplete="off"

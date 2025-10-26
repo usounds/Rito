@@ -1,2 +1,3 @@
 OPENAI_API_KEY="openai key here"
 DATABASE_URL="postgresql://url"
+JETSREAM_URL="wss://jetstream2.us-west.bsky.network/subscribe"

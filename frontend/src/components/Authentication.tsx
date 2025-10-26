@@ -124,7 +124,9 @@ export function Authentication() {
       const returnTo = window.location.href;
       loader.start()
       setIsLoginProcess(true)
-      const url = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
+      const cleanHandle = values.handle.replace(/^@/, ''); // 先頭の@を除去
+      setHandle(cleanHandle);
+      const url = `/api/oauth/login?handle=${encodeURIComponent(cleanHandle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
       window.location.href = url;
 
     } catch (e) {

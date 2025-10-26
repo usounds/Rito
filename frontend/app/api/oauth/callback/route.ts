@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
     response.cookies.set("USER_DID", signDid(session.did), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      sameSite: "strict",
       path: "/",
       maxAge: 60 * 60 * 24 * 60, // 60日
     });

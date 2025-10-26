@@ -16,10 +16,13 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Invalid Return To", { status: 403 });
   }
   // /oauth/authorize へ直接リダイレクト
-  const url = await client.authorize(handle, {
-    prompt: 'none',
-  })
-
+  let url;
+  try {
+    url = await client.authorize(handle, { prompt: 'none' });
+  } catch {
+    // fallback: 通常ログインへ
+    url = await client.authorize(handle);
+  }
   // レスポンス作成
   const response = NextResponse.redirect(url);
 

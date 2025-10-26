@@ -2,8 +2,6 @@
 import { Authentication } from "@/components/Authentication";
 import { useMyBookmark } from "@/state/MyBookmark";
 import { SCOPE } from "@/type/OauthConstants";
-//import { SCOPE } from "@/logic/HandleOauth";
-//import { SCOPE } from "@/logic/HandleOauthClientNode";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
@@ -19,6 +17,8 @@ import { useTopLoader } from 'nextjs-toploader';
 export function LoginButtonOrUser() {
     const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
+    const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
+    const setIsLoginProcess = useXrpcAgentStore(state => state.setIsLoginProcess);
     const setActiveDid = useXrpcAgentStore(state => state.setActiveDid);
     const setUserProf = useXrpcAgentStore(state => state.setUserProf);
     const setHandle = useXrpcAgentStore(state => state.setHandle);
@@ -134,7 +134,7 @@ export function LoginButtonOrUser() {
                 const meRes = await fetch("/api/me", { credentials: "include" })
                 if (!meRes.ok) {
                     console.warn("Not authenticated yet");
-                    if (handle) {
+                    if (handle && !isLoginProcess) {
                         notifications.show({
                             id: 'login-process',
                             title: messages.login.title,
@@ -161,6 +161,7 @@ export function LoginButtonOrUser() {
                 setUserProf(profile)
                 const did = meData.profile.did as ActorIdentifier;
                 console.log(`${did} was successfully resumed session.`);
+                setIsLoginProcess(false);
                 if (!did) return;
 
                 // meData.scope を配列化（空白区切り文字列 → 配列）

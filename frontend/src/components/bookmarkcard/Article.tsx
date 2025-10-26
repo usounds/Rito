@@ -119,9 +119,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     </Spoiler>
 
                     <Group mb='xs'>
-                        {typeof window !== 'undefined' && (
-                            <TagBadge tags={tags} locale={locale} />
-                        )}
+                        <TagBadge tags={tags} locale={locale} />
                     </Group>
                 </BlurReveal>
             </Box>

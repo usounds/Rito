@@ -8,7 +8,12 @@ const COOKIE_SECRET = process.env.COOKIE_SECRET || "secret";
 
 // 署名付き DID を検証して返す
 export function verifySignedDid(signedDid: string): string | null {
-  const [did, signature] = signedDid.split(".");
+  const index = signedDid.lastIndexOf(".");
+  if (index === -1) return null;
+
+  const did = signedDid.slice(0, index);
+  const signature = signedDid.slice(index + 1);
+
   if (!did || !signature) return null;
 
   const hmac = crypto.createHmac("sha256", COOKIE_SECRET);

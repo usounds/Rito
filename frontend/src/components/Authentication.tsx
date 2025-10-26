@@ -175,9 +175,6 @@ export function Authentication() {
 
   const handleInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const val = event.currentTarget.value;
-
-    console.log(val)
-
     if (!val) {
       setSuggestions([]);
       return;

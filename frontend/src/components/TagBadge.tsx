@@ -1,3 +1,4 @@
+"use client"
 import React, { useState, useEffect } from 'react';
 import { Group, Badge } from '@mantine/core';
 import { BadgeCheck } from 'lucide-react';

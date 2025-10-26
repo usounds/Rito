@@ -22,6 +22,7 @@ export function Authentication() {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const publicAgent = useXrpcAgentStore(state => state.publicAgent);
+  const setIsLoginProcess = useXrpcAgentStore(state => state.setIsLoginProcess);
   const [checked, setChecked] = useState(false);
   const handle = useXrpcAgentStore(state => state.handle);
   const setHandle = useXrpcAgentStore(state => state.setHandle);
@@ -122,6 +123,7 @@ export function Authentication() {
     try {
       const returnTo = window.location.href;
       loader.start()
+      setIsLoginProcess(true)
       const url = `/api/oauth/login?handle=${encodeURIComponent(values.handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
       window.location.href = url;
 

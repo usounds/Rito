@@ -9,6 +9,7 @@ type State = {
   userProf: AppBskyActorDefs.ProfileViewDetailed | null;
   publicAgent: Client;
   thisClient: Client;
+  isLoginProcess?: boolean;
 };
 
 type Action = {
@@ -17,6 +18,7 @@ type Action = {
   setUserProf: (userProf: AppBskyActorDefs.ProfileViewDetailed | null) => void;
   setPublicAgent: (publicAgent: Client) => void;
   setThisClient: (thisClient: Client) => void;
+  setIsLoginProcess: (isLoginProcess: boolean) => void;
 };
 
 export const useXrpcAgentStore = create<State & Action>()(
@@ -35,6 +37,7 @@ export const useXrpcAgentStore = create<State & Action>()(
           service: `${process.env.NEXT_PUBLIC_URL}`,
         }),
       }),
+      isLoginProcess : false,
 
       setActiveDid: (did: string | null) => set({ activeDid: did }),
       setHandle: (handle: string | null) => set({ handle }), // ← setter 実装
@@ -42,12 +45,14 @@ export const useXrpcAgentStore = create<State & Action>()(
         set({ userProf }),
       setPublicAgent: (publicAgent: Client) => set({ publicAgent }),
       setThisClient: (thisClient: Client) => set({ thisClient }),
+      setIsLoginProcess: (isLoginProcess: boolean) => set({ isLoginProcess }),
     }),
     {
       name: 'xrpc-agent-store', 
       partialize: (state) => ({
         activeDid: state.activeDid,
         handle: state.handle,
+        isLoginProcess: state.isLoginProcess,
       }),
     }
   )

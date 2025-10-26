@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Group, Badge } from '@mantine/core';
 import { BadgeCheck } from 'lucide-react';
 import Link from 'next/link';
@@ -9,11 +9,14 @@ interface TagBadgeProps {
 }
 
 export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
+  const [mounted, setMounted] = useState(false);
   const uniqueTags = Array.from(new Set(tags)); // 重複削除
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null; // SSR では描画しない
 
   if (uniqueTags.length === 0) return null;
 
-  const sortedTags = uniqueTags.sort((a, b) => {
+  const sortedTags = [...uniqueTags].sort((a, b) => {
     if (a === 'Verified') return -1;
     if (b === 'Verified') return 1;
     return a.localeCompare(b);

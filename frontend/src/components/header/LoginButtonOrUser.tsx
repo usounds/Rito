@@ -149,14 +149,12 @@ export function LoginButtonOrUser() {
                                     await resolveHandleViaDoH(handle);
                                 } catch (e2) {
                                     console.error('DoH resolve failed:', e2);
-                                    setIsLoginProcess(false);
                                     // 両方ダメなら通知出して終了
                                     return;
                                 }
                             }
 
                         } catch {
-                            setIsLoginProcess(false);
                             return;
                         }
 

@@ -20,10 +20,11 @@ import { SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import Markdown from 'react-markdown';
 import Like from "@/components/Like";
 import classes from './Article.module.scss';
 import ArticleImage from "@/components/ArticleImage";
+import dynamic from 'next/dynamic';
+const Markdown = dynamic(() => import('react-markdown'), { ssr: false });
 
 type ArticleCardProps = {
     url: string;

@@ -169,7 +169,8 @@ export function LoginButtonOrUser() {
 
                         const returnTo = window.location.href;
                         loader.start()
-                        const url = `/api/oauth/login?handle=${encodeURIComponent(handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
+                        const csrf = await fetch("/api/csrf").then(r => r.json());
+                        const url = `/api/oauth/login?handle=${encodeURIComponent(handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}&csrf=${csrf.csrfToken}`;
                         window.location.href = url;
                         return
 

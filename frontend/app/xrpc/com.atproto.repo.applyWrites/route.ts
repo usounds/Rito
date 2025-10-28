@@ -6,6 +6,13 @@ import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
 export async function POST(req: NextRequest) {
   const referer = req.headers.get("referer");
 
+  const csrfCookie = req.cookies.get("CSRF_TOKEN")?.value;
+  const csrfHeader = req.headers.get("x-csrf-token");
+
+  if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+    return new NextResponse("Invalid CSRF token", { status: 403 });
+  }
+
   if (referer && !referer.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Forbidden", { status: 403 });
   }
@@ -25,8 +32,18 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   try {
     const result = await agent.com.atproto.repo.applyWrites(body)
-    return NextResponse.json(result.data, { status: result.success ? 200 : 500 });
-    
+    const response = NextResponse.json(result.data, {
+      status: result.success ? 200 : 500,
+    });
+
+    // Cookie を削除
+    response.cookies.delete({
+      name: 'CSRF_TOKEN',
+      path: '/', 
+    });
+
+    return response;
+
   } catch (e) {
     return NextResponse.json({ 'error': e }, { status: 500 });
 

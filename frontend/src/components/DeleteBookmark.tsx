@@ -30,6 +30,7 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
 
         setLoading(true);
         try {
+            const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
             await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: repo,
@@ -40,6 +41,9 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
                             rkey: rkey,
                         },
                     ],
+                },
+                headers: {
+                    "X-CSRF-Token": csrfToken,
                 },
             });
 

@@ -5,7 +5,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { AppBskyActorDefs } from '@atcute/bluesky';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip,Modal } from '@mantine/core';
+import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip, Modal } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Heart, X } from 'lucide-react';
 import { useMessages } from 'next-intl';
@@ -39,10 +39,10 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
 
     const handleSubmit = async () => {
         if (!activeDid) {
-            setLoginOpened(true) 
+            setLoginOpened(true)
             return
         }
-            
+
         if (actionDisabled) return;
         setIsSubmit(true);
 
@@ -71,10 +71,14 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
             ];
 
             try {
+                const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
                 const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                     input: {
                         repo: activeDid as ActorIdentifier,
                         writes: writes,
+                    },
+                    headers: {
+                        "X-CSRF-Token": csrfToken,
                     },
                 });
 
@@ -120,10 +124,14 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
                 };
             });
 
+            const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
             const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: activeDid as ActorIdentifier,
                     writes,
+                },
+                headers: {
+                    "X-CSRF-Token": csrfToken,
                 },
             });
             notifications.hide(id);
@@ -162,7 +170,7 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
         // 重複を排除して最大5件
         const limitedDids = Array.from(new Set(dids)).slice(0, 5);
 
-        if(limitedDids.length===0) return
+        if (limitedDids.length === 0) return
 
         try {
             const res = await publicAgent.get(`app.bsky.actor.getProfiles`, {
@@ -179,16 +187,16 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
 
     return (
         <Box style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                    <Modal
-                                        opened={loginOpened}
-                                        onClose={() => setLoginOpened(false)}
-                                        size="md"
-                                        title={messages.login.titleDescription}
-                                        closeOnClickOutside={false}
-                                        centered
-                                    >
-                                        <Authentication />
-                                    </Modal>
+            <Modal
+                opened={loginOpened}
+                onClose={() => setLoginOpened(false)}
+                size="md"
+                title={messages.login.titleDescription}
+                closeOnClickOutside={false}
+                centered
+            >
+                <Authentication />
+            </Modal>
 
             <HoverCard>
                 <HoverCard.Target>

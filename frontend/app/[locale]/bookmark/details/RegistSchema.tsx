@@ -23,7 +23,7 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
     const [loading, setLoading] = useState(false);
 
     // 初期 schemaValue を決定
-    const initialSchemaValue = (!schema )
+    const initialSchemaValue = (!schema)
         ? `https://${domain}/`
         : schema;
 
@@ -129,10 +129,15 @@ export const RegistSchema: React.FC<RegistSchemaProps> = ({ nsid, isCreate, sche
         });
 
         try {
+            
+            const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
             const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: activeDid as ActorIdentifier,
                     writes: writes
+                },
+                headers: {
+                    "X-CSRF-Token": csrfToken,
                 },
             });
 

@@ -11,6 +11,14 @@ export async function GET(req: NextRequest) {
 
   const handle = req.nextUrl.searchParams.get("handle") || "";
   const returnTo = req.nextUrl.searchParams.get("returnTo") || "/";
+  const csrfParam = req.nextUrl.searchParams.get("csrf");
+  const csrfCookie = req.cookies.get("CSRF_TOKEN")?.value;
+
+  if (!csrfParam || !csrfCookie || csrfParam !== csrfCookie) {
+    return new NextResponse("Invalid CSRF token", { status: 403 });
+  }
+
+
 
   if (!returnTo.startsWith("/") && !returnTo.startsWith(process.env.NEXT_PUBLIC_URL!)) {
     return new NextResponse("Invalid Return To", { status: 403 });
@@ -43,7 +51,8 @@ export async function GET(req: NextRequest) {
     path: "/", // 全ページで参照可能
     maxAge: 60 * 5, // 5分で期限切れ
   });
-
+  
+  response.cookies.delete({ name: "CSRF_TOKEN", path: "/" });
 
   return response;
 }

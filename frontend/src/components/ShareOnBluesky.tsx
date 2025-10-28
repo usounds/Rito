@@ -83,10 +83,14 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                 value: appBskyFeedPost as unknown as Record<string, unknown>,
             });
 
+            const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
             const ret = await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
                     repo: activeDid as ActorIdentifier,
                     writes: writes
+                },
+                headers: {
+                    "X-CSRF-Token": csrfToken,
                 },
             });
 

@@ -122,11 +122,13 @@ export function Authentication() {
 
     try {
       const returnTo = window.location.href;
+      
       loader.start()
+      const csrf = await fetch("/api/csrf").then(r => r.json());
       setIsLoginProcess(true)
       const cleanHandle = values.handle.replace(/^@/, ''); // 先頭の@を除去
       setHandle(cleanHandle);
-      const url = `/api/oauth/login?handle=${encodeURIComponent(cleanHandle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}`;
+      const url = `/api/oauth/login?handle=${encodeURIComponent(cleanHandle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}&csrf=${csrf.csrfToken}`;
       window.location.href = url;
 
     } catch (e) {

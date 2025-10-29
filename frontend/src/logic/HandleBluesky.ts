@@ -1,6 +1,8 @@
 
 import RichtextBuilder from '@atcute/bluesky-richtext-builder';
 import { Messages } from 'next-intl';
+import { detectAll } from 'tinyld';
+
 const MAX_TEXT_LENGTH = 300;
 
 export function buildPost(
@@ -38,6 +40,29 @@ export function buildPost(
         text: builder.text,
         facets: builder.facets,
         createdAt: new Date().toISOString(),
-        via: messages.title
+        via: messages.title,
+        langs: detectTopLanguages(baseText)||[],
     };
+}
+
+/**
+ * テキストの言語を検知し、上位2件（または1件）を返す
+ * @param text 判定対象の文字列
+ * @returns 言語コード配列（例: ['ja', 'en']）
+ */
+export function detectTopLanguages(text: string): string[] {
+  // detectAllで候補を取得
+  const results = detectAll(text);
+
+  if (!results || results.length === 0) {
+    return [];
+  }
+
+  // accuracy順にソート（念のため）
+  const sorted = results.sort((a, b) => b.accuracy - a.accuracy);
+
+  // 上位2件を取得（候補が1件なら1件のみ）
+  const topLanguages = sorted.slice(0, 2).map(r => r.lang);
+
+  return topLanguages;
 }

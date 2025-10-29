@@ -1,21 +1,38 @@
-import { FlatCompat } from '@eslint/eslintrc';
-
-const compat = new FlatCompat({
-  baseDirectory: process.cwd(),
-});
+import nextPlugin from '@next/eslint-plugin-next';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import tsParser from '@typescript-eslint/parser';
 
 export default [
-  // 既存の設定
-  ...compat.extends(
-    'next/core-web-vitals',
-    'plugin:@typescript-eslint/recommended'
-  ),
+  // 🟥 まず最初に全体 ignore を定義する（Flat Configでは順序が重要）
   {
+    ignores: [
+      '**/.next/**',
+      '**/node_modules/**',
+      '**/out/**',
+      '**/dist/**',
+      'next-env.d.ts',
+      'src/lexicons/**',
+    ],
+  },
+
+  // 🟩 lint 対象の定義
+  {
+    files: ['**/*.{ts,tsx,js,jsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@next/next': nextPlugin,
+      '@typescript-eslint': tsPlugin,
+    },
     rules: {
+      ...nextPlugin.configs['core-web-vitals'].rules,
+      ...tsPlugin.configs.recommended.rules,
       '@typescript-eslint/no-require-imports': 'error',
     },
-  },
-  {
-    ignores: ['.next/*', 'node_modules/*', "src/lexicons/*",  'next-env.d.ts'],
   },
 ];

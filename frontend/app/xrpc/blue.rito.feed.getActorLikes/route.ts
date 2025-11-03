@@ -26,7 +26,7 @@ export async function GET(req: Request) {
       });
 
       if (!user) {
-        return NextResponse.json([], { status: 200 });
+        return NextResponse.json({ error: "Handle not found" }, { status: 404 });
       }
 
       likes = await prisma.like.findMany({

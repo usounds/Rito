@@ -137,7 +137,9 @@ async function init() {
       if (parts.length < 2) return false;
 
       // 1個目が @handle であることを確認
-      if (parts[0] !== `@${userProfHandle}`) return false;
+      if (parts[0] !== userProfHandle && parts[0] !== `@${userProfHandle}`) {
+        return false;
+      }
 
       return true;
     } catch {
@@ -292,14 +294,14 @@ async function init() {
       }
 
       // record.comments に存在しない言語は削除
-await prisma.comment.deleteMany({
-  where: {
-    bookmark_uri: aturi,
-    NOT: {
-      lang: { in: existingLangs },
-    },
-  },
-});
+      await prisma.comment.deleteMany({
+        where: {
+          bookmark_uri: aturi,
+          NOT: {
+            lang: { in: existingLangs },
+          },
+        },
+      });
 
       async function safeUpsertTag(name: string) {
         try {

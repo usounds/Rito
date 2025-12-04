@@ -31,7 +31,7 @@
     "@prisma/client": "^6.18.0",
     "@tabler/icons-react": "^3.35.0",
     "lucide-react": "^0.548.0",
-    "next": "^15.5.6",
+    "next": "^15.5.7",
     "next-intl": "^4.4.0",
     "nextjs-toploader": "^3.9.17",
     "open-graph-scraper": "^6.10.0",

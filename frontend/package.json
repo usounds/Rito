@@ -16,6 +16,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@atcute/atproto": "^3.1.9",
     "@atcute/bluesky": "^3.2.14",
     "@atcute/bluesky-richtext-builder": "^2.0.4",
     "@atcute/client": "^4.1.1",
@@ -45,10 +46,13 @@
   },
   "devDependencies": {
     "@atcute/lex-cli": "^2.5.2",
+    "@next/eslint-plugin-next": "^16.0.10",
     "@tailwindcss/postcss": "^4.1.18",
     "@types/node": "^24.10.4",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.49.0",
+    "@typescript-eslint/parser": "^8.49.0",
     "eslint": "^9.39.2",
     "eslint-config-next": "^16.0.10",
     "postcss": "^8.5.6",
@@ -57,5 +61,8 @@
     "prisma": "^6.19.1",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3"
+  },
+  "engines": {
+    "pnpm": ">=10.0.0"
   }
 }

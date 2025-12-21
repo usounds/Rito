@@ -1,5 +1,5 @@
 import { prisma } from '@/logic/HandlePrismaClient';
-import { normalizeBookmarks } from '@/type/ApiTypes';
+import { normalizeBookmarks } from '@/logic/HandleBookmark';
 import { NextResponse } from "next/server";
 
 export async function GET(req: Request) {

@@ -22,6 +22,7 @@ model Bookmark {
 
   user UserDidHandle @relation(fields: [did], references: [did], name: "BookmarkUser")
   handle String? @map("handle") // 物理名 handle
+  @@index([did, created_at(sort: Desc)])
 }
 
 model Post {
@@ -136,4 +137,12 @@ model Like {
 
   @@index([subject])
   @@map("Like") // PostgreSQL 上のテーブル名
+}
+
+
+model PostToBookmark {
+  sub         String   @id
+  @@index([sub])
+
+  @@map("PostToBookmark") 
 }

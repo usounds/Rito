@@ -3,12 +3,16 @@
 	"description": "A social bookmarking service built on the AT Protocol. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
 	"loading": "Loading",
 	"button": {
-		"search": "Search everyone's bookmarks",
+		"search": "Search",
+		"discover": "Discover",
 		"start": "Manage my bookmarks"
 	},
 	"ogp": {
 		"title": "Rito",
 		"description": "A social bookmarking platform connecting users and developers."
+	},
+	"inform": {
+		"1minutes": "This page was updated minutes ago."
 	},
 	"error": {
 		"delay": "Currently, Rito is experiencing delays, and it may take longer to register or update bookmarks. Please try again after some time.",
@@ -17,7 +21,8 @@
 	"header": {
 		"home": "Home",
 		"bookmark": "My Bookmarks",
-		"browse": "Browse",
+		"browse": "Search",
+		"discover": "Discover",
 		"navigation": "Navigation",
 		"feature": {
 			"title": "Features",
@@ -325,5 +330,10 @@
 			"success": "Post shared successfully",
 			"error": "A system error occurred"
 		}
+	},
+	"discover": {
+		"title": "Discover",
+		"latestbookmarbyusers": "Latest bookmarks by users",
+		"latestLike": "Latest liked bookmarks"
 	}
 }

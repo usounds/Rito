@@ -35,7 +35,7 @@ interface RawComment {
 }
 
 
-interface RawBookmark {
+export interface RawBookmark {
   uri: string;
   handle: string | null;
   subject: string;
@@ -47,34 +47,4 @@ interface RawBookmark {
   moderation_result?: string | null;
   comments: RawComment[];
   tags?: { tag: { name: string } }[];
-}
-
-export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
-  return raw.map(b => ({
-    uri: b.uri,
-    handle: b.handle ?? '',   // ← null の場合は空文字に変換
-    subject: b.subject,
-    ogpTitle: b.ogp_title ?? '',
-    ogpDescription: b.ogp_description ?? '',
-    ogpImage: b.ogp_image ?? null,
-createdAt: typeof b.created_at === 'string' ? b.created_at : b.created_at.toISOString(),
-indexedAt: typeof b.indexed_at === 'string' ? b.indexed_at : b.indexed_at.toISOString(),
-    moderations: b.moderation_result
-      ? b.moderation_result.split(',').map(s => s.trim())
-      : [],
-    comments: b.comments.map(c => ({
-  lang: c.lang === 'en' ? 'en' : 'ja', // string -> "ja" | "en"
-      title: c.title ?? '',
-      comment: c.comment ?? '',
-      moderations: c.moderation_result
-        ? c.moderation_result.split(',').map(s => s.trim())
-        : [],
-    })),
-    tags: Array.isArray(b.tags)
-      ? b.tags
-          .map(t => t.tag.name)
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .sort((a, _b) => (a === 'Verified' ? -1 : 0))
-      : [],
-  }));
 }

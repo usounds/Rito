@@ -1,6 +1,7 @@
 // frontend/app/[locale]/bookmark/details/page.tsx
 import { prisma } from '@/logic/HandlePrismaClient';
-import { normalizeBookmarks, Bookmark } from '@/type/ApiTypes';
+import { Bookmark } from '@/type/ApiTypes';
+import { normalizeBookmarks } from '@/logic/HandleBookmark';
 import { Container, Stack, Text, Spoiler, Flex, Title, Tabs, TabsList, TabsPanel, TabsTab, Timeline, TimelineItem, Group } from "@mantine/core";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { BlurReveal } from "@/components/BlurReveal";

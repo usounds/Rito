@@ -17,6 +17,14 @@ export async function Footer({ locale }: FooterProps) {
                 <Text c="dimmed">Developed by usounds.work</Text>
 
                 <Group gap="md" my="sm" wrap="nowrap">
+
+                    <Link href={`/${locale}/tos`} style={{ textDecoration: 'none', cursor: 'pointer', color: 'gray', fontSize: '0.875rem' }}>
+                        {t('header.termofuse')}
+                    </Link>
+                    <Link href={`/${locale}/privacy`} style={{ textDecoration: 'none', cursor: 'pointer', color: 'gray', fontSize: '0.875rem' }}>
+                        {t('header.privacypolicy')}
+                    </Link>
+
                     <Link
                         href={`/${locale}/status`}
                         style={{ textDecoration: 'none', cursor: 'pointer', color: 'gray', fontSize: '0.875rem' }}

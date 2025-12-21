@@ -79,14 +79,12 @@ export default function Header() {
               {messages.header.bookmark}
             </Link>
 
+            <Link href={`/${locale}/bookmark/discover`} className={classes.link} >
+              {messages.header.discover}
+            </Link>
+
             <Link href={`/${locale}/bookmark/search`} className={classes.link}>
               {messages.header.browse}
-            </Link>
-            <Link href={`/${locale}/tos`} className={classes.link}>
-              {messages.header.termofuse}
-            </Link>
-            <Link href={`/${locale}/privacy`} className={classes.link}>
-              {messages.header.privacypolicy}
             </Link>
           </Group>
 
@@ -118,14 +116,11 @@ export default function Header() {
             <Link href={`/${locale}/my/bookmark`} className={classes.link} onClick={closeDrawer}>
               {messages.header.bookmark}
             </Link>
+            <Link href={`/${locale}/bookmark/discover`} className={classes.link} onClick={closeDrawer}>
+              {messages.header.discover}
+            </Link>
             <Link href={`/${locale}/bookmark/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}
-            </Link>
-            <Link href={`/${locale}/tos`} className={classes.link} onClick={closeDrawer}>
-              {messages.header.termofuse}
-            </Link>
-            <Link href={`/${locale}/privacy`} className={classes.link} onClick={closeDrawer}>
-              {messages.header.privacypolicy}
             </Link>
           </Stack>
 

@@ -2,10 +2,11 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { Stats } from '@/components/stats/Stats';
 import { prisma } from '@/logic/HandlePrismaClient';
-import { Container ,Text} from '@mantine/core';
+import { Alert, Container } from '@mantine/core';
+import { Info } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = 60; // 5分ごとに再生成
+export const revalidate = 60; // 1分ごとに再生成
 
 type StatusProps = {
     params: { locale: string };
@@ -57,7 +58,6 @@ export default async function StatusPage({ params }: StatusProps) {
     return (
         <Container size="md" mx="auto" >
             <Breadcrumbs items={[{ label: t('status.title') }]} />
-            <Text mt='sm'>{ t('status.description') }</Text>
             <Stats
                 data={[
                     { title: t('status.field.bookmark'), icon: 'bookmark', value: bookmarks, diff: 0 },
@@ -67,6 +67,7 @@ export default async function StatusPage({ params }: StatusProps) {
                     { title: t('status.field.server'), icon: 'server', value: comment, diff: diffMinutes * -1 || 0 },
                 ]}
             />
+            <Alert my="sm" variant="light" color="blue" title={t('inform.1minutes')} icon={<Info size={18} />} />
         </Container>
     );
 }

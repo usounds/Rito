@@ -1,5 +1,6 @@
 import { Button, Container, Group, SimpleGrid, Text, ThemeIcon, Title } from '@mantine/core';
 import { AtSign, Bookmark, FileText, Search, Star } from 'lucide-react';
+import { Compass } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import classes from './Features.module.scss';
@@ -101,6 +102,13 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             variant="default"
           >
             {t('button.start')}
+          </Button>
+          <Button
+            component={Link}
+            href={`/${locale}/bookmark/discover`}
+            leftSection={<Compass size={14}
+            />} variant="default">
+            {t('button.discover')}
           </Button>
           <Button
             component={Link}

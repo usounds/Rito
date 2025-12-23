@@ -6,6 +6,9 @@ const _mainSchema = /*#__PURE__*/ v.record(
   /*#__PURE__*/ v.nsidString(),
   /*#__PURE__*/ v.object({
     $type: /*#__PURE__*/ v.literal("blue.rito.service.schema"),
+    /**
+     * The AppView URL for the NSID. For example, if the NSID is uk.skyblur.post, the URL should be https://skyblur.uk/post/{did}/{rkey}
+     */
     schema: /*#__PURE__*/ v.genericUriString(),
   }),
 );

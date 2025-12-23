@@ -1,20 +1,25 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
+import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
 import { useMyBookmark } from "@/state/MyBookmark";
-import { SCOPE } from "@/type/OauthConstants";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
+import { SCOPE } from "@/type/OauthConstants";
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
 import { notifications } from '@mantine/notifications';
-import { BookmarkPlus, LogOut, X } from 'lucide-react';
+import { BookmarkPlus, LogOut, Settings, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
 import { useTopLoader } from 'nextjs-toploader';
-import { resolveHandleViaDoH, resolveHandleViaHttp } from '@/logic/HandleDidredolver';
+import { useEffect, useState } from 'react';
+import Link from 'next/link'
 
-export function LoginButtonOrUser() {
+type LoginButtonOrUserProps = {
+    closeDrawer?: () => void;
+};
+
+export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
     const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
@@ -103,6 +108,7 @@ export function LoginButtonOrUser() {
 
         (async () => {
             try {
+                setIsLoginProcess(true);
                 if (tagRanking.length === 0) {
                     const res2 = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag`);
                     if (res2.ok) {
@@ -168,14 +174,31 @@ export function LoginButtonOrUser() {
                         });
 
                         const returnTo = window.location.href;
-                        loader.start()
                         const csrf = await fetch("/api/csrf").then(r => r.json());
-                        const url = `/api/oauth/login?handle=${encodeURIComponent(handle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}&csrf=${csrf.csrfToken}`;
+                        loader.start()
+                        const res = await fetch("/api/oauth/login", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                handle,
+                                returnTo,
+                                csrf: csrf.csrfToken,
+                            }),
+                        });
+
+                        if (!res.ok) {
+                            throw new Error("OAuth login failed");
+                        }
+
+                        const { url } = await res.json();
                         window.location.href = url;
                         return
 
                     } else {
                         setActiveDid(null);
+                        setIsLoginProcess(false);
                         return;
 
                     }
@@ -194,10 +217,13 @@ export function LoginButtonOrUser() {
                     : meData.scope.split(/\s+/).filter(Boolean); // 連続空白を除去
 
                 // replacedScope は "include:..." 置き換え済みのスコープ配列
-                const replacedScope = SCOPE.map(scope =>
+                const replacedScope = SCOPE.flatMap(scope =>
                     scope === "include:blue.rito.permissionSet"
-                        ? "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema"
-                        : scope
+                        ? [
+                            "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema",
+                            "rpc?lxm=blue.rito.preference.getPreference&lxm=blue.rito.preference.putPreference&aud=*"
+                        ]
+                        : [scope]
                 );
 
                 // すべての必要スコープが含まれているか判定
@@ -228,6 +254,24 @@ export function LoginButtonOrUser() {
             }
         })();
     }, [handle]);
+    useEffect(() => {
+        if (!activeDid) return;
+
+        const fetchBookmarks = async () => {
+            const res = await fetch(
+                `/xrpc/blue.rito.feed.getActorBookmarks?actor=${encodeURIComponent(activeDid)}`
+            );
+            if (!res.ok) return;
+
+            const data: Bookmark[] = await res.json();
+            setMyBookmark(data);
+        };
+
+        fetchBookmarks();
+        const id = setInterval(fetchBookmarks, 10_000);
+
+        return () => clearInterval(id);
+    }, [activeDid, setMyBookmark]);
 
     useEffect(() => {
         if (!isNeedReload || !activeDid) return;
@@ -272,6 +316,7 @@ export function LoginButtonOrUser() {
             setActiveDid(null)
             setUserProf(null)
             setHandle(null)
+            setIsLoginProcess(false);
         } catch (err) {
             console.error("Logout error:", err);
         }
@@ -303,6 +348,18 @@ export function LoginButtonOrUser() {
 
                         <Menu.Dropdown>
                             <Menu.Label>{messages.header.menu}</Menu.Label>
+                            <Link
+                                href={`/${locale}/settings`}
+                                style={{ textDecoration: 'none', color: 'inherit' }}
+                            >
+                                <Menu.Item
+                                    leftSection={<Settings size={14} />}
+                                    onClick={closeDrawer}
+                                >
+                                    {messages.header.items.settings}
+                                </Menu.Item>
+                            </Link>
+                            <Menu.Divider />
                             <Menu.Item leftSection={<LogOut size={14} />} color="red" onClick={handleLogout}>{messages.header.items.logout}</Menu.Item>
                         </Menu.Dropdown>
                     </Menu>

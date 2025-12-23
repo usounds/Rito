@@ -122,13 +122,31 @@ export function Authentication() {
 
     try {
       const returnTo = window.location.href;
-      
+
       loader.start()
-      const csrf = await fetch("/api/csrf").then(r => r.json());
       setIsLoginProcess(true)
       const cleanHandle = values.handle.replace(/^@/, ''); // 先頭の@を除去
       setHandle(cleanHandle);
-      const url = `/api/oauth/login?handle=${encodeURIComponent(cleanHandle)}&returnTo=${encodeURIComponent(returnTo)}&locale=${locale}&csrf=${csrf.csrfToken}`;
+
+      const csrf = await fetch("/api/csrf").then(r => r.json());
+      loader.start()
+      const res = await fetch("/api/oauth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          handle:cleanHandle,
+          returnTo,
+          csrf: csrf.csrfToken,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error("OAuth login failed");
+      }
+
+      const { url } = await res.json();
       window.location.href = url;
 
     } catch (e) {

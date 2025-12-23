@@ -142,6 +142,7 @@ model Like {
 
 model PostToBookmark {
   sub         String   @id
+  lang String @default("ja")
   @@index([sub])
 
   @@map("PostToBookmark") 

@@ -4,8 +4,9 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput } from '@mantine/core';
+import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
+import { Info } from 'lucide-react';
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -69,6 +70,10 @@ export function MyBookmark() {
                     styles={{ input: { fontSize: 16 } }}
                 />
             </SimpleGrid>
+
+            {myBookmark.length === 0 &&
+                <Alert my="sm" variant="light" color="blue" title={messages.mybookmark.empty} icon={<Info size={18} />} />
+            }
 
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
                 {filteredBookmarks.map((b) => {

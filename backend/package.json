@@ -19,8 +19,13 @@
   "type": "module",
   "dependencies": {
     "@atcute/client": "^4.1.0",
+    "@atcute/tid": "^1.0.3",
+    "@atproto/api": "^0.18.8",
+    "@atproto/jwk-jose": "^0.1.11",
+    "@atproto/oauth-client-node": "^0.3.13",
     "@prisma/client": "^6.19.0",
     "@skyware/jetstream": "^0.2.5",
+    "dotenv": "^17.2.3",
     "openai": "^6.10.0",
     "p-limit": "^7.2.0",
     "p-queue": "^9.0.1",

@@ -2,6 +2,34 @@ import { NextRequest, NextResponse } from "next/server";
 import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
 import { Agent } from "@atproto/api";
 
+async function getProfileWithRetry(
+  agent: Agent,
+  actor: string,
+  retries = 3,
+  delayMs = 300
+) {
+  let lastError;
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await agent.getProfile({ actor });
+    } catch (err) {
+      lastError = err;
+
+      // 最後の試行ならそのまま投げる
+      if (i === retries - 1) {
+        throw err;
+      }
+
+      // 少し待つ（バックオフ）
+      await new Promise((r) => setTimeout(r, delayMs * (i + 1)));
+    }
+  }
+
+  // 通常ここには来ないが、型安全のため
+  throw lastError;
+}
+
 export async function GET(req: NextRequest) {
   const referer = req.headers.get("referer");
 
@@ -24,7 +52,11 @@ export async function GET(req: NextRequest) {
 
   const session = await client.restore(did);
   const agent = new Agent(session);
-  const profile = await agent.getProfile({ actor: agent.did || '' });
+  const profile = await getProfileWithRetry(
+    agent,
+    agent.did || '',
+    3
+  );
 
   const token = await session.getTokenInfo()
   const scope = token.scope

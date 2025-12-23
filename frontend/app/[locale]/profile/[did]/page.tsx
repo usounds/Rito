@@ -16,7 +16,7 @@ type ProfileBookmarkProps = {
 };
 
 export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
-  const { locale, did } = params;
+  const { locale, did } = await params;
   const t = await getTranslations({ locale });
   return {
     openGraph: {
@@ -29,10 +29,10 @@ export async function generateMetadata({ params }: { params: { locale: string; d
 }
 
 const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) => {
-  const { locale, did } = params;
+  const { locale, did } = await params;
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
-  const query = searchParams ?? {};
+  const query = (await searchParams) ?? {}; // 👈 ここ
 
   const page = query.page
     ? parseInt(Array.isArray(query.page) ? query.page[0] : query.page, 10)
@@ -43,8 +43,7 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
   const paginationQuery = { page: page.toString() };
 
   const decodedDid = decodeURIComponent(did);
-
-
+  
   const tags = query.tag ? (Array.isArray(query.tag) ? query.tag : (query.tag as string).split(',')).map(t => t.trim()).filter(Boolean) : undefined;
   const whereBase = decodedDid.startsWith("did")
     ? { did: decodedDid }

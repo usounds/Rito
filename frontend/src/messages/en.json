@@ -91,7 +91,7 @@
 	"mybookmark": {
 		"latest": "Latest Bookmark",
 		"login": "Please log in to manage your bookmarks",
-		"empty": "Please register your bookmarks",
+		"empty": "Please register your bookmarks from the bottom-right button.",
 		"field": {
 			"search": {
 				"title": "Word Search",
@@ -341,8 +341,8 @@
 		"title": "Settings",
 		"section": {
 			"autoGenerateBookmark": {
-				"title": "Automatic Collection",
-				"description": "Posts you make on Bluesky with the #rito.blue tag will be automatically saved to your Rito bookmarks.",
+				"title": "Automatic Collection (β)",
+				"description": "Automatically bookmarks your posts on Bluesky with the #rito.blue tag.",
 				"enable": "Enable automatic collection"
 			},
 			"user": {

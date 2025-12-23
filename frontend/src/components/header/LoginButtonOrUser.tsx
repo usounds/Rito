@@ -254,6 +254,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
             }
         })();
     }, [handle]);
+    
     useEffect(() => {
         if (!activeDid) return;
 

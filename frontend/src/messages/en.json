@@ -5,7 +5,7 @@
 	"button": {
 		"search": "Search",
 		"discover": "Discover",
-		"start": "Manage my bookmarks"
+		"start": "Start"
 	},
 	"ogp": {
 		"title": "Rito",
@@ -37,7 +37,7 @@
 				"longdescription": "Fully compatible with ATProtocol, all data is stored in your PDS."
 			},
 			"ownerbenefit": {
-				"title": "Owner Verified Comments",
+				"title": "Owner Comments",
 				"description": "Owner of ATProtocol-based products can add descriptions to their products",
 				"longdescription": "Product owners can create special bookmarks that display their service description at the top of the bookmark list."
 			},
@@ -58,6 +58,7 @@
 		"bookmarkMenu": "Bookmark",
 		"menu": "Menu",
 		"items": {
+			"settings": "Settings",
 			"logout": "Logout"
 		}
 	},
@@ -335,5 +336,24 @@
 		"title": "Discover",
 		"latestbookmarbyusers": "Latest bookmarks by users",
 		"latestLike": "Latest liked bookmarks"
+	},
+	"settings": {
+		"title": "Settings",
+		"section": {
+			"autoGenerateBookmark": {
+				"title": "Automatic Collection",
+				"description": "Posts you make on Bluesky with the #rito.blue tag will be automatically saved to your Rito bookmarks.",
+				"enable": "Enable automatic collection"
+			},
+			"user": {
+				"title": "Current user"
+			}
+		},
+		"inform": {
+			"loading": "Loading settings from the server",
+			"saving": "Saving settings to the server",
+			"needlogin": "Need login",
+			"error": "A system error has occurred"
+		}
 	}
 }

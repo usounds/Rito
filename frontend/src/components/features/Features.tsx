@@ -28,12 +28,17 @@ export function Features({ icon: Icon, title, description, href }: FeatureProps)
       </ThemeIcon>
       {href ? (
         <>
-          <Text component={Link} href={href} target="_blank" mt="sm" mb={7} style={{ display: 'block' }} >
-            {title}
-          </Text>
-          <Text component={Link} href={href} target="_blank" size="sm" c="dimmed" lh={1.6}>
-            {description}
-          </Text>
+          <Link href={`${href}`} style={{ textDecoration: 'none', color: 'inherit', }}>
+            <Text mt="sm" mb={7} style={{ display: 'block' }} >
+              {title}
+            </Text>
+          </Link>
+          <Link href={`${href}`} style={{ textDecoration: 'none' }}>
+            <Text size="sm" c="dimmed" lh={1.6}>
+              {description}
+            </Text>
+
+          </Link>
         </>
       ) :
         <>
@@ -66,6 +71,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
     {
       icon: FileText,
       title: t('header.feature.ownerbenefit.title'),
+      href: 'https://blog.usounds.work/posts/rito-for-developer',
       description: t('header.feature.ownerbenefit.longdescription'),
     },
     {
@@ -95,28 +101,32 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           {t('description')}
         </Text>
         <Group justify="center" gap="md" mt="md">
-          <Button
-            component={Link}
-            href={`/${locale}/my/bookmark`}
-            leftSection={<BookmarkCheck size={14} />}
-            variant="default"
-          >
-            {t('button.start')}
-          </Button>
-          <Button
-            component={Link}
-            href={`/${locale}/bookmark/discover`}
-            leftSection={<Compass size={14}
-            />} variant="default">
-            {t('button.discover')}
-          </Button>
-          <Button
-            component={Link}
-            href={`/${locale}/bookmark/search`}
-            leftSection={<Search size={14}
-            />} variant="default">
-            {t('button.search')}
-          </Button>
+          <Link href={`/${locale}/my/bookmark`} style={{ textDecoration: 'none' }}>
+            <Button
+              leftSection={<BookmarkCheck size={14} />}
+              variant="default"
+            >
+              {t('button.start')}
+            </Button>
+          </Link>
+
+          <Link href={`/${locale}/bookmark/discover`} style={{ textDecoration: 'none' }}>
+            <Button
+              leftSection={<Compass size={14} />}
+              variant="default"
+            >
+              {t('button.discover')}
+            </Button>
+          </Link>
+
+          <Link href={`/${locale}/bookmark/search`} style={{ textDecoration: 'none' }}>
+            <Button
+              leftSection={<Search size={14} />}
+              variant="default"
+            >
+              {t('button.search')}
+            </Button>
+          </Link>
         </Group>
       </Container>
 

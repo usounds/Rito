@@ -1,0 +1,32 @@
+
+{
+    "lexicon": 1,
+    "id": "blue.rito.preference.getPreference",
+    "defs": {
+        "main": {
+            "type": "query",
+            "description": "Get user preference for Rito. Authentication required.",
+            "output": {
+                "encoding": "application/json",
+                "description": "Returns user preference for Rito.",
+                "schema": {
+                    "type": "object",
+                    "required": [
+                        "autoGenerateBookmark",
+                        "langForAutoGenertateBookmark"
+                    ],
+                    "properties": {
+                        "autoGenerateBookmark": {
+                            "type": "boolean",
+                            "description": "Whether to automatically collect Bluesky posts to Rito bookmarks."
+                        },
+                        "langForAutoGenertateBookmark": {
+                            "type": "string",
+                            "description": "User's preferred language for Auto Generate Bookmark."
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

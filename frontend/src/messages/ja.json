@@ -9,7 +9,7 @@
 	"button": {
 		"search": "検索する",
 		"discover": "見つける",
-		"start": "私のブックマーク"
+		"start": "始める"
 	},
 	"error": {
 		"delay": "現在、リトでは遅延が発生して、ブックマークの登録と変更に時間がかかっています。しばらく時間をおいてから再度お試しください。",
@@ -58,6 +58,7 @@
 		"bookmarkMenu": "ブックマーク",
 		"menu": "メニュー",
 		"items": {
+			"settings": "設定",
 			"logout": "ログアウト"
 		}
 	},
@@ -334,5 +335,24 @@
 		"title": "見つける",
 		"latestbookmarbyusers": "ユーザーごとの最新ブックマーク",
 		"latestLike": "いいねされたブックマーク"
+	},
+	"settings":{
+		"title":"設定",
+		"section": {
+			"autoGenerateBookmark":{
+				"title":"自動収集",
+				"description":"Blueskyで #rito.blue タグを付けたあなたの投稿を自動でリトのブックマークに保存します",
+				"enable":"自動収集を有効にする"
+			},
+			"user":{
+				"title":"現在ログインしているユーザー"
+			}
+		},
+		"inform": {
+			"loading": "サーバーから設定を取得中です",
+			"saving": "サーバーに設定を反映中です",
+			"needlogin": "ログインが必要です",
+			"error": "システムエラーが発生しました"
+		}
 	}
 }

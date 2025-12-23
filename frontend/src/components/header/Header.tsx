@@ -89,7 +89,7 @@ export default function Header() {
           </Group>
 
           <Group visibleFrom="sm">
-            <LoginButtonOrUser />
+            <LoginButtonOrUser closeDrawer={closeDrawer} />
             <LanguageToggle />
             <SwitchColorMode />
           </Group>
@@ -128,7 +128,7 @@ export default function Header() {
           <Divider my="sm" />
 
           <Group align="center" justify="center" gap={12} style={{ width: '100%' }} >
-            <LoginButtonOrUser />
+            <LoginButtonOrUser closeDrawer={closeDrawer} />
             <LanguageToggle />
             <SwitchColorMode />
           </Group>

@@ -1,13 +1,16 @@
 import { PrismaClient } from "@prisma/client";
 import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
 import WebSocket from 'ws';
-import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION, LIKE } from './config';
-import { BlueRitoFeedBookmark } from './lexicons';
-import logger from './logger';
+import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION, LIKE } from './config.js';
+import { BlueRitoFeedBookmark } from './lexicons/index.js';
+import logger from './logger.js';
 import OpenAI from "openai";
 import { Client, simpleFetchHandler } from '@atcute/client';
 import pLimit from "p-limit";
 import PQueue from 'p-queue';
+import { client as oauthClient } from "./lib/HandleOauthClientNode.js";
+import { Agent } from "@atproto/api";
+import * as TID from '@atcute/tid';
 const queue = new PQueue({ concurrency: 1 });
 
 const dbLimit = pLimit(5); // 同時に DB 操作は最大 5 件まで
@@ -83,7 +86,7 @@ async function init() {
   cursor = await loadCursor();
 
   const jetstream = new Jetstream({
-    wantedCollections: [BOOKMARK, SERVICE, LIKE],
+    wantedCollections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
     endpoint: JETSREAM_URL,
     cursor: Number(cursor),
     ws: WebSocket,
@@ -379,19 +382,29 @@ async function init() {
 
     try {
       // facets と embed からリンク抽出
+      const tags: string[] = [];
       const links: string[] = [];
 
       if (record.facets) {
         for (const facet of record.facets) {
           if (facet.features) {
             for (const feature of facet.features) {
-              if (feature.$type === 'app.bsky.richtext.facet#link' && feature.uri) {
-                links.push(feature.uri);
+              if (feature.$type === 'app.bsky.richtext.facet#tag' && feature.tag) {
+                tags.push(feature.tag);
               }
             }
           }
         }
       }
+
+
+      if (!tags.includes('rito.blue')) {
+        return
+      }
+
+      tags.splice(tags.indexOf('rito.blue'), 1)
+
+      if (record.via === 'リト' || record.via === 'Rito') return;
 
       if (record.embed?.$type === 'app.bsky.embed.external' && record.embed.external?.uri) {
         links.push(record.embed.external.uri);
@@ -399,25 +412,7 @@ async function init() {
 
       // 重複・undefined 排除
       const uniqueLinks = Array.from(new Set(links.filter((l): l is string => !!l)));
-      if (uniqueLinks.length === 0) return;
-
-      // Bookmark チェック（空配列回避済み）
-      const chunkSize = 50; // 1回のクエリで処理する件数
-
-      const chunks = Array.from({ length: Math.ceil(uniqueLinks.length / chunkSize) }, (_, i) =>
-        uniqueLinks.slice(i * chunkSize, i * chunkSize + chunkSize)
-      );
-
-      const results = await Promise.all(
-        chunks.map(chunk =>
-          dbLimit(() =>
-            prisma.bookmark.findMany({ where: { subject: { in: chunk } } })
-          )
-        )
-      );
-
-      const matchingBookmarks = results.flat();
-      if (!matchingBookmarks || matchingBookmarks.length === 0) return;
+      if (uniqueLinks.length != 1) return;
 
       // UserDidHandle upsert
       let handle = 'no handle';
@@ -458,59 +453,102 @@ async function init() {
         }
       }
 
-      await dbLimit(() =>
-        prisma.userDidHandle.upsert({
-          where: { did: event.did },
-          update: { handle },
-          create: { did: event.did, handle },
-        })
-      );
+      const exists = await prisma.postToBookmark.findUnique({
+        where: { sub: event.did },
+        select: { sub: true }, // 必要な情報だけ取得
+      });
 
-      // Post の moderation チェック
-      const postTexts = record.text ? [record.text] : [];
-      const postFlaggedCategories = await checkModeration(postTexts);
-      const postModerationResult = postFlaggedCategories.length > 0 ? postFlaggedCategories.join(',') : null;
-
-      // 既存 PostUri 削除
-      await dbLimit(() =>
-        prisma.postUri.deleteMany({ where: { postUri: aturi } })
-      );
-
-      // Post upsert
-      await dbLimit(() =>
-        prisma.post.upsert({
-          where: { uri: aturi },
-          update: {
-            handle,
-            text: record.text || '',
-            lang: Array.isArray(record.langs) ? record.langs : [],
-            moderation_result: postModerationResult,
-            indexed_at: new Date(),
-          },
-          create: {
-            uri: aturi,
-            did: event.did,
-            handle,
-            text: record.text || '',
-            lang: Array.isArray(record.langs) ? record.langs : [],
-            moderation_result: postModerationResult,
-            indexed_at: new Date(),
-          },
-        })
-      );
-
-      // PostUri 作成（空配列チェック）
-      if (uniqueLinks.length > 0) {
-        await dbLimit(() =>
-          prisma.postUri.createMany({
-            data: uniqueLinks.map(uri => ({ postUri: aturi, uri })),
-            skipDuplicates: true,
-          })
-        );
+      if (!exists) {
+        // 存在しない場合は処理を中断
+        return;
       }
 
       logger.info(
-        `Upserted post: ${aturi}, handle: ${handle}, uris: ${uniqueLinks.join(', ')}, moderation: ${postModerationResult}`
+        `Detect #rito.blue post: ${aturi}, link: ${uniqueLinks[0]}`
+      );
+
+      //ドメインチェック
+      const urlString = uniqueLinks[0] || '';
+      let domain = '';
+
+      try {
+        const url = new URL(urlString);
+        domain = url.hostname;
+      } catch (err) {
+        return
+      }
+      const domainCheck = await fetch(`https://rito.blue/api/checkDomain?domain=${domain}`);
+      const domainData = await domainCheck.json();
+
+      if (domainData.result) {
+        logger.warn(`Domain not allowed: ${domain} for post ${aturi}`);
+        return;
+      }
+
+      let oggTitle = '';
+      let ogpDescription = '';
+      let ogImage = '';
+
+      try {
+        const ogp = await fetch(`https://rito.blue/api/fetchOgp?url=${encodeURIComponent(urlString)}`);
+        const ogpData = await ogp.json();
+
+        if (ogpData.result.ogTitle) oggTitle = ogpData.result.ogTitle;
+        if (ogpData.result.ogDescription) ogpDescription = ogpData.result.ogDescription;
+        if (ogpData.result.ogImage[0].url) ogImage = ogpData.result.ogImage[0].url;
+
+      } catch (err) {
+      }
+
+      const session = await oauthClient.restore(event.did);
+      const agent = new Agent(session);
+      const rkeyLocal = TID.now();
+
+      function normalizeComment(text: string): string {
+        let result = text
+
+        // #tags を削除
+        result = result.replace(/#[^\s#]+/g, '')
+
+        // URL / ドメイン（パス付き含む）を根こそぎ削除
+        result = result.replace(
+          /\bhttps?:\/\/[^\s]+|\b[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?:\/[^\s]*)?/g,
+          ''
+        )
+
+        // 空白を 1 つに圧縮
+        result = result
+          // 半角スペース + 全角スペースを 1 つに
+          .replace(/[ 　]+/g, ' ')
+          // 行頭・行末のスペースだけ除去（改行は残る）
+          .replace(/^[ 　]+|[ 　]+$/gm, '')
+
+        return result
+      }
+
+      await agent.com.atproto.repo.putRecord({
+        repo: event.did, // ここが対象ユーザーの DID
+        collection: 'blue.rito.feed.bookmark',
+        rkey: rkeyLocal, // レコードキー
+        record: {
+          subject: uniqueLinks[0],
+          createdAt: new Date().toISOString(),
+          comments: [
+            {
+              lang: exists.lang || 'ja',
+              title: oggTitle,
+              comment: normalizeComment(event.commit.record.text || ''),
+            }
+          ],
+          ogpTitle: oggTitle,
+          ogpDescription: record.embed.external?.description || ogpDescription,
+          ogpImage: ogImage,
+          tags
+        },
+      })
+
+      logger.info(
+        `Post to bookmark created: ${aturi}, link: ${uniqueLinks[0]}`
       );
     } catch (err) {
       logger.error(`Error in upsertPost for ${aturi}: ${err}`);
@@ -523,8 +561,8 @@ async function init() {
   jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
 
   // POST_COLLECTION
-  //jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-  //jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+  jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+  jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
 
   // SERVICE
   jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
@@ -754,12 +792,12 @@ async function init() {
       await dbLimit(() =>
         prisma.postUri.deleteMany({ where: { postUri: aturi } })
       );
-
+ 
       // 2. Post を削除
       const deletedPosts = await dbLimit(() =>
         prisma.post.deleteMany({ where: { uri: aturi } })
       );
-
+ 
       if (deletedPosts.count > 0) {
         logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
       }

@@ -12,7 +12,7 @@ env:
   # Configure environment variables.
   # See https://firebase.google.com/docs/app-hosting/configure#user-defined-environment
   - variable: NEXT_PUBLIC_URL
-    secret: projects/743932493666/secrets/NEXT_PUBLIC_URL/versions/1
+    value: "https://rito.blue"
   - variable: DATABASE_URL
     secret: projects/743932493666/secrets/DATABASE_URL/versions/3
   - variable: COOKIE_SECRET

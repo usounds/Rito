@@ -12,11 +12,11 @@
                 "schema": {
                     "type": "object",
                     "required": [
-                        "autoGenerateBookmark",
+                        "enableAutoGenerateBookmark",
                         "langForAutoGenertateBookmark"
                     ],
                     "properties": {
-                        "autoGenerateBookmark": {
+                        "enableAutoGenerateBookmark": {
                             "type": "boolean",
                             "description": "Whether to automatically collect Bluesky posts to Rito bookmarks."
                         },

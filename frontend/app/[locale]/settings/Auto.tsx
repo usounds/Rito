@@ -13,6 +13,7 @@ export function Auto() {
     const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [isLoading, setIsLoading] = useState(true)
+    const [isError, setIsError] = useState(false)
     const [enableAutoGenerateBookmark, setenableAutoGenerateBookmark] = useState(false)
 
     let duplicateCheck = false;
@@ -43,7 +44,7 @@ export function Auto() {
 
             if (!response2.ok) {
                 console.error('Failed to get service auth', response2.status)
-
+                setIsError(true);
                 notifications.clean();
                 setIsLoading(false)
                 return
@@ -61,6 +62,9 @@ export function Auto() {
             if (response.ok) {
                 const data = await response.json();
                 setenableAutoGenerateBookmark(data.enableAutoGenerateBookmark || false);
+            }else{
+                setIsError(true);
+
             }
 
             notifications.clean();
@@ -72,6 +76,7 @@ export function Auto() {
 
 
     async function changeenableAutoGenerateBookmark() {
+        setIsError(false)
         setIsLoading(true)
         notifications.show({
             id: 'process',
@@ -95,6 +100,7 @@ export function Auto() {
         if (!response2.ok) {
             console.error('Failed to get service auth', response2.status)
             setIsLoading(false)
+            setIsError(true);
             notifications.clean();
             return
         }
@@ -164,7 +170,7 @@ export function Auto() {
             }
             <Title order={4}>{messages.settings.section.enableAutoGenerateBookmark.title}</Title>
             <Switch
-                disabled={isLoading || userProf == null}
+                disabled={isLoading || userProf == null || isError}
                 checked={enableAutoGenerateBookmark}
                 onChange={changeenableAutoGenerateBookmark}
                 description={messages.settings.section.enableAutoGenerateBookmark.description}

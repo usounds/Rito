@@ -34,6 +34,10 @@ export async function GET(req: NextRequest) {
     const url = new URL(origin)
     const audience = `did:web:${url.hostname}`
 
+    if((await session.getTokenInfo()).scope.indexOf('lxm='+lxmParam)===-1){
+        return new NextResponse("Missing scope parameter", { status: 403 });
+    }
+
     let token = ''
 
     try {

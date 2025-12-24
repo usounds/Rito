@@ -38,10 +38,10 @@ export async function POST(req: NextRequest) {
 
   // POST body の取得
   const body = await req.json()
-  const autoGenerateBookmark = Boolean(body.autoGenerateBookmark)
+  const enableAutoGenerateBookmark = Boolean(body.enableAutoGenerateBookmark)
   const lang = body.lang || 'ja'
 
-  if (autoGenerateBookmark) {
+  if (enableAutoGenerateBookmark) {
     // true の場合は INSERT（存在しなければ作成）
     await prisma.postToBookmark.upsert({
       where: { sub: did },
@@ -55,8 +55,8 @@ export async function POST(req: NextRequest) {
     })
   }
 
-  // 結果として autoGenerateBookmark の状態を返す
+  // 結果として enableAutoGenerateBookmark の状態を返す
   return NextResponse.json({
-    autoGenerateBookmark
+    enableAutoGenerateBookmark
   }, { status: 200 })
 }

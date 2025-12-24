@@ -340,7 +340,7 @@
 	"settings": {
 		"title": "Settings",
 		"section": {
-			"autoGenerateBookmark": {
+			"enableAutoGenerateBookmark": {
 				"title": "Automatic Collection (β)",
 				"description": "Automatically bookmarks your posts on Bluesky with the #rito.blue tag.",
 				"enable": "Enable automatic collection"

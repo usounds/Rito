@@ -339,7 +339,7 @@
 	"settings":{
 		"title":"設定",
 		"section": {
-			"autoGenerateBookmark":{
+			"enableAutoGenerateBookmark":{
 				"title":"自動収集(β)",
 				"description":"Bluesky上で「#rito.blue」タグを付けたあなたの投稿を、自動でリトにブックマークします",
 				"enable":"自動収集を有効にする"

@@ -37,10 +37,10 @@ export async function GET(req: Request) {
     where: { sub: did },
   })
 
-  // 存在すれば autoGenerateBookmark: true、なければ false
+  // 存在すれば enableAutoGenerateBookmark: true、なければ false
     return NextResponse.json({
-    autoGenerateBookmark: !!record,
-    langForAutoGenertateBookmark: record?.lang || 'ja'
+    enableAutoGenerateBookmark: !!record,
+    langForAutoGenertateBookmark: record?.lang || ''
   }, { status: 200 });
 
 

@@ -13,7 +13,7 @@ export function Auto() {
     const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
     const userProf = useXrpcAgentStore(state => state.userProf);
     const [isLoading, setIsLoading] = useState(true)
-    const [autoGenerateBookmark, setautoGenerateBookmark] = useState(false)
+    const [enableAutoGenerateBookmark, setenableAutoGenerateBookmark] = useState(false)
 
     let duplicateCheck = false;
     useEffect(() => {
@@ -60,7 +60,7 @@ export function Auto() {
 
             if (response.ok) {
                 const data = await response.json();
-                setautoGenerateBookmark(data.autoGenerateBookmark || false);
+                setenableAutoGenerateBookmark(data.enableAutoGenerateBookmark || false);
             }
 
             notifications.clean();
@@ -71,7 +71,7 @@ export function Auto() {
     }, [userProf]);
 
 
-    async function changeautoGenerateBookmark() {
+    async function changeenableAutoGenerateBookmark() {
         setIsLoading(true)
         notifications.show({
             id: 'process',
@@ -82,7 +82,7 @@ export function Auto() {
         });
         const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
         const jsonBody = {
-            autoGenerateBookmark: !autoGenerateBookmark,
+            enableAutoGenerateBookmark: !enableAutoGenerateBookmark,
             lang: locale
         }
 
@@ -111,7 +111,7 @@ export function Auto() {
 
         if (response.ok) {
             const data = await response.json()
-            setautoGenerateBookmark(data.autoGenerateBookmark ?? false)
+            setenableAutoGenerateBookmark(data.enableAutoGenerateBookmark ?? false)
         } else {
             console.error('Failed to update preference', response.status)
         }
@@ -162,13 +162,13 @@ export function Auto() {
                     </div>
                 </Group>
             }
-            <Title order={4}>{messages.settings.section.autoGenerateBookmark.title}</Title>
+            <Title order={4}>{messages.settings.section.enableAutoGenerateBookmark.title}</Title>
             <Switch
                 disabled={isLoading || userProf == null}
-                checked={autoGenerateBookmark}
-                onChange={changeautoGenerateBookmark}
-                description={messages.settings.section.autoGenerateBookmark.description}
-                label={messages.settings.section.autoGenerateBookmark.enable}
+                checked={enableAutoGenerateBookmark}
+                onChange={changeenableAutoGenerateBookmark}
+                description={messages.settings.section.enableAutoGenerateBookmark.description}
+                label={messages.settings.section.enableAutoGenerateBookmark.enable}
             />
         </Stack>
 

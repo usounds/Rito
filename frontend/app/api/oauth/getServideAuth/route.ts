@@ -34,7 +34,20 @@ export async function GET(req: NextRequest) {
     const url = new URL(origin)
     const audience = `did:web:${url.hostname}`
 
-    if((await session.getTokenInfo()).scope.indexOf('lxm='+lxmParam)===-1){
+    const { scope } = await session.getTokenInfo();
+
+    const scopes = scope.split(' ');
+
+    const hasLxm = scopes.some(s => {
+        if (!s.startsWith('rpc?')) return false;
+
+        const query = s.slice(4); // "lxm=...&lxm=...&aud=*"
+        const params = new URLSearchParams(query);
+
+        return params.getAll('lxm').includes(lxmParam);
+    });
+
+    if (!hasLxm) {
         return new NextResponse("Missing scope parameter", { status: 403 });
     }
 

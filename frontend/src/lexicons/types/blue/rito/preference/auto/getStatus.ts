@@ -12,7 +12,7 @@ const _mainSchema = /*#__PURE__*/ v.query(
         /**
          * Namespace ID of the service or application (e.g., 'uk.skyblur.post').
          */
-        autoGenerateBookmark: /*#__PURE__*/ v.boolean(),
+        enableAutoGenerateBookmark: /*#__PURE__*/ v.boolean(),
       }),
     },
   },

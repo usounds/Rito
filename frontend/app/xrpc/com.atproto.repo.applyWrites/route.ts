@@ -1,7 +1,7 @@
 // app/xrpc/[...path]/route.ts
 import { NextRequest, NextResponse } from "next/server";
 import { Agent } from "@atproto/api";
-import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
 
 export async function POST(req: NextRequest) {
   const referer = req.headers.get("referer");
@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Invalid signature", { status: 401 });
   }
 
+  const client = await getOAuthClient();
   const session = await client.restore(did);
   const agent = new Agent(session);
 

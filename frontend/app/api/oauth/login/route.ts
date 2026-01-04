@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { client } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient } from "@/logic/HandleOauthClientNode";
 
 type Body = {
   handle: string;
@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
 
   // OAuth authorize URL を生成
   let url: URL;
+  const client = await getOAuthClient();
   try {
     url = await client.authorize(handle, { prompt: "none" });
   } catch {

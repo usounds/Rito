@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { client } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient } from '@/logic/HandleOauthClientNode'
 import { Agent } from "@atproto/api";
 import crypto from "crypto";
 
@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const params = url.searchParams;
 
+  const client = await getOAuthClient();
   const error = params.get("error");
   if (error === "consent_required" || error === "login_required") {
     // サイレントサインインのリトライ

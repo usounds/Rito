@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
 import { Agent } from "@atproto/api";
 
 export async function GET(req: NextRequest) {
@@ -21,6 +21,7 @@ export async function GET(req: NextRequest) {
         return new NextResponse("Invalid signature", { status: 401 });
     }
 
+    const client = await getOAuthClient();
     const session = await client.restore(did);
     const agent = new Agent(session);
 

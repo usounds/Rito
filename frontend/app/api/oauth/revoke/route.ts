@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { client, verifySignedDid } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
 
 export async function GET(req: NextRequest) {
     const referer = req.headers.get("referer");
@@ -20,6 +20,7 @@ export async function GET(req: NextRequest) {
         return new NextResponse("Invalid signature", { status: 401 });
     }
 
+    const client = await getOAuthClient();
     try {
         // DID からセッションを復元
         const session = await client.restore(did);

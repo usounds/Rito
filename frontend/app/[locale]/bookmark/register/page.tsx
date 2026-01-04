@@ -557,13 +557,15 @@ export default function RegistBookmarkPage() {
                 });
 
             }
-        } catch {
+        } catch(e) {
             notifications.show({
                 title: 'Error',
                 message: messages.create.error.unknownError,
                 color: 'red',
                 icon: <X />
             });
+
+            console.error(e)
 
         }
 

@@ -1,7 +1,6 @@
 // app/xrpc/[...path]/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { Agent } from "@atproto/api";
-import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
+import { getOAuthClient, verifySignedDid,getAgent } from "@/logic/HandleOauthClientNode";
 
 export async function POST(req: NextRequest) {
   const referer = req.headers.get("referer");
@@ -27,8 +26,8 @@ export async function POST(req: NextRequest) {
   }
 
   const client = await getOAuthClient();
-  const session = await client.restore(did);
-  const agent = new Agent(session);
+  
+  const { agent } = await getAgent(did, client);
 
   const body = await req.json();
   try {

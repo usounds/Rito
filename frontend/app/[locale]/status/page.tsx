@@ -21,6 +21,23 @@ export default async function StatusPage({ params }: StatusProps) {
     const { locale } = await params;
     const t = await getTranslations({ locale });
 
+        if (process.env.SKIP_DB_DURING_BUILD === 'true') {
+        return (
+            <Container size="md" mx="auto">
+                <Breadcrumbs items={[{ label: t('status.title') }]} />
+                <Stats
+                    data={[
+                        { title: t('status.field.bookmark'), icon: 'bookmark', value: 0, diff: 0 },
+                        { title: t('status.field.tag'), icon: 'tag', value: 0, diff: 0 },
+                        { title: t('status.field.user'), icon: 'user', value: 0, diff: 0 },
+                        { title: t('status.field.like'), icon: 'like', value: 0, diff: 0 },
+                        { title: t('status.field.server'), icon: 'server', value: t('status.inform.unknown'), diff: 0 },
+                    ]}
+                />
+            </Container>
+        );
+    }
+
     const bookmarks = await prisma.bookmark.count({});
     const tags = await prisma.tag.count({});
     const uniqueDids = await prisma.bookmark.groupBy({

@@ -159,6 +159,7 @@ export function Authentication() {
         autoClose: true,
         icon: <X />
       });
+      loader.done()
       setIsLoading(false);
     } finally {
       //なにもしない

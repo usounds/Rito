@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getOAuthClient, verifySignedDid } from '@/logic/HandleOauthClientNode'
+import { getOAuthClient, verifySignedDid,getAgent } from '@/logic/HandleOauthClientNode'
 import { Agent } from "@atproto/api";
 
 async function getProfileWithRetry(
@@ -51,8 +51,8 @@ export async function GET(req: NextRequest) {
   }
 
   const client = await getOAuthClient();
-  const session = await client.restore(did);
-  const agent = new Agent(session);
+  
+const { agent, session } = await getAgent(did, client);
   const profile = await getProfileWithRetry(
     agent,
     agent.did || '',

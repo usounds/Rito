@@ -4,36 +4,8 @@ import { JoseKey } from '@atproto/jwk-jose'
 import { prisma } from '@/logic/HandlePrismaClient'
 import { SCOPE } from "@/type/OauthConstants"
 import crypto from "crypto"
-import { LRUCache } from 'lru-cache';
-import { Agent } from '@atproto/api';
-import { OAuthSession } from '@atproto/oauth-client-node';
 
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "secret"
-
-interface CachedAgent {
-  agent: Agent;
-  session: OAuthSession;
-}
-
-const agentCache = new LRUCache<string, CachedAgent>({
-  max: 100,               // 最大100ユーザーまで
-  ttl: 1000 * 60 * 30,    // 30分で自動破棄
-});
-
-export async function getAgent(did: string, client: NodeOAuthClient): Promise<CachedAgent> {
-  // キャッシュ済みなら即返す
-  const cached = agentCache.get(did);
-  if (cached) return cached;
-
-  // restore して Agent を作る
-  const session: OAuthSession = await client.restore(did);
-  const agent = new Agent(session);
-
-  const newCache: CachedAgent = { agent, session };
-  agentCache.set(did, newCache);
-
-  return newCache;
-}
 
 export function verifySignedDid(signedDid: string): string | null {
   const index = signedDid.lastIndexOf(".")

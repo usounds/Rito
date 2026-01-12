@@ -249,6 +249,7 @@
 			"error": "システムエラーが発生しました",
 			"success": "登録しました",
 			"nobookmark": "ブックマークはありません",
+			"nomore": "これ以上のブックマークはありません",
 			"process": "処理中です...",
 			"needlogin": "いいねをするには先にログインしてください"
 		},
@@ -336,16 +337,16 @@
 		"latestbookmarbyusers": "ユーザーごとの最新ブックマーク",
 		"latestLike": "いいねされたブックマーク"
 	},
-	"settings":{
-		"title":"設定",
+	"settings": {
+		"title": "設定",
 		"section": {
-			"enableAutoGenerateBookmark":{
-				"title":"自動収集(β)",
-				"description":"Bluesky上で「#rito.blue」タグを付けたあなたの投稿を、自動でリトにブックマークします",
-				"enable":"自動収集を有効にする"
+			"enableAutoGenerateBookmark": {
+				"title": "自動収集(β)",
+				"description": "Bluesky上で「#rito.blue」タグを付けたあなたの投稿を、自動でリトにブックマークします",
+				"enable": "自動収集を有効にする"
 			},
-			"user":{
-				"title":"現在ログインしているユーザー"
+			"user": {
+				"title": "現在ログインしているユーザー"
 			}
 		},
 		"inform": {

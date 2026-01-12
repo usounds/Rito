@@ -250,6 +250,7 @@
 			"error": "A system error has occurred",
 			"success": "Successfully registered",
 			"nobookmark": "No bookmarks",
+			"nomore": "No more bookmarks",
 			"process": "Processing...",
 			"needlogin": "Please log in first to like this."
 		},

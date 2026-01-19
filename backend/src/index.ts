@@ -13,6 +13,55 @@ import { Agent } from "@atproto/api";
 import * as TID from '@atcute/tid';
 const queue = new PQueue({ concurrency: 1 });
 
+// Type definitions for API responses
+interface DidDocument {
+  alsoKnownAs?: string[];
+}
+
+interface DomainCheckResult {
+  result: boolean;
+}
+
+interface OgpResult {
+  result: {
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: { url: string }[];
+  };
+}
+
+interface DnsAnswer {
+  data: string;
+}
+
+interface DnsResponse {
+  Answer?: DnsAnswer[];
+}
+
+interface PostToBookmarkRecord {
+  sub: string;
+  lang?: string;
+}
+
+// Comment locale type
+interface CommentLocale {
+  lang: string;
+  title?: string;
+  comment?: string;
+}
+
+// Bookmark record type (the inner object, not the full record schema)
+interface BookmarkRecord {
+  $type: 'blue.rito.feed.bookmark';
+  subject: string;
+  createdAt?: string;
+  comments?: CommentLocale[];
+  ogpTitle?: string;
+  ogpDescription?: string;
+  ogpImage?: string;
+  tags?: string[];
+}
+
 const dbLimit = pLimit(5); // 同時に DB 操作は最大 5 件まで
 const publicAgent = new Client({
   handler: simpleFetchHandler({
@@ -153,7 +202,7 @@ async function init() {
   async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
     //console.log("upsertBookmark")
 
-    const record = event.commit.record as BlueRitoFeedBookmark.Main;
+    const record = event.commit.record as BookmarkRecord;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     cursor = event.time_us.toString();
 
@@ -166,8 +215,8 @@ async function init() {
       try {
         const res = await fetch(`https://plc.directory/${event.did}`);
         if (res.ok) {
-          const didData = await res.json();
-          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+          const didData = await res.json() as DidDocument;
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '') ?? handle;
           logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
           break; // 成功したらループを抜ける
         } else {
@@ -197,7 +246,7 @@ async function init() {
     }
 
     // URL が正しいかチェック
-    const subject = event.commit.record.subject || '';
+    const subject = record.subject || '';
     try {
       const url = new URL(subject);
       const domain = url.hostname;
@@ -259,7 +308,7 @@ async function init() {
         })
       );
 
-      const existingLangs = (record.comments ?? []).map(c => c.lang);
+      const existingLangs = (record.comments ?? []).map((c: CommentLocale) => c.lang);
 
       // コメントの upsert（個別に moderation）
       for (const c of record.comments ?? []) {
@@ -323,8 +372,8 @@ async function init() {
 
       // タグの更新
       let tagsLocal = (record.tags ?? [])
-        .filter((name) => name && name.trim().length > 0) // 空文字を除外
-        .filter((name) => name.toLowerCase() !== "verified");
+        .filter((name: string) => name && name.trim().length > 0) // 空文字を除外
+        .filter((name: string) => name.toLowerCase() !== "verified");
 
       if (isVerify) tagsLocal.push("Verified");
 
@@ -423,8 +472,8 @@ async function init() {
         try {
           const res = await fetch(`https://plc.directory/${event.did}`);
           if (res.ok) {
-            const didData = await res.json();
-            handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+            const didData = await res.json() as DidDocument;
+            handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '') ?? handle;
             logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
             break; // 成功したらループを抜ける
           } else {
@@ -478,7 +527,7 @@ async function init() {
         return
       }
       const domainCheck = await fetch(`https://rito.blue/api/checkDomain?domain=${domain}`);
-      const domainData = await domainCheck.json();
+      const domainData = await domainCheck.json() as DomainCheckResult;
 
       if (domainData.result) {
         logger.warn(`Domain not allowed: ${domain} for post ${aturi}`);
@@ -491,13 +540,26 @@ async function init() {
 
       try {
         const ogp = await fetch(`https://rito.blue/api/fetchOgp?url=${encodeURIComponent(urlString)}`);
-        const ogpData = await ogp.json();
+        const ogpData = await ogp.json() as OgpResult;
 
-        if (ogpData.result.ogTitle) oggTitle = ogpData.result.ogTitle;
-        if (ogpData.result.ogDescription) ogpDescription = ogpData.result.ogDescription;
-        if (ogpData.result.ogImage[0].url) ogImage = ogpData.result.ogImage[0].url;
+        if (ogpData.result?.ogTitle) oggTitle = ogpData.result.ogTitle;
+        if (ogpData.result?.ogDescription) ogpDescription = ogpData.result.ogDescription;
+        if (ogpData.result?.ogImage?.[0]?.url) ogImage = ogpData.result.ogImage[0].url;
 
       } catch (err) {
+      }
+
+      // 既に同じURLのブックマークが存在するかチェック（重複作成防止）
+      const existingBookmark = await prisma.bookmark.findFirst({
+        where: {
+          did: event.did,
+          subject: uniqueLinks[0],
+        },
+      });
+
+      if (existingBookmark) {
+        logger.info(`Bookmark already exists for ${uniqueLinks[0]} by ${event.did}, skipping...`);
+        return;
       }
 
       const session = await oauthClient.restore(event.did);
@@ -535,7 +597,7 @@ async function init() {
           createdAt: new Date().toISOString(),
           comments: [
             {
-              lang: exists.lang || 'ja',
+              lang: (exists as PostToBookmarkRecord).lang || 'ja',
               title: oggTitle,
               comment: normalizeComment(event.commit.record.text || ''),
             }
@@ -575,10 +637,10 @@ async function init() {
   const fetchTxtRecords = async (subDomain: string): Promise<string | null> => {
     try {
       const response = await fetch(`https://dns.google/resolve?name=${subDomain}&type=TXT`);
-      const data = await response.json();
+      const data = await response.json() as DnsResponse;
       if (!data.Answer || data.Answer.length === 0) return null;
 
-      const txtData = data.Answer.map((a: any) => a.data)
+      const txtData = data.Answer.map((a: DnsAnswer) => a.data)
         .join("")
         .replace(/^"|"$/g, "")
         .replace(/"/g, "");
@@ -622,8 +684,8 @@ async function init() {
       try {
         const res = await fetch(`https://plc.directory/${event.did}`);
         if (res.ok) {
-          const didData = await res.json();
-          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+          const didData = await res.json() as DidDocument;
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '') ?? '';
         }
 
         if (!handle) {
@@ -681,8 +743,8 @@ async function init() {
       try {
         const res = await fetch(`https://plc.directory/${event.did}`);
         if (res.ok) {
-          const didData = await res.json();
-          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '');
+          const didData = await res.json() as DidDocument;
+          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '') ?? handle;
           logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
           break; // 成功したらループを抜ける
         } else {

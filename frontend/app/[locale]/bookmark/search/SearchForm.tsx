@@ -53,8 +53,8 @@ export function SearchForm({
         const data: TagRanking[] = await res.json();
         // タグリストを更新
         let tagNames = data.map(r => r.tag);
-        // Verified がなければ追加
-        if (!tagNames.includes("Verified") && !selectedTags.includes("Verified")) {
+        // タグ未選択時のみ Verified を先頭に追加
+        if (selectedTags.length === 0 && !tagNames.includes("Verified")) {
           tagNames = ["Verified", ...tagNames];
         }
         setMyTag(tagNames);

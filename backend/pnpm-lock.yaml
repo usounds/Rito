@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  undici: '>=6.23.0'
+
 importers:
 
   .:
@@ -649,9 +652,9 @@ packages:
   undici-types@7.16.0:
     resolution: {integrity: sha512-Zz+aZWSj8LE6zoxD+xrjh4VfkIG8Ya6LvYkZqtUQGJPZjYl53ypCaUwWqo7eI0x66KBGeRo+mlBEkMSeSZ38Nw==}
 
-  undici@6.22.0:
-    resolution: {integrity: sha512-hU/10obOIu62MGYjdskASR3CUAiYaFTtC9Pa6vHyf//mAipSvSQg6od2CnJswq7fvzNS3zJhxoRkgNVaHurWKw==}
-    engines: {node: '>=18.17'}
+  undici@7.18.2:
+    resolution: {integrity: sha512-y+8YjDFzWdQlSE9N5nzKMT3g4a5UBX1HKowfdXh0uvAnTaqqwqB92Jt4UXBAeKekDs5IaDKyJFR4X1gYVCgXcw==}
+    engines: {node: '>=20.18.1'}
 
   unicode-segmenter@0.14.4:
     resolution: {integrity: sha512-pR5VCiCrLrKOL6FRW61jnk9+wyMtKKowq+jyFY9oc6uHbWKhDL4yVRiI4YZPksGMK72Pahh8m0cn/0JvbDDyJg==}
@@ -720,7 +723,7 @@ snapshots:
       '@atproto-labs/fetch': 0.2.3
       '@atproto-labs/pipe': 0.1.1
       ipaddr.js: 2.3.0
-      undici: 6.22.0
+      undici: 7.18.2
 
   '@atproto-labs/fetch@0.2.3':
     dependencies:
@@ -1277,7 +1280,7 @@ snapshots:
 
   undici-types@7.16.0: {}
 
-  undici@6.22.0: {}
+  undici@7.18.2: {}
 
   unicode-segmenter@0.14.4: {}
 

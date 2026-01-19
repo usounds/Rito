@@ -49,7 +49,7 @@ export function SearchForm({
             const res = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag?${params.toString()}`);
             if (res.ok) {
                 const data: TagRanking[] = await res.json();
-                // タグリストを更新
+                // タグリストを更新（APIから返されたタグのみ表示）
                 const tagNames = data.map(r => r.tag);
                 setMyTag(tagNames);
                 // 件数マップを更新

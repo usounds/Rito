@@ -4,27 +4,29 @@ import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from "next/navigation";
 import { ClipboardPaste } from 'lucide-react';
-import { useMyBookmark } from "@/state/MyBookmark";
 import { TagSuggestion } from "@/components/TagSuggest";
 import User from "@/components/user/User";
+import { TagRanking } from '@/type/ApiTypes';
 
 type SearchFormProps = {
     defaultTags?: string[];
     userTags?: string[];
+    tagCounts?: Record<string, number>;
     did: string;
 };
 
 export function SearchForm({
     defaultTags = [],
     userTags = [],
+    tagCounts: initialTagCounts,
     did,
 }: SearchFormProps) {
     const [tags, setTags] = useState<string[]>(defaultTags);
-    const [myTag, setMyTag] = useState<string[]>([]);
-    const tagRanking = useMyBookmark(state => state.tagRanking);
+    const [myTag, setMyTag] = useState<string[]>(userTags);
+    const [dynamicTagCounts, setDynamicTagCounts] = useState<Record<string, number>>(initialTagCounts ?? {});
     const [isLoading, setIsLoading] = useState(false);
     const [copied, setCopied] = useState(false);
     const messages = useMessages();
@@ -35,14 +37,44 @@ export function SearchForm({
     // App Router 用: クエリパラメータを取得
     const searchParams = useSearchParams();
 
+    // 選択タグに基づいて関連タグを取得（ユーザー固有）
+    const fetchRelatedTags = useCallback(async (selectedTags: string[]) => {
+        try {
+            const params = new URLSearchParams();
+            params.set('actor', did);
+            if (selectedTags.length > 0) {
+                params.set('tags', selectedTags.join(','));
+            }
+
+            const res = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag?${params.toString()}`);
+            if (res.ok) {
+                const data: TagRanking[] = await res.json();
+                // タグリストを更新
+                const tagNames = data.map(r => r.tag);
+                setMyTag(tagNames);
+                // 件数マップを更新
+                setDynamicTagCounts(Object.fromEntries(data.map(r => [r.tag, r.count])));
+            }
+        } catch (err) {
+            console.error("Error fetching related tags:", err);
+        }
+    }, [did]);
+
     useEffect(() => {
         if (!searchParams) return;
 
         const tagParam = searchParams.get('tag');
-        setMyTag(userTags);
+        const initialTags = tagParam ? tagParam.split(',') : [];
+        setTags(initialTags);
 
-        setTags(tagParam ? tagParam.split(',') : []);
-    }, [searchParams, tagRanking]);
+        // 初期ロード時に関連タグを取得
+        fetchRelatedTags(initialTags);
+    }, [searchParams, fetchRelatedTags]);
+
+    // タグ変更時に関連タグを再取得
+    useEffect(() => {
+        fetchRelatedTags(tags);
+    }, [tags, fetchRelatedTags]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -93,6 +125,7 @@ export function SearchForm({
                                 tags={myTag}
                                 selectedTags={tags}
                                 setTags={setTags}
+                                tagCounts={dynamicTagCounts}
                             />
                         </Box>
                     </SimpleGrid>

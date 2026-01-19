@@ -7,6 +7,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 import { Info } from 'lucide-react';
+import { TagSuggestion } from "@/components/TagSuggest";
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -17,6 +18,18 @@ export function MyBookmark() {
     // --- フックは必ず最初に ---
     const [tags, setTags] = useState<string[]>([]);
     const [query, setQuery] = useState<string>("");
+
+    // ユーザーのブックマークからタグと件数を集計
+    const { allTags, tagCounts } = useMemo(() => {
+        if (!Array.isArray(myBookmark)) return { allTags: [], tagCounts: {} };
+        const counts: Record<string, number> = {};
+        myBookmark.forEach(b => {
+            b.tags.forEach((tag: string) => {
+                counts[tag] = (counts[tag] || 0) + 1;
+            });
+        });
+        return { allTags: Object.keys(counts), tagCounts: counts };
+    }, [myBookmark]);
 
     const filteredBookmarks = useMemo(() => {
         if (!Array.isArray(myBookmark)) return [];
@@ -54,14 +67,22 @@ export function MyBookmark() {
     return (
         <Stack gap="md">
             <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <TagsInput
-                    label={messages.search.field.tag.title}
-                    placeholder={messages.search.field.tag.placeholder}
-                    value={tags}
-                    onChange={(newTags) => setTags(newTags.map(tag => tag.replace(/#/g, "")))}
-                    styles={{ input: { fontSize: 16 } }}
-                    clearable
-                />
+                <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <TagsInput
+                        label={messages.search.field.tag.title}
+                        placeholder={messages.search.field.tag.placeholder}
+                        value={tags}
+                        onChange={(newTags) => setTags(newTags.map(tag => tag.replace(/#/g, "")))}
+                        styles={{ input: { fontSize: 16 } }}
+                        clearable
+                    />
+                    <TagSuggestion
+                        tags={allTags}
+                        selectedTags={tags}
+                        setTags={setTags}
+                        tagCounts={tagCounts}
+                    />
+                </Box>
                 <TextInput
                     label={messages.mybookmark.field.search.title}
                     placeholder={messages.mybookmark.field.search.placeholder}

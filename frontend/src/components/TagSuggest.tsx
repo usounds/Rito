@@ -8,12 +8,14 @@ interface TagSuggestionProps {
     tags: string[];             // 他人のタグ（ランキング）
     selectedTags: string[];            // すでに選択済みのタグ
     setTags: (tags: string[]) => void; // 親に返す
+    tagCounts?: Record<string, number>; // タグごとの件数（オプショナル）
 }
 
 export function TagSuggestion({
     tags = [],
     selectedTags,
     setTags,
+    tagCounts,
 }: TagSuggestionProps) {
     const [suggested, setSuggested] = useState<string[]>([]);
 
@@ -49,7 +51,7 @@ export function TagSuggestion({
                 {/* 再提案ボタンをタグの左に */}
                 <ActionIcon
                     variant="outline"
-                     color="gray"
+                    color="gray"
                     size="sm"
                     aria-label="再提案"
                     onClick={updateSuggestions}
@@ -75,6 +77,11 @@ export function TagSuggestion({
                         >
                             {tag === "Verified" && <BadgeCheck size={12} />}
                             {tag}
+                            {tagCounts && tagCounts[tag] !== undefined && (
+                                <span style={{ marginLeft: 4, opacity: 0.7 }}>
+                                    ({tagCounts[tag]})
+                                </span>
+                            )}
                         </span>
                     </Badge>
                 ))}

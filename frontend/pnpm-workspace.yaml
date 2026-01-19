@@ -1,4 +1,5 @@
 onlyBuiltDependencies:
+  - '@atcute/time-ms'
   - '@parcel/watcher'
   - '@prisma/client'
   - '@prisma/engines'

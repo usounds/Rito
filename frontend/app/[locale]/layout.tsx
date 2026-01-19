@@ -11,6 +11,7 @@ import { Footer } from "@/components/footer/Footer";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 export async function generateMetadata({
   params,
@@ -90,7 +91,8 @@ export default async function RootLayout({
             />
             <Header />
             {children}
-            <Footer locale={locale}/>
+            <Footer locale={locale} />
+            <ScrollToTop />
           </MantineProvider>
         </NextIntlClientProvider>
       </body>

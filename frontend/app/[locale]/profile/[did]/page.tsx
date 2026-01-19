@@ -61,15 +61,22 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
     tags: { tag: { name: string } }[];
   }>;
 
-  const allTags: string[] = Array.from(
-    new Set(allBookmarks.flatMap(b => b.tags.map(bt => bt.tag.name)))
-  );
+  // タグごとの件数を集計
+  const tagCounts: Record<string, number> = {};
+  allBookmarks.forEach(b => {
+    b.tags.forEach(bt => {
+      const name = bt.tag.name;
+      tagCounts[name] = (tagCounts[name] || 0) + 1;
+    });
+  });
+
+  const allTags: string[] = Object.keys(tagCounts);
 
   return (
     <Container size="md" mx="auto">
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
 
-      <SearchForm defaultTags={tags} userTags={allTags} did={decodedDid} />
+      <SearchForm defaultTags={tags} userTags={allTags} tagCounts={tagCounts} did={decodedDid} />
 
       {result.items.length === 0 && <Text c="dimmed" mt="md">{t('profile.inform.nobookmark')}</Text>}
 

@@ -4,12 +4,13 @@ import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from "next/navigation";
 import { ClipboardPaste } from 'lucide-react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { TagRanking } from '@/type/ApiTypes';
 
 type SearchFormProps = {
   locale: string;
@@ -24,6 +25,7 @@ export function SearchForm({
 }: SearchFormProps) {
   const [tags, setTags] = useState<string[]>(defaultTags);
   const [myTag, setMyTag] = useState<string[]>([]);
+  const [dynamicTagCounts, setDynamicTagCounts] = useState<Record<string, number>>({});
   const [handles, setHandles] = useState<string[]>(defaultHandles);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const tagRanking = useMyBookmark(state => state.tagRanking);
@@ -39,27 +41,50 @@ export function SearchForm({
   // App Router 用: クエリパラメータを取得
   const searchParams = useSearchParams();
 
+  // 選択タグに基づいて関連タグを取得
+  const fetchRelatedTags = useCallback(async (selectedTags: string[]) => {
+    try {
+      const url = selectedTags.length > 0
+        ? `/xrpc/blue.rito.feed.getLatestBookmarkTag?tags=${encodeURIComponent(selectedTags.join(','))}`
+        : `/xrpc/blue.rito.feed.getLatestBookmarkTag`;
+
+      const res = await fetch(url);
+      if (res.ok) {
+        const data: TagRanking[] = await res.json();
+        // タグリストを更新
+        let tagNames = data.map(r => r.tag);
+        // Verified がなければ追加
+        if (!tagNames.includes("Verified") && !selectedTags.includes("Verified")) {
+          tagNames = ["Verified", ...tagNames];
+        }
+        setMyTag(tagNames);
+        // 件数マップを更新
+        setDynamicTagCounts(Object.fromEntries(data.map(r => [r.tag, r.count])));
+      }
+    } catch (err) {
+      console.error("Error fetching related tags:", err);
+    }
+  }, []);
+
   useEffect(() => {
     if (!searchParams) return;
 
     const tagParam = searchParams.get('tag');
     const handleParam = searchParams.get('handle');
 
-    let rankingTags: string[] = tagRanking
-      .filter(r => r.count >= 2)  // count が 2 以上
-      .map(r => r.tag);
-
-    // Verified がなければ追加
-    if (!rankingTags.includes("Verified")) {
-      rankingTags = ["Verified", ...rankingTags];
-    }
-
-    setMyTag(rankingTags);
-
     setCommentPriority(searchParams.get('comment') || 'comment');
-    setTags(tagParam ? tagParam.split(',') : []);
+    const initialTags = tagParam ? tagParam.split(',') : [];
+    setTags(initialTags);
     setHandles(handleParam ? handleParam.split(',') : []);
-  }, [searchParams, tagRanking]);
+
+    // 初期ロード時に関連タグを取得
+    fetchRelatedTags(initialTags);
+  }, [searchParams, fetchRelatedTags]);
+
+  // タグ変更時に関連タグを再取得
+  useEffect(() => {
+    fetchRelatedTags(tags);
+  }, [tags, fetchRelatedTags]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +158,7 @@ export function SearchForm({
               tags={myTag}
               selectedTags={tags}
               setTags={setTags}
+              tagCounts={dynamicTagCounts}
             />
           </Box>
 

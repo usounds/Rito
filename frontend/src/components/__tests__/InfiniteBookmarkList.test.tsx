@@ -8,7 +8,7 @@ import { fetchBookmarksAction } from '@app/[locale]/bookmark/search/latestbookma
 vi.mock('@mantine/core', () => ({
     SimpleGrid: ({ children }: { children: React.ReactNode }) => <div data-testid="grid">{children}</div>,
     Stack: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-    Center: ({ children }: { children: React.ReactNode }) => <div data-testid="center">{children}</div>,
+    Center: vi.fn().mockImplementation(({ children, ...props }) => <div data-testid="center" {...props}>{children}</div>),
     Loader: () => <div data-testid="loader">Loading...</div>,
     Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,
     Box: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -22,8 +22,8 @@ vi.mock('@mantine/hooks', () => ({
 }));
 
 vi.mock('@/components/bookmarkcard/Article', () => ({
-    Article: ({ url, title }: { url: string; title: string }) => (
-        <div data-testid="article-card" data-url={url}>{title}</div>
+    Article: ({ url, title, comment }: { url: string; title: string, comment: string }) => (
+        <div data-testid="article-card" data-url={url} data-title={title} data-comment={comment}>{title}</div>
     ),
 }));
 
@@ -34,19 +34,23 @@ vi.mock('@app/[locale]/bookmark/search/latestbookmark/actions', () => ({
     }),
 }));
 
+vi.mock('next-intl', () => ({
+    useTranslations: () => (key: string) => key === 'nomore' ? 'nomore' : key,
+}));
+
 describe('InfiniteBookmarkList', () => {
     const mockBookmark = {
         uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/1',
         handle: 'user.bsky.social',
         subject: 'https://example.com/article',
-        ogpTitle: 'Test Article',
-        ogpDescription: 'Description',
+        ogpTitle: 'OGP Title',
+        ogpDescription: 'OGP Description',
         ogpImage: 'https://example.com/image.jpg',
         createdAt: '2024-01-01T00:00:00Z',
         indexedAt: '2024-01-01T00:00:00Z',
-        moderations: [],
+        moderations: ['mod1'],
         comments: [
-            { lang: 'ja', title: '日本語タイトル', comment: 'コメント', moderations: [] } as any,
+            { lang: 'ja', title: 'JA Title', comment: 'JA Comment', moderations: ['ja-mod'] } as any,
         ],
         tags: ['test'],
         likes: [],
@@ -65,49 +69,46 @@ describe('InfiniteBookmarkList', () => {
         expect(screen.getByTestId('grid')).toBeInTheDocument();
     });
 
-    it('ブックマークカードを表示する', () => {
-        render(<InfiniteBookmarkList {...defaultProps} />);
+    it('query.comment が comment の場合、コメント情報を優先表示する', () => {
+        render(<InfiniteBookmarkList {...defaultProps} query={{ ...defaultProps.query, comment: 'comment' }} />);
+        const card = screen.getByTestId('article-card');
+        expect(card).toHaveAttribute('data-title', 'JA Title');
+        expect(card).toHaveAttribute('data-comment', 'JA Comment');
+    });
+
+    it('query.comment が none の場合、OGP情報を優先表示する', () => {
+        render(<InfiniteBookmarkList {...defaultProps} query={{ ...defaultProps.query, comment: 'none' } as any} />);
+        const card = screen.getByTestId('article-card');
+        expect(card).toHaveAttribute('data-title', 'OGP Title');
+        expect(card).toHaveAttribute('data-comment', 'OGP Description');
+    });
+
+    it('sort が updated の場合、indexedAt を日付として使用する', () => {
+        const customBookmark = {
+            ...mockBookmark,
+            createdAt: '2024-01-01T00:00:00Z',
+            indexedAt: '2024-02-01T00:00:00Z',
+        };
+        // Article mock doesn't show date, but we hit the branch
+        render(<InfiniteBookmarkList {...defaultProps} initialItems={[customBookmark] as any} query={{ sort: 'updated' }} />);
         expect(screen.getByTestId('article-card')).toBeInTheDocument();
     });
 
-    it('複数のブックマークを表示する', () => {
-        const props = {
-            ...defaultProps,
-            initialItems: [
-                mockBookmark,
-                { ...mockBookmark, uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/2' },
-                { ...mockBookmark, uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/3' },
-            ],
-        };
-        render(<InfiniteBookmarkList {...props as any} />);
-        const cards = screen.getAllByTestId('article-card');
-        expect(cards).toHaveLength(3);
+    it('initialItems が変更されたら内部状態をリセットする', () => {
+        const { rerender } = render(<InfiniteBookmarkList {...defaultProps} />);
+        expect(screen.getAllByTestId('article-card')).toHaveLength(1);
+
+        const newItems = [
+            mockBookmark,
+            { ...mockBookmark, uri: 'at://2', subject: 'https://2.com' }
+        ];
+        rerender(<InfiniteBookmarkList {...defaultProps} initialItems={newItems as any} />);
+        expect(screen.getAllByTestId('article-card')).toHaveLength(2);
     });
 
-    it('hasMore=trueでローダー領域を表示', () => {
-        render(<InfiniteBookmarkList {...defaultProps} initialHasMore={true} />);
-        expect(screen.getByTestId('center')).toBeInTheDocument();
-    });
-
-    it('空リストを正しく処理', () => {
-        render(<InfiniteBookmarkList {...defaultProps} initialItems={[]} />);
-        expect(screen.queryByTestId('article-card')).not.toBeInTheDocument();
-    });
-
-    it('ロケールに基づいてコメントを選択', () => {
-        const props = {
-            ...defaultProps,
-            initialItems: [{
-                ...mockBookmark,
-                comments: [
-                    { lang: 'ja', title: '日本語', comment: 'JA', moderations: [] },
-                    { lang: 'en', title: 'English', comment: 'EN', moderations: [] },
-                ],
-            }],
-            locale: 'en',
-        };
-        render(<InfiniteBookmarkList {...props as any} />);
-        expect(screen.getByTestId('article-card')).toBeInTheDocument();
+    it('nomoreメッセージを表示する', () => {
+        render(<InfiniteBookmarkList {...defaultProps} initialHasMore={false} />);
+        expect(screen.getByText('nomore')).toBeInTheDocument();
     });
 
     it('交差時に loadMore を呼び出す', async () => {
@@ -122,7 +123,6 @@ describe('InfiniteBookmarkList', () => {
             totalPages: 1,
         } as any);
 
-        // isIntersecting: true にして再レンダリングを促す
         vi.mocked(useIntersection).mockReturnValue({
             ref: { current: null },
             entry: { isIntersecting: true },

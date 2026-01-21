@@ -17,6 +17,26 @@ vi.mock('@/logic/HandlePrismaClient', () => ({
 import { withTrailingSlashVariants, normalizeBookmarks, enrichBookmarks } from '../HandleBookmark';
 
 describe('HandleBookmark', () => {
+    const mockRawBookmark = {
+        uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/yyy',
+        handle: 'user.bsky.social',
+        subject: 'https://example.com/article',
+        ogp_title: 'Test Article',
+        ogp_description: 'Description',
+        ogp_image: 'https://example.com/image.jpg',
+        created_at: new Date('2024-01-01T00:00:00Z'),
+        indexed_at: new Date('2024-01-01T00:00:00Z'),
+        moderation_result: 'nsfw,spam',
+        comments: [
+            { lang: 'ja', title: '日本語タイトル', comment: 'コメント', moderation_result: null },
+            { lang: 'en', title: 'English Title', comment: 'Comment', moderation_result: 'adult' },
+        ],
+        tags: [
+            { tag: { name: 'test' } },
+            { tag: { name: 'Verified' } },
+        ],
+    };
+
     beforeEach(() => {
         vi.clearAllMocks();
     });
@@ -39,25 +59,6 @@ describe('HandleBookmark', () => {
     });
 
     describe('normalizeBookmarks', () => {
-        const mockRawBookmark = {
-            uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/yyy',
-            handle: 'user.bsky.social',
-            subject: 'https://example.com/article',
-            ogp_title: 'Test Article',
-            ogp_description: 'Description',
-            ogp_image: 'https://example.com/image.jpg',
-            created_at: new Date('2024-01-01T00:00:00Z'),
-            indexed_at: new Date('2024-01-01T00:00:00Z'),
-            moderation_result: 'nsfw,spam',
-            comments: [
-                { lang: 'ja', title: '日本語タイトル', comment: 'コメント', moderation_result: null },
-                { lang: 'en', title: 'English Title', comment: 'Comment', moderation_result: 'adult' },
-            ],
-            tags: [
-                { tag: { name: 'test' } },
-                { tag: { name: 'Verified' } },
-            ],
-        };
 
         it('RawBookmarkをBookmark形式に変換する', () => {
             const result = normalizeBookmarks([mockRawBookmark as never]);
@@ -218,6 +219,46 @@ describe('HandleBookmark', () => {
             expect(result).toHaveLength(2);
             expect(result[0].likes).toHaveLength(1);
             expect(result[1].likes).toHaveLength(0);
+        });
+
+        it('日付が文字列の場合も正しく処理', () => {
+            const stringDateBookmark = {
+                ...mockRawBookmark,
+                created_at: '2024-05-01T12:00:00Z',
+                indexed_at: '2024-05-01T12:00:00Z',
+            };
+            const result = normalizeBookmarks([stringDateBookmark as never]);
+            expect(result[0].createdAt).toBe('2024-05-01T12:00:00Z');
+        });
+
+        it('コメントのフィールドが欠落している場合を処理', () => {
+            const partialCommentBookmark = {
+                ...mockRawBookmark,
+                comments: [{ lang: 'ja', title: null, comment: null, moderation_result: null }],
+            };
+            const result = normalizeBookmarks([partialCommentBookmark as never]);
+            expect(result[0].comments[0].title).toBe('');
+            expect(result[0].comments[0].comment).toBe('');
+        });
+
+        it('タグが配列でない場合を処理', () => {
+            const noTagsBookmark = { ...mockRawBookmark, tags: null };
+            const result = normalizeBookmarks([noTagsBookmark as never]);
+            expect(result[0].tags).toEqual([]);
+        });
+
+        it('AT-URI Likeがどのbookmarkにもマッチしない場合を処理', async () => {
+            mockPrisma.bookmark.findMany.mockResolvedValue([
+                { uri: 'at://did:plc:xxx/blue.rito.feed.bookmark/1', subject: 'https://example.com' },
+            ]);
+            mockPrisma.like.findMany.mockResolvedValue([
+                { subject: 'at://did:plc:other/blue.rito.feed.bookmark/999', aturi: 'at://like/1' },
+            ]);
+
+            const result = await enrichBookmarks(mockBookmarks as never, mockPrisma as never);
+            // マッチしないAT-URI Likeはそのまま保持される（特定のuriには紐付かないが、コード上は matchedUris.push(like.subject) を通る）
+            // 実際には uriLikesMap[bookmark.uri] 経由で取得されるので、どのブックマークの likes にも含まれない
+            expect(result[0].likes).toHaveLength(0);
         });
     });
 });

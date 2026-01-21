@@ -66,4 +66,27 @@ describe('xRPC: /xrpc/blue.rito.feed.getActorBookmarks', () => {
 
         expect(response.status).toBe(400);
     });
+
+    it('likesを正しくマッピングして返す', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.like.findMany).mockResolvedValueOnce([
+            { subject: 'at://did:plc:testuser/blue.rito.feed.bookmark/1', aturi: 'at://like/1' }
+        ] as any);
+
+        const req = new Request('http://localhost/xrpc/blue.rito.feed.getActorBookmarks?actor=did:plc:testuser');
+        const response = await GET(req);
+        const data = await response.json();
+
+        expect(data[0].likes).toEqual(['at://like/1']);
+    });
+
+    it('内部エラーが発生した場合は500エラー', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.bookmark.findMany).mockRejectedValueOnce(new Error('DB Error'));
+
+        const req = new Request('http://localhost/xrpc/blue.rito.feed.getActorBookmarks?actor=did:plc:testuser');
+        const response = await GET(req);
+
+        expect(response.status).toBe(500);
+    });
 });

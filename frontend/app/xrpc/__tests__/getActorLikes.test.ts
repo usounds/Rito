@@ -53,4 +53,24 @@ describe('xRPC: /xrpc/blue.rito.feed.getActorLikes', () => {
 
         expect(response.status).toBe(400);
     });
+
+    it('存在しないhandleの場合は404エラー', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.userDidHandle.findFirst).mockResolvedValueOnce(null);
+
+        const req = new Request('http://localhost/xrpc/blue.rito.feed.getActorLikes?actor=unknown.handle');
+        const response = await GET(req);
+
+        expect(response.status).toBe(404);
+    });
+
+    it('内部エラーが発生した場合は500エラー', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.like.findMany).mockRejectedValueOnce(new Error('DB Error'));
+
+        const req = new Request('http://localhost/xrpc/blue.rito.feed.getActorLikes?actor=did:plc:testuser');
+        const response = await GET(req);
+
+        expect(response.status).toBe(500);
+    });
 });

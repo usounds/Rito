@@ -150,7 +150,10 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
         try {
             const recordUrl = `${SLINGSHOT_BASE_URL}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(record.did)}&collection=${encodeURIComponent(record.collection)}&rkey=${encodeURIComponent(record.rkey)}`;
             const recordRes = await fetch(recordUrl, {
-                headers: { "User-Agent": MICROCOSM_USER_AGENT },
+                headers: {
+                    "User-Agent": MICROCOSM_USER_AGENT,
+                    "X-User-Agent": MICROCOSM_USER_AGENT
+                },
             });
 
             if (!recordRes.ok) return null;
@@ -185,7 +188,10 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
             try {
                 const backlinksUrl = `${CONSTELLATION_BASE_URL}/links?target=${encodeURIComponent(subjectUrl)}&collection=app.bsky.feed.post&path=.embed.external.uri&limit=100`;
                 const backlinksRes = await fetch(backlinksUrl, {
-                    headers: { "User-Agent": MICROCOSM_USER_AGENT },
+                    headers: {
+                        "User-Agent": MICROCOSM_USER_AGENT,
+                        "X-User-Agent": MICROCOSM_USER_AGENT
+                    },
                 });
 
                 if (!backlinksRes.ok) {

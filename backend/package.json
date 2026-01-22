@@ -11,7 +11,10 @@
     "prisma:generate": "npx prisma generate",
     "docker:build": "docker build -t rito-backend:latest .",
     "docker:run": "docker run -it --rm --name rito-backend --env-file .env rito-backend:latest",
-    "docker:push": "docker buildx build --platform linux/amd64 -t ghcr.io/usounds/rito-backend:latest . --push"
+    "docker:push": "docker buildx build --platform linux/amd64 -t ghcr.io/usounds/rito-backend:latest . --push",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +40,9 @@
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@types/ws": "^8.18.1",
-    "prisma": "^6.19.0"
+    "@vitest/coverage-v8": "^4.0.17",
+    "prisma": "^6.19.0",
+    "vitest": "^4.0.17"
   },
   "pnpm": {
     "overrides": {

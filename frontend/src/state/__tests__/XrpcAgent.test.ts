@@ -1,9 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { Client } from '@atcute/client';
 
 // Mock Client with proper class implementation
 vi.mock('@atcute/client', () => {
     return {
         Client: class MockClient {
+            constructor() { }
             get = vi.fn();
             post = vi.fn();
         },
@@ -71,5 +73,17 @@ describe('Store: XrpcAgent', () => {
     it('thisClientが初期化されている', () => {
         const state = useXrpcAgentStore.getState();
         expect(state.thisClient).toBeDefined();
+    });
+
+    it('setPublicAgentでPublicAgentを更新できる', () => {
+        const newAgent = new Client() as any;
+        useXrpcAgentStore.getState().setPublicAgent(newAgent);
+        expect(useXrpcAgentStore.getState().publicAgent).toBe(newAgent);
+    });
+
+    it('setThisClientでThisClientを更新できる', () => {
+        const newClient = new Client() as any;
+        useXrpcAgentStore.getState().setThisClient(newClient);
+        expect(useXrpcAgentStore.getState().thisClient).toBe(newClient);
     });
 });

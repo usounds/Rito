@@ -70,4 +70,69 @@ describe('API: /api/oauth/login', () => {
         const response = await POST(req);
         expect(response.status).toBe(400);
     });
+
+    it('不正なrefererは403エラー', async () => {
+        const req = new NextRequest('http://localhost/api/oauth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'referer': 'http://malicious.com/',
+            },
+            body: JSON.stringify({
+                handle: 'user.bsky.social',
+                csrf: 'token',
+            }),
+        });
+        req.cookies.set('CSRF_TOKEN', 'token');
+
+        const response = await POST(req);
+        expect(response.status).toBe(403);
+    });
+
+    it('不正なreturnToは403エラー', async () => {
+        const req = new NextRequest('http://localhost/api/oauth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'referer': 'http://localhost:3000/',
+            },
+            body: JSON.stringify({
+                handle: 'user.bsky.social',
+                returnTo: 'http://malicious.com/',
+                csrf: 'token',
+            }),
+        });
+        req.cookies.set('CSRF_TOKEN', 'token');
+
+        const response = await POST(req);
+        expect(response.status).toBe(403);
+    });
+
+    it('authorizeの例外発生時にフォールバックする', async () => {
+        const { getOAuthClient } = await import('@/logic/HandleOauthClientNode');
+        const client = await getOAuthClient();
+
+        // 最初の呼び出しでエラー、2回目で成功
+        vi.mocked(client.authorize).mockRejectedValueOnce(new Error('Silent auth failed'))
+            .mockResolvedValueOnce(new URL('https://bsky.social/oauth/authorize?fallback=true'));
+
+        const req = new NextRequest('http://localhost/api/oauth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'referer': 'http://localhost:3000/',
+            },
+            body: JSON.stringify({
+                handle: 'user.bsky.social',
+                csrf: 'token',
+            }),
+        });
+        req.cookies.set('CSRF_TOKEN', 'token');
+
+        const response = await POST(req);
+        const data = await response.json();
+
+        expect(response.status).toBe(200);
+        expect(data.url).toContain('fallback=true');
+    });
 });

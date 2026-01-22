@@ -56,4 +56,37 @@ describe('API: /api/oauth/revoke', () => {
         const response = await GET(req);
         expect(response.status).toBe(401);
     });
+
+    it('不正なrefererは403エラー', async () => {
+        const req = new NextRequest('http://localhost/api/oauth/revoke', {
+            headers: {
+                'referer': 'http://malicious.com/',
+            },
+        });
+        req.cookies.set('USER_DID', 'did:plc:testuser.signature');
+
+        const response = await GET(req);
+        expect(response.status).toBe(403);
+    });
+
+    it('サインアウト中のエラーは500を返す', async () => {
+        const { getOAuthClient } = await import('@/logic/HandleOauthClientNode');
+        const client = await getOAuthClient();
+        const session = await client.restore('did:plc:testuser');
+
+        vi.mocked(session.signOut).mockRejectedValueOnce(new Error('Signout failed'));
+
+        const req = new NextRequest('http://localhost/api/oauth/revoke', {
+            headers: {
+                'referer': 'http://localhost:3000/',
+            },
+        });
+        req.cookies.set('USER_DID', 'did:plc:testuser.signature');
+
+        const response = await GET(req);
+        const data = await response.json();
+
+        expect(response.status).toBe(500);
+        expect(data.error).toBe('Internal Server Error');
+    });
 });

@@ -10,27 +10,23 @@ import { ModerationBadges } from "@/components/ModerationBadges";
 import { TagBadge } from '@/components/TagBadge';
 import TimeAgo from "@/components/TimeAgo";
 import { getTranslations, setRequestLocale } from "next-intl/server";
-import { cookies } from "next/headers";
 import Link from 'next/link';
 import Markdown from 'react-markdown';
 import { SchemaEditor } from "./SchemaEditor";
+import { BlueskyPostsTab } from "./BlueskyPostsTab";
+import { BlueskyTabLabel } from "./BlueskyTabLabel";
 import EditMenu from '@/components/EditMenu';
 import { Bookmark as BookmarkIcon } from 'lucide-react';
 import { Library } from 'lucide-react';
 import publicSuffixList from '@/data/publicSuffixList.json';
 import type { Metadata } from "next";
+import { FaBluesky } from "react-icons/fa6";
+
+const MICROCOSM_USER_AGENT = "Rito @rito.blue";
 
 interface PageProps {
     params: { locale: string };
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-interface PostData {
-    uri: string;
-    text: string;
-    moderations: string[];
-    indexedAt: Date;
-    handle: string | null;
 }
 
 interface DisplayData {
@@ -214,10 +210,6 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
-    const cookieStore = await cookies();
-    const token = cookieStore.get("access_token");
-    const isLoggedIn = !!token;
-
     const search = await searchParams;
     const uri = typeof search.uri === "string" ? search.uri : undefined;
     if (!uri) return <Container><Text c="dimmed">{t('detail.error.uriRequired')}</Text></Container>;
@@ -233,9 +225,6 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     const tags: string[] = Array.from(new Set(bookmarks.flatMap(b => b.tags || [])));
     //const verifiedBookmarks = bookmarks.filter(b => b.tags.includes("Verified"));
     const otherBookmarks = bookmarks.filter(b => !b.tags.includes("Verified"));
-
-    // Post 情報取得
-    const postDataArray: PostData[] = [];
 
     return (
         <Container size="md" mx="auto">
@@ -278,11 +267,9 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                         <TabsTab value="bookmarks" leftSection={<BookmarkIcon size={16} />}>
                             {t('detail.rito')}({otherBookmarks.length})
                         </TabsTab>
-                        {/* 
                         <TabsTab value="posts" leftSection={<FaBluesky size={16} />}>
-                            {t('detail.bluesky')}({postDataArray.length})
-                        </TabsTab> 
-                        */}
+                            <BlueskyTabLabel subjectUrl={uri} />
+                        </TabsTab>
                         {tags.some(tag => tag.toLowerCase().includes('atprotocol')) &&
                             <TabsTab value="resolver" leftSection={<Library size={16} />}>{t('detail.resolver')}</TabsTab>
                         }
@@ -339,40 +326,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
                     <TabsPanel value="posts" pt="xs">
                         <Stack my="md">
-                            {!isLoggedIn &&
-                                <Text c="dimmed">{t('detail.needlogin')}</Text>
-                            }
-                            {isLoggedIn && postDataArray.length === 0 &&
-                                <Text c="dimmed">{t('detail.nocomment')}</Text>
-                            }
-                            {isLoggedIn && postDataArray.length > 0 &&
-                                <Timeline bulletSize={20} lineWidth={4}>
-                                    {postDataArray.map((post, idx) => (
-                                        <TimelineItem key={idx}>
-                                            {post.text?.trim() ? (
-                                                <>
-                                                    <Text component="div">
-                                                        <BlurReveal moderated={post.moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
-                                                            <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>
-                                                                <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: 'pre-line' }} {...props} /> }}>
-                                                                    {post.text}
-                                                                </Markdown>
-                                                            </Spoiler>
-                                                        </BlurReveal>
-                                                    </Text>
-                                                    <ModerationBadges moderations={post.moderations} />
-                                                </>
-                                            ) : null}
-                                            <Text c="dimmed" size="sm">
-                                                <Link href={`/${locale}/profile/${encodeURIComponent(post.handle || '')}`} style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                                                    {"by @" + post.handle + " "}
-                                                </Link>
-                                                <TimeAgo date={post.indexedAt} locale={locale} />
-                                            </Text>
-                                        </TimelineItem>
-                                    ))}
-                                </Timeline>
-                            }
+                            <BlueskyPostsTab subjectUrl={uri} locale={locale} />
                         </Stack>
                     </TabsPanel>
 

@@ -19,7 +19,10 @@ export function BlueskyTabLabel({ subjectUrl }: BlueskyTabLabelProps) {
             try {
                 const backlinksUrl = `${CONSTELLATION_BASE_URL}/links?target=${encodeURIComponent(subjectUrl)}&collection=app.bsky.feed.post&path=.embed.external.uri&limit=1`;
                 const res = await fetch(backlinksUrl, {
-                    headers: { "User-Agent": MICROCOSM_USER_AGENT }
+                    headers: {
+                        "User-Agent": MICROCOSM_USER_AGENT,
+                        "X-User-Agent": MICROCOSM_USER_AGENT
+                    }
                 });
                 if (res.ok) {
                     const data = await res.json();

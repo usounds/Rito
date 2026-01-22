@@ -266,7 +266,9 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
 
     if (initialLoading) {
         return (
-            <Loader />
+            <Center py="xl">
+                <Loader />
+            </Center>
         );
     }
 
@@ -313,7 +315,9 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
             </Timeline>
 
             {(loadingMore || (hasMore && posts.length < linkingRecords.length)) && (
-                <Loader />
+                <Center py="xl">
+                    <Loader />
+                </Center>
             )}
         </Stack>
     );

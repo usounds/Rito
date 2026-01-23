@@ -9,12 +9,12 @@ type State = {
   userProf: AppBskyActorDefs.ProfileViewDetailed | null;
   publicAgent: Client;
   thisClient: Client;
-  isLoginProcess?: boolean;
+  isLoginProcess: boolean;
 };
 
 type Action = {
   setActiveDid: (did: string | null) => void;
-  setHandle: (handle: string | null) => void; 
+  setHandle: (handle: string | null) => void;
   setUserProf: (userProf: AppBskyActorDefs.ProfileViewDetailed | null) => void;
   setPublicAgent: (publicAgent: Client) => void;
   setThisClient: (thisClient: Client) => void;
@@ -25,7 +25,7 @@ export const useXrpcAgentStore = create<State & Action>()(
   persist(
     (set) => ({
       activeDid: null,
-      handle: null, // ← デフォルト
+      handle: null,
       userProf: null,
       publicAgent: new Client({
         handler: simpleFetchHandler({
@@ -37,10 +37,10 @@ export const useXrpcAgentStore = create<State & Action>()(
           service: `${process.env.NEXT_PUBLIC_URL}`,
         }),
       }),
-      isLoginProcess : false,
+      isLoginProcess: false,
 
       setActiveDid: (did: string | null) => set({ activeDid: did }),
-      setHandle: (handle: string | null) => set({ handle }), // ← setter 実装
+      setHandle: (handle: string | null) => set({ handle }),
       setUserProf: (userProf: AppBskyActorDefs.ProfileViewDetailed | null) =>
         set({ userProf }),
       setPublicAgent: (publicAgent: Client) => set({ publicAgent }),
@@ -48,12 +48,12 @@ export const useXrpcAgentStore = create<State & Action>()(
       setIsLoginProcess: (isLoginProcess: boolean) => set({ isLoginProcess }),
     }),
     {
-      name: 'xrpc-agent-store', 
-      partialize: (state) => ({
+      name: 'xrpc-agent-store',
+      partialize: (state: State & Action) => ({
         activeDid: state.activeDid,
         handle: state.handle,
         isLoginProcess: state.isLoginProcess,
       }),
     }
-  )
+  ) as any
 );

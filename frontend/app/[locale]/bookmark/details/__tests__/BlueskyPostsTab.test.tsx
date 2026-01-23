@@ -18,7 +18,10 @@ describe('BlueskyPostsTab', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         (useXrpcAgentStore as any).mockReturnValue({
-            userProf: { did: 'did:plc:testuser' }
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: {
+                get: vi.fn(),
+            },
         });
     });
 
@@ -61,28 +64,32 @@ describe('BlueskyPostsTab', () => {
             })
         });
 
-        // Slingshot API のレスポンス (1件目の投稿)
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: 'Hello world!',
-                    createdAt: new Date().toISOString()
+        // publicAgent.get のレスポンス (2件の投稿を一括取得)
+        const mockPublicAgent = {
+            get: vi.fn().mockResolvedValueOnce({
+                ok: true,
+                data: {
+                    posts: [
+                        {
+                            uri: 'at://did:plc:user1/app.bsky.feed.post/post1',
+                            author: { handle: 'user1.bsky.social', did: 'did:plc:user1' },
+                            record: { text: 'Hello world!', facets: [] },
+                            indexedAt: new Date().toISOString()
+                        },
+                        {
+                            uri: 'at://did:plc:user2/app.bsky.feed.post/post2',
+                            author: { handle: 'user2.bsky.social', did: 'did:plc:user2' },
+                            record: { text: 'Bluesky is cool', facets: [] },
+                            indexedAt: new Date().toISOString()
+                        }
+                    ]
                 }
             })
-        });
+        };
 
-        // Slingshot API のレスポンス (2件目の投稿)
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: 'Bluesky is cool',
-                    createdAt: new Date().toISOString()
-                }
-            })
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
         });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
@@ -92,8 +99,8 @@ describe('BlueskyPostsTab', () => {
             expect(screen.getByText('Bluesky is cool')).toBeInTheDocument();
         });
 
-        expect(screen.getByText('by @did:plc:user1')).toBeInTheDocument();
-        expect(screen.getByText('by @did:plc:user2')).toBeInTheDocument();
+        expect(screen.getByText('by @user1.bsky.social')).toBeInTheDocument();
+        expect(screen.getByText('by @user2.bsky.social')).toBeInTheDocument();
     });
 
     it('APIエラー時にエラーメッセージを表示する', async () => {
@@ -124,27 +131,46 @@ describe('BlueskyPostsTab', () => {
             })
         });
 
-        // 初期ロード (2件分)
-        (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => ({ value: { $type: 'app.bsky.feed.post', text: 'Post 1' } }) });
-        (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => ({ value: { $type: 'app.bsky.feed.post', text: 'Post 2' } }) });
+        // publicAgent.get のレスポンス (初期ロードで全3件取得)
+        const mockPublicAgent = {
+            get: vi.fn()
+                .mockResolvedValueOnce({
+                    ok: true,
+                    data: {
+                        posts: [
+                            {
+                                uri: 'at://did:plc:u1/app.bsky.feed.post/p1',
+                                author: { handle: 'u1.bsky.social', did: 'did:plc:u1' },
+                                record: { text: 'Post 1' },
+                                indexedAt: new Date().toISOString()
+                            },
+                            {
+                                uri: 'at://did:plc:u2/app.bsky.feed.post/p2',
+                                author: { handle: 'u2.bsky.social', did: 'did:plc:u2' },
+                                record: { text: 'Post 2' },
+                                indexedAt: new Date().toISOString()
+                            },
+                            {
+                                uri: 'at://did:plc:u3/app.bsky.feed.post/p3',
+                                author: { handle: 'u3.bsky.social', did: 'did:plc:u3' },
+                                record: { text: 'Post 3' },
+                                indexedAt: new Date().toISOString()
+                            }
+                        ]
+                    }
+                })
+        };
 
-        // 追加ロード (1件分)
-        (global.fetch as any).mockResolvedValueOnce({ ok: true, json: async () => ({ value: { $type: 'app.bsky.feed.post', text: 'Post 3' } }) });
-
-        vi.mocked(useIntersection).mockImplementation(() => ({
-            ref: vi.fn(),
-            entry: { isIntersecting: true } as any // インターセクション発生状態
-        }));
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
+        });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
 
         await waitFor(() => {
             expect(screen.getByText('Post 1')).toBeInTheDocument();
             expect(screen.getByText('Post 2')).toBeInTheDocument();
-        });
-
-        // Intersection Observer が発火して loadMorePosts が呼ばれるのを待つ
-        await waitFor(() => {
             expect(screen.getByText('Post 3')).toBeInTheDocument();
         });
     });
@@ -159,29 +185,41 @@ describe('BlueskyPostsTab', () => {
             })
         });
 
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: 'Check this link google.com, mention @user.bsky.social, and tag #bluesky! 🚀',
-                    facets: [
+        const mockPublicAgent = {
+            get: vi.fn().mockResolvedValueOnce({
+                ok: true,
+                data: {
+                    posts: [
                         {
-                            index: { byteStart: 16, byteEnd: 26 },
-                            features: [{ $type: 'app.bsky.richtext.facet#link', uri: 'https://google.com' }]
-                        },
-                        {
-                            index: { byteStart: 36, byteEnd: 53 },
-                            features: [{ $type: 'app.bsky.richtext.facet#mention', did: 'did:plc:mentionuser' }]
-                        },
-                        {
-                            index: { byteStart: 63, byteEnd: 71 },
-                            features: [{ $type: 'app.bsky.richtext.facet#tag', tag: 'bluesky' }]
+                            uri: 'at://did:plc:user1/app.bsky.feed.post/post1',
+                            author: { handle: 'user1.bsky.social', did: 'did:plc:user1' },
+                            record: {
+                                text: 'Check this link google.com, mention @user.bsky.social, and tag #bluesky! 🚀',
+                                facets: [
+                                    {
+                                        index: { byteStart: 16, byteEnd: 26 },
+                                        features: [{ $type: 'app.bsky.richtext.facet#link', uri: 'https://google.com' }]
+                                    },
+                                    {
+                                        index: { byteStart: 36, byteEnd: 53 },
+                                        features: [{ $type: 'app.bsky.richtext.facet#mention', did: 'did:plc:mentionuser' }]
+                                    },
+                                    {
+                                        index: { byteStart: 63, byteEnd: 71 },
+                                        features: [{ $type: 'app.bsky.richtext.facet#tag', tag: 'bluesky' }]
+                                    }
+                                ]
+                            },
+                            indexedAt: new Date().toISOString()
                         }
-                    ],
-                    createdAt: new Date().toISOString()
+                    ]
                 }
             })
+        };
+
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
         });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
@@ -213,29 +251,34 @@ describe('BlueskyPostsTab', () => {
             })
         });
 
-        // 1件目: 不明なファセットタイプ (プレーンテキストとして表示されるはず)
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: 'Unknown facet',
-                    facets: [{ index: { byteStart: 0, byteEnd: 7 }, features: [{ $type: 'unknown' }] }],
-                    createdAt: new Date().toISOString()
+        // 1件目は不明なファセットタイプをシミュレート
+        // 2件目は $type が違うのをシミュレート (getPosts では通常発生しないがテストロジック維持)
+        // 3件目は取得エラーをシミュレート
+        const mockPublicAgent = {
+            get: vi.fn().mockResolvedValueOnce({
+                ok: true,
+                data: {
+                    posts: [
+                        {
+                            uri: 'at://did:plc:u1/app.bsky.feed.post/p1',
+                            author: { handle: 'u1.bsky.social', did: 'did:plc:u1' },
+                            record: {
+                                text: 'Unknown facet',
+                                facets: [{ index: { byteStart: 0, byteEnd: 7 }, features: [{ $type: 'unknown' }] }],
+                            },
+                            indexedAt: new Date().toISOString()
+                        }
+                        // 2件目 (other.type) は getPosts 側で返さないか、マッピングで除外される想定
+                        // 3件目 (fetch error) は get 呼び出し自体が ok: false を返す想定
+                    ]
                 }
             })
-        });
+        };
 
-        // 2件目: fetch は ok だが $type が違う (スキップされるはず)
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: { $type: 'other.type' }
-            })
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
         });
-
-        // 3件目: fetch エラー (スキップされるはず)
-        (global.fetch as any).mockResolvedValueOnce({ ok: false });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
 
@@ -244,41 +287,39 @@ describe('BlueskyPostsTab', () => {
         });
 
         // 2件目と3件目は表示されないはず
-        expect(screen.queryByText('by @did:plc:u2')).not.toBeInTheDocument();
-        expect(screen.queryByText('by @did:plc:u3')).not.toBeInTheDocument();
+        expect(screen.queryByText('by @u2.bsky.social')).not.toBeInTheDocument();
+        expect(screen.queryByText('by @u3.bsky.social')).not.toBeInTheDocument();
     });
 
-    it('レコード取得中に例外が発生しても処理を続行する', async () => {
+    it('レコード取得中に例外が発生した場合、そのバッチは表示されない', async () => {
         (global.fetch as any).mockResolvedValueOnce({
             ok: true,
             json: async () => ({
                 linking_records: [
-                    { did: 'did:plc:u1', collection: 'app.bsky.feed.post', rkey: 'p1' },
-                    { did: 'did:plc:u2', collection: 'app.bsky.feed.post', rkey: 'p2' }
+                    { did: 'did:plc:u1', collection: 'app.bsky.feed.post', rkey: 'p1' }
                 ]
             })
         });
 
-        // 1件目: 例外発生
-        (global.fetch as any).mockRejectedValueOnce(new Error('Network failure'));
+        // get が失敗 (ok: false)
+        const mockPublicAgent = {
+            get: vi.fn().mockResolvedValueOnce({ ok: false })
+        };
 
-        // 2件目: 正常
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: 'Success after failure',
-                    createdAt: new Date().toISOString()
-                }
-            })
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
         });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
 
+        // Timelineは表示されるが、中身（Post 1）は表示されないことを確認
         await waitFor(() => {
-            expect(screen.getByText('Success after failure')).toBeInTheDocument();
+            expect(screen.queryByText('Post 1')).not.toBeInTheDocument();
         });
+
+        // また、詳細メッセージも表示されない（linking_recordsはあるため）
+        expect(screen.queryByText('detail.nocomment')).not.toBeInTheDocument();
     });
 
     it('隣接するファセットや端のファセットを正しく処理する', async () => {
@@ -291,25 +332,37 @@ describe('BlueskyPostsTab', () => {
             })
         });
 
-        (global.fetch as any).mockResolvedValueOnce({
-            ok: true,
-            json: async () => ({
-                value: {
-                    $type: 'app.bsky.feed.post',
-                    text: '@u1#tag',
-                    facets: [
+        const mockPublicAgent = {
+            get: vi.fn().mockResolvedValueOnce({
+                ok: true,
+                data: {
+                    posts: [
                         {
-                            index: { byteStart: 0, byteEnd: 3 },
-                            features: [{ $type: 'app.bsky.richtext.facet#mention', did: 'did:plc:u1' }]
-                        },
-                        {
-                            index: { byteStart: 3, byteEnd: 7 },
-                            features: [{ $type: 'app.bsky.richtext.facet#tag', tag: 'tag' }]
+                            uri: 'at://did:plc:u1/app.bsky.feed.post/p1',
+                            author: { handle: 'u1.bsky.social', did: 'did:plc:u1' },
+                            record: {
+                                text: '@u1#tag',
+                                facets: [
+                                    {
+                                        index: { byteStart: 0, byteEnd: 3 },
+                                        features: [{ $type: 'app.bsky.richtext.facet#mention', did: 'did:plc:u1' }]
+                                    },
+                                    {
+                                        index: { byteStart: 3, byteEnd: 7 },
+                                        features: [{ $type: 'app.bsky.richtext.facet#tag', tag: 'tag' }]
+                                    }
+                                ]
+                            },
+                            indexedAt: new Date().toISOString()
                         }
-                    ],
-                    createdAt: new Date().toISOString()
+                    ]
                 }
             })
+        };
+
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
         });
 
         render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);

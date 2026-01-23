@@ -10,9 +10,8 @@ import { useTranslations } from 'next-intl';
 import { useIntersection } from '@mantine/hooks';
 
 const CONSTELLATION_BASE_URL = "https://constellation.microcosm.blue";
-const SLINGSHOT_BASE_URL = "https://slingshot.microcosm.blue";
 const MICROCOSM_USER_AGENT = "Rito @rito.blue";
-const BATCH_SIZE = 5; // 一度に読み込むレコード数
+const BATCH_SIZE = 25; // 一度に読み込むレコード数 (getPostsの制限)
 
 interface LinkingRecord {
     did: string;
@@ -127,7 +126,7 @@ interface BlueskyPostsTabProps {
 
 export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
     const t = useTranslations();
-    const { userProf } = useXrpcAgentStore();
+    const { userProf, publicAgent } = useXrpcAgentStore();
     const isLoggedIn = !!userProf;
 
     const [posts, setPosts] = useState<PostData[]>([]);
@@ -143,41 +142,37 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
         threshold: 0.1,
     });
 
-    // レコードを1件ずつ取得してすぐに表示
-    const fetchSingleRecord = useCallback(async (record: LinkingRecord): Promise<PostData | null> => {
-        if (record.collection !== "app.bsky.feed.post") return null;
+    // レコードを複数一括で取得
+    const fetchPostsBatch = useCallback(async (records: LinkingRecord[]): Promise<PostData[]> => {
+        if (records.length === 0 || !publicAgent) return [];
 
         try {
-            const recordUrl = `${SLINGSHOT_BASE_URL}/xrpc/com.atproto.repo.getRecord?repo=${encodeURIComponent(record.did)}&collection=${encodeURIComponent(record.collection)}&rkey=${encodeURIComponent(record.rkey)}`;
-            const recordRes = await fetch(recordUrl, {
-                headers: {
-                    "User-Agent": MICROCOSM_USER_AGENT,
-                    "X-User-Agent": MICROCOSM_USER_AGENT
+            const uris = records.map(r => `at://${r.did}/${r.collection}/${r.rkey}`);
+            const res = await publicAgent.get('app.bsky.feed.getPosts', {
+                params: {
+                    uris: uris as any,
                 },
             });
 
-            if (!recordRes.ok) return null;
+            if (!res.ok) return [];
 
-            const recordData = await recordRes.json();
-            const value = recordData.value;
+            const postViews = res.data.posts || [];
 
-            if (!value || value.$type !== "app.bsky.feed.post") return null;
-
-            return {
-                uri: `at://${record.did}/${record.collection}/${record.rkey}`,
-                text: value.text || "",
-                facets: value.facets || [],
-                moderations: [],
-                indexedAt: new Date(value.createdAt || Date.now()),
-                handle: record.did,
-            };
+            return postViews.map((view: any) => ({
+                uri: view.uri,
+                text: (view.record as any)?.text || "",
+                facets: (view.record as any)?.facets || [],
+                moderations: [], // 必要に応じて拡張可能
+                indexedAt: new Date(view.indexedAt || Date.now()),
+                handle: view.author?.handle || view.author?.did || "unknown",
+            }));
         } catch (e) {
-            console.error(`Failed to fetch record for ${record.did}/${record.rkey}:`, e);
-            return null;
+            console.error(`Failed to fetch posts batch:`, e);
+            return [];
         }
-    }, []);
+    }, [publicAgent]);
 
-    // 最初にバックリンクを取得し、最初の数件も併せて取得する
+    // 最初にバックリンクを取得し、最初のバッチを表示
     useEffect(() => {
         async function fetchInitial() {
             if (!isLoggedIn) {
@@ -205,19 +200,12 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
                 if (records.length === 0) {
                     setHasMore(false);
                 } else {
-                    // 最初の2件をまず取得して表示の準備をする（Jumpingを防止）
-                    const initialBatchSize = 2;
-                    const endIndex = Math.min(initialBatchSize, records.length);
-                    const initialPosts: PostData[] = [];
+                    const initialBatchSize = Math.min(BATCH_SIZE, records.length);
+                    const batchPosts = await fetchPostsBatch(records.slice(0, initialBatchSize));
 
-                    for (let i = 0; i < endIndex; i++) {
-                        const post = await fetchSingleRecord(records[i]);
-                        if (post) initialPosts.push(post);
-                    }
-
-                    setPosts(initialPosts);
-                    setLoadedCount(endIndex);
-                    setHasMore(endIndex < records.length);
+                    setPosts(batchPosts);
+                    setLoadedCount(initialBatchSize);
+                    setHasMore(initialBatchSize < records.length);
                 }
             } catch (e) {
                 console.error("fetchInitial error:", e);
@@ -228,9 +216,9 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
         }
 
         fetchInitial();
-    }, [subjectUrl, isLoggedIn, fetchSingleRecord]);
+    }, [subjectUrl, isLoggedIn, fetchPostsBatch]);
 
-    // バッチでレコードを読み込む（1件ずつ順番に表示）
+    // バッチでレコードを読み込む
     const loadMorePosts = useCallback(async () => {
         if (loadingMore || loadedCount >= linkingRecords.length) {
             setHasMore(false);
@@ -238,20 +226,18 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
         }
 
         setLoadingMore(true);
-        const endIndex = Math.min(loadedCount + BATCH_SIZE, linkingRecords.length);
+        const nextBatchEnd = Math.min(loadedCount + BATCH_SIZE, linkingRecords.length);
+        const batchRecords = linkingRecords.slice(loadedCount, nextBatchEnd);
 
-        for (let i = loadedCount; i < endIndex; i++) {
-            const record = linkingRecords[i];
-            const post = await fetchSingleRecord(record);
-            if (post) {
-                setPosts(prev => [...prev, post]);
-            }
+        const newPosts = await fetchPostsBatch(batchRecords);
+        if (newPosts.length > 0) {
+            setPosts(prev => [...prev, ...newPosts]);
         }
 
-        setLoadedCount(endIndex);
-        setHasMore(endIndex < linkingRecords.length);
+        setLoadedCount(nextBatchEnd);
+        setHasMore(nextBatchEnd < linkingRecords.length);
         setLoadingMore(false);
-    }, [loadedCount, linkingRecords, loadingMore, fetchSingleRecord]);
+    }, [loadedCount, linkingRecords, loadingMore, fetchPostsBatch]);
 
     // スクロールで追加読み込み
     useEffect(() => {

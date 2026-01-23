@@ -18,5 +18,5 @@ export const usePreferenceStore = create<PreferenceState & PreferenceAction>()(
     {
       name: 'preference-store', // localStorage に保存されるキー名
     }
-  )
+  ) as any
 );

@@ -630,8 +630,9 @@ async function init() {
   if (!isLocal || isForceEnabled) {
     jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
     jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+    logger.info(`POST_COLLECTION handlers are ENABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled})`);
   } else {
-    logger.info('POST_COLLECTION handlers are disabled in local environment (IS_LOCAL=true or NODE_ENV!=production)');
+    logger.info(`POST_COLLECTION handlers are DISABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled}). Set ENABLE_POST_COLLECTION=true to force enable.`);
   }
 
   // SERVICE

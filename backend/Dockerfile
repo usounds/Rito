@@ -23,6 +23,7 @@ RUN pnpm exec prisma generate
 # ---------- Production Stage ----------
 FROM node:22-alpine AS production
 
+ENV NODE_ENV=production
 RUN apk update && apk upgrade --no-cache
 
 WORKDIR /app

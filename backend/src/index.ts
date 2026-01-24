@@ -1,5 +1,5 @@
-import { PrismaClient } from "@prisma/client";
 import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
+import { prisma } from './db.js';
 import WebSocket from 'ws';
 import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION, LIKE } from './config.js';
 import { BlueRitoFeedBookmark } from './lexicons/index.js';
@@ -96,7 +96,7 @@ async function checkModeration(texts: string[]): Promise<string[]> {
   }
 }
 
-const prisma = new PrismaClient();
+//const prisma = new PrismaClient();
 let cursor = "0";
 let prev_time_us = "0";
 let cursorUpdateInterval: NodeJS.Timeout;
@@ -378,7 +378,7 @@ async function init() {
       if (isVerify) tagsLocal.push("Verified");
 
       // 順番に処理
-      const tagRecords = [];
+      const tagRecords: { id: number; name: string }[] = [];
       for (const name of tagsLocal) {
         const tag = await safeUpsertTag(name);
         if (tag) tagRecords.push(tag);
@@ -390,15 +390,16 @@ async function init() {
       );
 
       // BookmarkTag の更新用
-      const oldTagIds = await prisma.bookmarkTag.findMany({
+      const oldTags = await prisma.bookmarkTag.findMany({
         where: { bookmark_uri: aturi },
         select: { tag_id: true },
-      }).then(res => res.map(r => r.tag_id));
+      });
+      const oldTagIds = oldTags.map((r: { tag_id: number }) => r.tag_id);
 
-      const newTagIds = validTagRecords.map(t => t.id);
+      const newTagIds = validTagRecords.map((t: { id: number }) => t.id);
 
       // 不要タグ削除
-      const removeIds = oldTagIds.filter(id => !newTagIds.includes(id));
+      const removeIds = oldTagIds.filter((id: number) => !newTagIds.includes(id));
       if (removeIds.length > 0) {
         await dbLimit(() =>
           prisma.bookmarkTag.deleteMany({
@@ -408,7 +409,7 @@ async function init() {
       }
 
       // 新規タグ追加
-      const addIds = newTagIds.filter(id => !oldTagIds.includes(id));
+      const addIds = newTagIds.filter((id: number) => !oldTagIds.includes(id));
       for (const id of addIds) {
         await dbLimit(() =>
           prisma.bookmarkTag.create({ data: { bookmark_uri: aturi, tag_id: id } })
@@ -623,8 +624,15 @@ async function init() {
   jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
 
   // POST_COLLECTION
-  jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-  jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+  const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
+  const isForceEnabled = process.env.ENABLE_POST_COLLECTION === 'true';
+
+  if (!isLocal || isForceEnabled) {
+    jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+    jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+  } else {
+    logger.info('POST_COLLECTION handlers are disabled in local environment (IS_LOCAL=true or NODE_ENV!=production)');
+  }
 
   // SERVICE
   jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));

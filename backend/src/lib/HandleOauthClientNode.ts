@@ -1,16 +1,14 @@
 import { NodeOAuthClient, NodeSavedState, NodeSavedSession } from '@atproto/oauth-client-node'
 import { JoseKey } from '@atproto/jwk-jose'
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../db.js";
 
 export const SCOPE = [
-    "atproto",
-    "include:blue.rito.permissionSet",
-    "repo:app.bsky.feed.post",
-    "rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
-    "blob:*/*",
+  "atproto",
+  "include:blue.rito.permissionSet",
+  "repo:app.bsky.feed.post",
+  "rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
+  "blob:*/*",
 ];
-
-const prisma = new PrismaClient();
 
 const stateStore = {
   async set(key: string, internalState: NodeSavedState): Promise<void> {
@@ -34,7 +32,7 @@ const stateStore = {
   },
 
   async del(key: string): Promise<void> {
-    await prisma.nodeOAuthState.delete({ where: { key } }).catch(() => {})
+    await prisma.nodeOAuthState.delete({ where: { key } }).catch(() => { })
   },
 }
 
@@ -60,12 +58,12 @@ const sessionStore = {
   },
 
   async del(sub: string): Promise<void> {
-    await prisma.nodeOAuthSession.delete({ where: { key: sub } }).catch(() => {})
+    await prisma.nodeOAuthSession.delete({ where: { key: sub } }).catch(() => { })
   },
 }
 
 // JoseKey を生成
-const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK||'', 'key1')
+const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK || '', 'key1')
 
 export const client = new NodeOAuthClient({
   // This object will be used to build the payload of the /client-metadata.json

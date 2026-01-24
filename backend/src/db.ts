@@ -3,15 +3,26 @@
  * This module wraps Prisma operations for better testability.
  */
 
+import 'dotenv/config';
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 import pLimit from "p-limit";
 import logger from './logger.js';
 
 // Export the PLimit instance for external use
 export const dbLimit = pLimit(5);
 
+// Internal networks (localhost, Docker service names without dots) don't need SSL
+const isInternalNetwork = !process.env.DATABASE_URL?.match(/@[\w-]+\.[\w.-]+[:/]/);
+const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: isInternalNetwork ? false : { rejectUnauthorized: false }
+});
+const adapter = new PrismaPg(pool);
+
 // Create a singleton Prisma client
-export const prisma = new PrismaClient();
+export const prisma = new PrismaClient({ adapter });
 
 // Set up error handler
 (prisma as any).$on('error', (e: any) => {
@@ -185,7 +196,7 @@ export async function getBookmarkTagIds(bookmarkUri: string): Promise<number[]> 
         where: { bookmark_uri: bookmarkUri },
         select: { tag_id: true },
     });
-    return tags.map(r => r.tag_id);
+    return tags.map((r: { tag_id: number }) => r.tag_id);
 }
 
 /**

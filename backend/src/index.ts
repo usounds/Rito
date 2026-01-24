@@ -11,6 +11,22 @@ import PQueue from 'p-queue';
 import { client as oauthClient } from "./lib/HandleOauthClientNode.js";
 import { Agent } from "@atproto/api";
 import * as TID from '@atcute/tid';
+import { ActorIdentifier } from '@atcute/lexicons/syntax';
+import { BlueRitoFeedLike, BlueRitoServiceSchema } from './lexicons/index.js';
+import type { XRPCQueries } from '@atcute/lexicons/ambient';
+import type * as AppBskyActorGetProfile from '@atcute/bluesky/types/app/actor/getProfile';
+import type * as AppBskyFeedPost from '@atcute/bluesky/types/app/feed/post';
+import type * as AppBskyRichTextFacet from '@atcute/bluesky/types/app/richtext/facet';
+import type * as AppBskyEmbedExternal from '@atcute/bluesky/types/app/embed/external';
+
+const isPostRecord = (v: unknown): v is AppBskyFeedPost.Main & { via?: string } =>
+  !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.feed.post';
+
+const isEmbedExternal = (v: unknown): v is AppBskyEmbedExternal.Main =>
+  !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.embed.external';
+
+const isTagFeature = (v: unknown): v is AppBskyRichTextFacet.Tag =>
+  !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.richtext.facet#tag';
 const queue = new PQueue({ concurrency: 1 });
 
 // Type definitions for API responses
@@ -67,7 +83,7 @@ const publicAgent = new Client({
   handler: simpleFetchHandler({
     service: 'https://public.api.bsky.app',
   }),
-});
+}) as Client<XRPCQueries>;
 
 
 const client = new OpenAI({
@@ -232,9 +248,9 @@ async function init() {
       logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
       try {
         const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-          params: { actor: event.did },
+          params: { actor: event.did as ActorIdentifier },
         });
-        if (userProfile.ok && userProfile.data.handle) {
+        if (userProfile.ok && userProfile.data?.handle) {
           handle = userProfile.data.handle;
         } else {
           logger.error(`Error fetching handle from publicAgent: ${event.did}`);
@@ -427,7 +443,8 @@ async function init() {
   async function upsertPost(
     event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>
   ) {
-    const record = event.commit.record as any;
+    const record = event.commit.record;
+    if (!isPostRecord(record)) return;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
 
     try {
@@ -439,7 +456,7 @@ async function init() {
         for (const facet of record.facets) {
           if (facet.features) {
             for (const feature of facet.features) {
-              if (feature.$type === 'app.bsky.richtext.facet#tag' && feature.tag) {
+              if (isTagFeature(feature) && feature.tag) {
                 tags.push(feature.tag);
               }
             }
@@ -456,7 +473,7 @@ async function init() {
 
       if (record.via === 'リト' || record.via === 'Rito') return;
 
-      if (record.embed?.$type === 'app.bsky.embed.external' && record.embed.external?.uri) {
+      if (record.embed && isEmbedExternal(record.embed) && record.embed.external?.uri) {
         links.push(record.embed.external.uri);
       }
 
@@ -489,10 +506,10 @@ async function init() {
       if (!handle) {
         logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
         try {
-          const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-            params: { actor: event.did },
+          const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
+            params: { actor: event.did as ActorIdentifier },
           });
-          if (userProfile.ok && userProfile.data.handle) {
+          if (userProfile.ok && userProfile.data?.handle) {
             handle = userProfile.data.handle;
           } else {
             logger.error(`Error fetching handle from publicAgent: ${event.did}`);
@@ -600,11 +617,11 @@ async function init() {
             {
               lang: (exists as PostToBookmarkRecord).lang || 'ja',
               title: oggTitle,
-              comment: normalizeComment(event.commit.record.text || ''),
+              comment: normalizeComment(record.text || ''),
             }
           ],
           ogpTitle: oggTitle,
-          ogpDescription: record.embed.external?.description || ogpDescription,
+          ogpDescription: (record.embed && isEmbedExternal(record.embed)) ? record.embed.external?.description || ogpDescription : ogpDescription,
           ogpImage: ogImage,
           tags
         },
@@ -666,7 +683,7 @@ async function init() {
   async function upsertResolver(
     event: CommitCreateEvent<typeof SERVICE> | CommitUpdateEvent<typeof SERVICE>
   ) {
-    const record = event.commit.record as any;
+    const record = event.commit.record as BlueRitoServiceSchema.Main;
     const nsid = event.commit.rkey;
     const did = event.did;
     const schema = record.schema || '';
@@ -700,10 +717,10 @@ async function init() {
         if (!handle) {
           // まずユーザープロフィールから handle を取得
           const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
-            params: { actor: did },
+            params: { actor: did as ActorIdentifier },
           });
 
-          if (userProfile.ok) {
+          if (userProfile.ok && userProfile.data?.handle) {
             handle = userProfile.data.handle;
 
           }
@@ -740,7 +757,7 @@ async function init() {
   async function upsertLike(
     event: CommitCreateEvent<"blue.rito.feed.like"> | CommitUpdateEvent<"blue.rito.feed.like">
   ) {
-    const record = event.commit.record as any;
+    const record = event.commit.record as BlueRitoFeedLike.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     const subject = record?.subject;
     if (!subject) return;
@@ -768,10 +785,10 @@ async function init() {
     if (!handle) {
       logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
       try {
-        const userProfile = await publicAgent.get(`app.bsky.actor.getProfile`, {
-          params: { actor: event.did },
+        const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
+          params: { actor: event.did as ActorIdentifier },
         });
-        if (userProfile.ok && userProfile.data.handle) {
+        if (userProfile.ok && userProfile.data?.handle) {
           handle = userProfile.data.handle;
         } else {
           logger.error(`Error fetching handle from publicAgent: ${event.did}`);

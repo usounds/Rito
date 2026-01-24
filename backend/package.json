@@ -6,6 +6,7 @@
   "target": "esnext",
   "scripts": {
     "start": "pnpm exec tsx src/index.ts",
+    "dev": "pnpm exec tsx --watch src/index.ts",
     "update": "pnpm up -L && pnpm install",
     "prisma:apply": "pnpm prisma migrate dev --name init",
     "prisma:generate": "pnpm prisma generate",
@@ -21,7 +22,9 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@atcute/bluesky": "^3.2.15",
     "@atcute/client": "^4.2.1",
+    "@atcute/lexicons": "^1.2.6",
     "@atcute/tid": "^1.1.1",
     "@atproto/api": "^0.18.17",
     "@atproto/jwk-jose": "^0.1.11",
@@ -45,6 +48,7 @@
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.0.18",
     "prisma": "^7.3.0",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   },
   "pnpm": {

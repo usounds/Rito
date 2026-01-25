@@ -76,13 +76,13 @@ describe('Store: XrpcAgent', () => {
     });
 
     it('setPublicAgentでPublicAgentを更新できる', () => {
-        const newAgent = new Client() as any;
+        const newAgent = new Client({} as any) as any;
         useXrpcAgentStore.getState().setPublicAgent(newAgent);
         expect(useXrpcAgentStore.getState().publicAgent).toBe(newAgent);
     });
 
     it('setThisClientでThisClientを更新できる', () => {
-        const newClient = new Client() as any;
+        const newClient = new Client({} as any) as any;
         useXrpcAgentStore.getState().setThisClient(newClient);
         expect(useXrpcAgentStore.getState().thisClient).toBe(newClient);
     });

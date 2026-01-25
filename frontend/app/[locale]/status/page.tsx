@@ -6,22 +6,17 @@ import { Alert, Container } from '@mantine/core';
 import { Info } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = 60; // 1分ごとに再生成
+export const dynamic = 'force-dynamic';
 
 type StatusProps = {
-    params: { locale: string };
+    params: Promise<{ locale: string }>;
 };
-
-export async function generateStaticParams() {
-    // routing.locales は ['en', 'ja'] などの配列
-    return ['en', 'ja'].map(locale => ({ locale }));
-}
 
 export default async function StatusPage({ params }: StatusProps) {
     const { locale } = await params;
     const t = await getTranslations({ locale });
 
-        if (process.env.SKIP_DB_DURING_BUILD === 'true') {
+    if (process.env.SKIP_DB_DURING_BUILD === 'true') {
         return (
             <Container size="md" mx="auto">
                 <Breadcrumbs items={[{ label: t('status.title') }]} />
@@ -45,7 +40,7 @@ export default async function StatusPage({ params }: StatusProps) {
         _count: true,
     });
     const like = await prisma.like.count({});
-    
+
     const record = await prisma.jetstreamIndex.findUnique({
         where: { service: 'rito' },
     });

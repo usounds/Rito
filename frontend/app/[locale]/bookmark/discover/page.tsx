@@ -6,33 +6,17 @@ import { Alert, Container, SimpleGrid, Text } from '@mantine/core';
 import { Info } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 
-export const revalidate = 60; // 1分ごとに再生成
+export const dynamic = 'force-dynamic';
 
 type DiscoverProps = {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 };
-
-export async function generateStaticParams() {
-  // routing.locales は ['en', 'ja'] などの配列
-  return ['en', 'ja'].map(locale => ({ locale }));
-}
 
 export default async function DiscoverPage({ params }: DiscoverProps) {
   const { locale } = await params;
   const t = await getTranslations({ locale });
 
-  if (process.env.SKIP_DB_DURING_BUILD === 'true') {
-    // DB なしのときは空配列を返す
-    return (
-      <Container size="md" mx="auto">
-        <Breadcrumbs items={[{ label: t('discover.title') }]} />
-        <Text mt="sm" c="dimmed">{t('discover.latestLike')}</Text>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-          <Text>Data will load at runtime</Text>
-        </SimpleGrid>
-      </Container>
-    );
-  }
+
 
   // DIDごとの最新取得
   const latestPerDid = await prisma.bookmark.groupBy({

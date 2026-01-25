@@ -25,7 +25,7 @@ import { FaBluesky } from "react-icons/fa6";
 const MICROCOSM_USER_AGENT = "Rito @rito.blue";
 
 interface PageProps {
-    params: { locale: string };
+    params: Promise<{ locale: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
@@ -41,7 +41,7 @@ interface DisplayData {
 }
 
 /** 共通：displayTitle / displayComment / moderations を決定 */
-export async function getBookmarkDisplayData(uri: string, locale: string): Promise<DisplayData> {
+async function getBookmarkDisplayData(uri: string, locale: string): Promise<DisplayData> {
     function withTrailingSlashVariants(uri: string) {
         return uri.endsWith("/")
             ? [uri, uri.slice(0, -1)]

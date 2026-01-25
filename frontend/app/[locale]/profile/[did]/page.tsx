@@ -9,11 +9,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import type { Metadata } from 'next';
 
 type ProfileBookmarkProps = {
-  params: { locale: string; did: string };
-  searchParams?: { page?: string; tag?: string };
+  params: Promise<{ locale: string; did: string }>;
+  searchParams?: Promise<{ page?: string; tag?: string }>;
 };
 
-export async function generateMetadata({ params }: { params: { locale: string; did: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string; did: string }> }): Promise<Metadata> {
   const { locale, did } = await params;
   const t = await getTranslations({ locale });
   return {

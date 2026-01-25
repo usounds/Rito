@@ -310,7 +310,8 @@
 		},
 		"inform": {
 			"fine": "Fine",
-			"delay": "Delay"
+			"delay": "Delay",
+			"unknown": "Unknown"
 		}
 	},
 	"share": {

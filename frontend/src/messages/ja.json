@@ -309,7 +309,8 @@
 		},
 		"inform": {
 			"fine": "遅延なし",
-			"delay": "遅れ"
+			"delay": "遅れ",
+			"unknown": "不明"
 		}
 	},
 	"share": {

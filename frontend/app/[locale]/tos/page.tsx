@@ -6,7 +6,7 @@ import path from "path";
 import ReactMarkdown from "react-markdown";
 
 interface PageProps {
-  params: { locale: string };
+  params: Promise<{ locale: string }>;
 }
 
 export default async function PrivacyPage({ params }: PageProps) {

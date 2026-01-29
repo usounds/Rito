@@ -136,7 +136,7 @@ export function Authentication() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          handle:cleanHandle,
+          handle: cleanHandle,
           returnTo,
           csrf: csrf.csrfToken,
         }),
@@ -194,7 +194,7 @@ export function Authentication() {
   );
 
 
-  const handleInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = async (event: React.FormEvent<HTMLInputElement>) => {
     const val = event.currentTarget.value;
     if (!val) {
       setSuggestions([]);

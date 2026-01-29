@@ -111,7 +111,7 @@ export function SearchForm({
     }
   };
 
-  const handleInput = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInput = async (event: React.FormEvent<HTMLInputElement>) => {
     const val = event.currentTarget.value;
 
     if (!val) {

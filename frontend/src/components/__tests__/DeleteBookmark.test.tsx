@@ -147,13 +147,16 @@ describe('DeleteBookmark', () => {
     });
 
     it('aturiがundefinedの場合は削除処理をスキップ', async () => {
+        vi.useFakeTimers();
         render(<DeleteBookmark aturi={undefined} onClose={mockOnClose} />);
 
         const deleteButton = screen.getByText('削除');
         fireEvent.click(deleteButton);
 
-        // fetchが呼ばれないことを確認
-        await new Promise(r => setTimeout(r, 100));
+        // タイマーを進める
+        vi.runAllTimers();
+
         expect(global.fetch).not.toHaveBeenCalled();
+        vi.useRealTimers();
     });
 });

@@ -39,10 +39,32 @@ export default function RegistBookmarkPage() {
     const [isSubmit, setIsSubmit] = useState(false);
     const [isCanVerify, setIsVerify] = useState(false);
     const [isPostToBluesky, setIsPostToBluesky] = useState(false);
+    const [isUseOriginalLink, setIsUseOriginalLink] = useState(false);
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
     const [ogpTitle, setOgpTitle] = useState<string | null>(null);
     const [ogpDescription, setOgpDescription] = useState<string | null>(null);
+    // ... (skip intermediate lines) ...
+    {
+        !aturi && (
+            <>
+                <Switch
+                    label={messages.create.field.posttobluesky.title}
+                    checked={isPostToBluesky}
+                    onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                />
+                {isPostToBluesky && (
+                    <Switch
+                        mt="xs"
+                        label={messages.create.field.useOriginalLink.title}
+                        description={messages.create.field.useOriginalLink.description}
+                        checked={isUseOriginalLink}
+                        onChange={() => setIsUseOriginalLink(!isUseOriginalLink)}
+                    />
+                )}
+            </>
+        )
+    }
     const [ogpImage, setOgpImage] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
@@ -480,21 +502,100 @@ export default function RegistBookmarkPage() {
                     via?: string;
                 };
 
+                // Rito URL
+                const ritoUrl = `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`;
+                // Determine if we should pass ritoUrl to buildPost (to add reference link)
+                const postRitoUrl = isUseOriginalLink ? ritoUrl : undefined;
+
                 const appBskyFeedPost: MyPost = {
-                    ...(buildPost(activeComment, tags, messages) as Omit<MyPost, "via">),
+                    ...(buildPost(activeComment, tags, messages, postRitoUrl) as Omit<MyPost, "via">),
                     via: messages.title
                 };
 
                 let ogpMessage = messages.create.inform.ogp
-
                 ogpMessage = ogpMessage.replace("{0}", userProf?.handle ?? "");
+
+                let embedUri = ritoUrl as unknown as ResourceUri;
+                let embedTitle = ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title;
+                let embedDesc = ogpMessage || '';
+                let embedThumbBlob: any = undefined;
+
+                // Handle Image Blob Upload (Common)
+                if (ogpImageLocal) {
+                    try {
+                        console.log('[DEBUG] Fetching proxy image:', ogpImageLocal);
+                        const blobRes = await fetch(`/api/proxyImage?url=${encodeURIComponent(ogpImageLocal)}`);
+
+                        if (blobRes.ok) {
+                            let blobData = await blobRes.blob();
+                            console.log('[DEBUG] Original blob size:', blobData.size, blobData.type);
+
+                            if (blobData.size > 0) {
+                                // Compress if necessary
+                                try {
+                                    const { compressImage } = await import('@/logic/ImageCompression');
+                                    blobData = await compressImage(blobData);
+                                    console.log('[DEBUG] Compressed blob size:', blobData.size, blobData.type);
+                                } catch (compressErr) {
+                                    console.error('[DEBUG] Compression failed, trying original:', compressErr);
+                                }
+
+                                const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
+                                const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_URL}/xrpc/com.atproto.repo.uploadBlob`, {
+                                    method: 'POST',
+                                    headers: {
+                                        "Content-Type": blobData.type,
+                                        "X-CSRF-Token": csrfToken,
+                                    },
+                                    body: blobData
+                                });
+
+                                console.log('[DEBUG] Upload response status:', uploadRes.status);
+
+                                if (uploadRes.ok) {
+                                    const uploadData = await uploadRes.json();
+                                    console.log('[DEBUG] Upload data:', uploadData);
+                                    if (uploadData && uploadData.blob) {
+                                        embedThumbBlob = uploadData.blob;
+                                    }
+                                } else {
+                                    console.error('[DEBUG] Upload failed:', await uploadRes.text());
+                                }
+                            }
+                        } else {
+                            console.error('[DEBUG] Proxy fetch failed:', blobRes.status);
+                        }
+                    } catch (e) {
+                        console.error("[DEBUG] Failed to upload blob", e);
+                    }
+                }
+
+                if (isUseOriginalLink) {
+                    embedUri = url as unknown as ResourceUri;
+                    const host = new URL(url).hostname;
+                    // Original description
+                    embedTitle = ogpTitleLocal || host;
+                    embedDesc = ogpDescriptionLocal || '';
+                } else {
+                    // Rito Link (Default) but with Source Citation
+                    // embedUri is already ritoUrl (default)
+                    const host = new URL(url).hostname;
+                    embedTitle = ogpTitleLocal
+                        ? `${messages.create.inform.originalSource} : ${host} - ${ogpTitleLocal}`
+                        : `${messages.create.inform.originalSource} : ${host}`;
+                    // embedDesc uses default ogpMessage (Rito description)
+                }
+
+                // Ensure embedThumbBlob is used
+                console.log('[DEBUG] Final embedThumbBlob:', embedThumbBlob);
 
                 appBskyFeedPost.embed = {
                     $type: 'app.bsky.embed.external',
                     external: {
-                        uri: `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}` as unknown as ResourceUri,
-                        title: ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title,
-                        description: ogpMessage || '',
+                        uri: embedUri,
+                        title: embedTitle,
+                        description: embedDesc,
+                        thumb: embedThumbBlob
                     },
                 };
 
@@ -557,7 +658,7 @@ export default function RegistBookmarkPage() {
                 });
 
             }
-        } catch(e) {
+        } catch (e) {
             notifications.show({
                 title: 'Error',
                 message: messages.create.error.unknownError,
@@ -713,17 +814,28 @@ export default function RegistBookmarkPage() {
                             </Tabs.Panel>
                         </Tabs>
 
-                        <Group justify="right">
+                        <Group justify={activeDid && aturi ? "right" : "space-between"}>
                             {activeDid ? (
                                 <>
                                     {!aturi && (
-                                        <Switch
-                                            label={messages.create.field.posttobluesky.title}
-                                            checked={isPostToBluesky}
-                                            onChange={() => setIsPostToBluesky(!isPostToBluesky)}
-                                        />
+                                        <Group gap="xs" mb="sm">
+                                            <Switch
+                                                label={messages.create.field.posttobluesky.title}
+                                                description={messages.create.field.posttobluesky.description}
+                                                checked={isPostToBluesky}
+                                                onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                                            />
+                                            <Switch
+                                                label={messages.create.field.useOriginalLink.title}
+                                                description={messages.create.field.useOriginalLink.description}
+                                                checked={isUseOriginalLink}
+                                                disabled={!isPostToBluesky}
+                                                onChange={() => setIsUseOriginalLink(!isUseOriginalLink)}
+                                            />
+                                        </Group>
                                     )}
                                     <Button
+                                        ml="auto"
                                         leftSection={<BookmarkPlus size={16} />}
                                         onClick={handleSubmit}
                                         loading={isSubmit}

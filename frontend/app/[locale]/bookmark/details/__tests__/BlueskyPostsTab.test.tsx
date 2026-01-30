@@ -372,4 +372,91 @@ describe('BlueskyPostsTab', () => {
             expect(screen.getByText('#tag')).toBeInTheDocument();
         });
     });
+
+    it('POST取得時に例外が発生した場合（catchブロック）を処理する', async () => {
+        const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                linking_records: [
+                    { did: 'did:plc:u1', collection: 'app.bsky.feed.post', rkey: 'p1' }
+                ]
+            })
+        });
+
+        const mockPublicAgent = {
+            get: vi.fn().mockRejectedValueOnce(new Error('API error'))
+        };
+
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
+        });
+
+        render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
+
+        await waitFor(() => {
+            expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to fetch posts batch:', expect.any(Error));
+        });
+
+        expect(screen.queryByText('Post 1')).not.toBeInTheDocument();
+        consoleErrorSpy.mockRestore();
+    });
+
+    it('25件を超える投稿がある場合、ページネーションが動作する', async () => {
+        // useIntersectionのモックを上書きして、要素が見えていることにする
+        const { useIntersection } = await import('@mantine/hooks');
+        (useIntersection as any).mockReturnValue({ ref: vi.fn(), entry: { isIntersecting: true } });
+
+        // 30件のレコードを作成
+        const records = Array.from({ length: 30 }, (_, i) => ({
+            did: `did:plc:u${i}`, collection: 'app.bsky.feed.post', rkey: `p${i}`
+        }));
+
+        (global.fetch as any).mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({ linking_records: records })
+        });
+
+        const mockPublicAgent = {
+            get: vi.fn()
+                // 1回目のコール (0-24)
+                .mockResolvedValueOnce({
+                    ok: true,
+                    data: {
+                        posts: records.slice(0, 25).map((r, i) => ({
+                            uri: `at://${r.did}/${r.collection}/${r.rkey}`,
+                            author: { handle: `u${i}.bsky`, did: r.did },
+                            record: { text: `Post ${i}` },
+                            indexedAt: new Date().toISOString()
+                        }))
+                    }
+                })
+                // 2回目のコール (25-29) - loadMorePostsによって呼ばれる
+                .mockResolvedValueOnce({
+                    ok: true,
+                    data: {
+                        posts: records.slice(25).map((r, i) => ({
+                            uri: `at://${r.did}/${r.collection}/${r.rkey}`,
+                            author: { handle: `u${i + 25}.bsky`, did: r.did },
+                            record: { text: `Post ${i + 25}` },
+                            indexedAt: new Date().toISOString()
+                        }))
+                    }
+                })
+        };
+
+        (useXrpcAgentStore as any).mockReturnValue({
+            userProf: { did: 'did:plc:testuser' },
+            publicAgent: mockPublicAgent
+        });
+
+        render(<BlueskyPostsTab subjectUrl="https://example.com" locale="ja" />);
+
+        // 最初と最後の投稿が表示されることを確認
+        await waitFor(() => {
+            expect(screen.getByText('Post 0')).toBeInTheDocument();
+            expect(screen.getByText('Post 29')).toBeInTheDocument();
+        });
+    });
 });

@@ -160,7 +160,12 @@
 				"description": "Comment for the URL"
 			},
 			"posttobluesky": {
-				"title": "Post to Bluesky"
+				"title": "Post to Bluesky",
+				"description": "Post to Bluesky when registering a bookmark"
+			},
+			"useOriginalLink": {
+				"title": "Use original link",
+				"description": "Set the link destination of the OGP card to the original website"
 			}
 		},
 		"button": {
@@ -178,7 +183,9 @@
 			"success": "Regist successfully",
 			"bookmark": "Bookmarked on Rito",
 			"ogp": "View {0} and others' bookmarks",
-			"needlogin": "Login is required to register a bookmark"
+			"needlogin": "Login is required to register a bookmark",
+			"referInRito": "Refer in Rito",
+			"originalSource": "Source"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",

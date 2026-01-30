@@ -20,6 +20,7 @@ vi.mock('@atcute/bluesky-richtext-builder', () => ({
         facets: unknown[] = [];
         addText(t: string) { this.text += t; return this; }
         addTag(tag: string) { this.text += `#${tag}`; this.facets.push({ tag }); return this; }
+        addLink(text: string, href: string) { this.text += text; this.facets.push({ link: href }); return this; }
     },
 }));
 
@@ -52,7 +53,7 @@ describe('HandleBluesky', () => {
         const mockMessages = {
             create: { inform: { bookmark: 'ブックマークしました' } },
             title: 'Rito',
-        } as never;
+        } as any;
 
         it('投稿オブジェクトを生成する', () => {
             const result = buildPost('テストコメント', ['tag1'], mockMessages);
@@ -80,6 +81,19 @@ describe('HandleBluesky', () => {
         it('ホワイトスペースを含むタグは除外', () => {
             const result = buildPost('test', ['valid', 'in valid', 'also valid'], mockMessages);
             expect(result.text).not.toContain('in valid');
+        });
+
+        it('ritoUrlが指定された場合、参照リンクを追加する', () => {
+            const mockMessagesWithLink = {
+                ...mockMessages,
+                create: { inform: { bookmark: 'ブックマーク', referInRito: 'Ritoで見る' } }
+            };
+            const result = buildPost('test', [], mockMessagesWithLink as any, 'https://rito.blue/post/123');
+
+            // テキストにリンク文言が含まれるか
+            expect(result.text).toContain('Ritoで見る');
+            // ファセットが含まれるか (mockの実装に依存)
+            expect(result.facets).toEqual(expect.arrayContaining([{ link: 'https://rito.blue/post/123' }]));
         });
     });
 });

@@ -53,7 +53,9 @@
   },
   "pnpm": {
     "overrides": {
-      "undici": ">=6.23.0"
+      "undici": ">=6.23.0",
+      "hono": ">=4.11.7",
+      "lodash": ">=4.17.23"
     },
     "onlyBuiltDependencies": [
       "@atcute/time-ms",

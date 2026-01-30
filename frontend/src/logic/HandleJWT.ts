@@ -21,7 +21,7 @@ const myResolver = getResolver()
 const web = getWebResolver()
 const resolver: ResolverRegistry = {
     'plc': myResolver.DidPlcResolver as unknown as DIDResolver,
-    'web': web as unknown as DIDResolver,
+    'web': web.web as unknown as DIDResolver,
 }
 export const resolverInstance = new Resolver(resolver)
 export type Service = {
@@ -45,7 +45,7 @@ export const verifyJWT = async (auth: string, audience: string) => {
     return result
 
 
-    
+
 }
 
 export const fetchDiDDocument = async (did: string) => {
@@ -85,19 +85,19 @@ export const fetchServiceEndpoint = async (did: string) => {
 
 
 export const getSubFromJWT = (jwtToken: string): string => {
-  try {
-    // "DPoP ..." プレフィックスを除去
-    const token = jwtToken.replace(/^DPoP\s+/i, '').trim()
+    try {
+        // "DPoP ..." プレフィックスを除去
+        const token = jwtToken.replace(/^DPoP\s+/i, '').trim()
 
-    const parts = token.split('.')
-    if (parts.length !== 3) return ''
+        const parts = token.split('.')
+        if (parts.length !== 3) return ''
 
-    const payloadB64 = parts[1]
-    const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8')
-    const payload = JSON.parse(payloadJson)
-    return payload.sub || ''
-  } catch (err) {
-    console.error('JWT decode error:', err)
-    return ''
-  }
+        const payloadB64 = parts[1]
+        const payloadJson = Buffer.from(payloadB64, 'base64').toString('utf-8')
+        const payload = JSON.parse(payloadJson)
+        return payload.sub || ''
+    } catch (err) {
+        console.error('JWT decode error:', err)
+        return ''
+    }
 }

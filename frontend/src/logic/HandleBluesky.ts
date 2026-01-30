@@ -8,7 +8,8 @@ const MAX_TEXT_LENGTH = 300;
 export function buildPost(
     activeComment: string | undefined,
     tags: string[],
-    messages: Messages
+    messages: Messages,
+    ritoUrl?: string
 ) {
     const builder = new RichtextBuilder();
 
@@ -25,9 +26,25 @@ export function buildPost(
         return sum + 1 + tag.length + 1; // # + tag.length + 半角スペース
     }, 0);
 
+    // リトへの参照リンク分の文字数
+    let referText = "";
+    let referLength = 0;
+    if (ritoUrl) {
+        // 例: "\n\nリトで参照する"
+        referText = `\n\n${messages.create.inform.referInRito}`;
+        referLength = referText.length; // リンク自体の長さはFacetで処理されるため、表示文字数分だけ考慮
+    }
+
     // text部分を短くして addText
     const baseText = activeComment || messages.create.inform.bookmark;
-    builder.addText(baseText.slice(0, MAX_TEXT_LENGTH - tagsLength));
+    // MAX - タグ分 - 参照リンク分
+    builder.addText(baseText.slice(0, MAX_TEXT_LENGTH - tagsLength - referLength));
+
+    // リトへの参照リンクを追加
+    if (ritoUrl) {
+        builder.addText("\n\n");
+        builder.addLink(messages.create.inform.referInRito, ritoUrl as `${string}:${string}`);
+    }
 
     // タグを追加（全てのタグの前に半角スペース）
     validTags.forEach(tag => {
@@ -40,8 +57,7 @@ export function buildPost(
         text: builder.text,
         facets: builder.facets,
         createdAt: new Date().toISOString(),
-        via: messages.title,
-        langs: detectTopLanguages(baseText)||[],
+        langs: detectTopLanguages(baseText) || [],
     };
 }
 
@@ -51,18 +67,18 @@ export function buildPost(
  * @returns 言語コード配列（例: ['ja', 'en']）
  */
 export function detectTopLanguages(text: string): string[] {
-  // detectAllで候補を取得
-  const results = detectAll(text);
+    // detectAllで候補を取得
+    const results = detectAll(text);
 
-  if (!results || results.length === 0) {
-    return [];
-  }
+    if (!results || results.length === 0) {
+        return [];
+    }
 
-  // accuracy順にソート（念のため）
-  const sorted = results.sort((a, b) => b.accuracy - a.accuracy);
+    // accuracy順にソート（念のため）
+    const sorted = results.sort((a, b) => b.accuracy - a.accuracy);
 
-  // 上位2件を取得（候補が1件なら1件のみ）
-  const topLanguages = sorted.slice(0, 2).map(r => r.lang);
+    // 上位2件を取得（候補が1件なら1件のみ）
+    const topLanguages = sorted.slice(0, 2).map(r => r.lang);
 
-  return topLanguages;
+    return topLanguages;
 }

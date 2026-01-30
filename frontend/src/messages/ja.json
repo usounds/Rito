@@ -159,7 +159,12 @@
 				"description": "ブックマークのコメント"
 			},
 			"posttobluesky": {
-				"title": "Blueskyに投稿する"
+				"title": "Blueskyに投稿する",
+				"description": "ブックマーク登録時にBlueskyにも投稿します"
+			},
+			"useOriginalLink": {
+				"title": "オリジナルのリンク先を使用する",
+				"description": "OGPカードのリンク先を元のWebサイトにします"
 			}
 		},
 		"button": {
@@ -177,7 +182,9 @@
 			"success": "登録しました",
 			"bookmark": "リトにブックマークを登録しました",
 			"ogp": "{0} さんや他の人のブックマークを見る",
-			"needlogin": "ブックマークを登録するにはログインが必要です"
+			"needlogin": "ブックマークを登録するにはログインが必要です",
+			"referInRito": "リトで参照する",
+			"originalSource": "引用元"
 		},
 		"error": {
 			"invalidurl": "URLの形式が不正です",

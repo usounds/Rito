@@ -216,18 +216,29 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                     ? meData.scope
                     : meData.scope.split(/\s+/).filter(Boolean); // 連続空白を除去
 
-                // replacedScope は "include:..." 置き換え済みのスコープ配列
-                const replacedScope = SCOPE.flatMap(scope =>
-                    scope === "include:blue.rito.permissionSet"
-                        ? [
-                            "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema",
-                            "rpc?lxm=blue.rito.preference.getPreference&lxm=blue.rito.preference.putPreference&aud=*"
-                        ]
-                        : [scope]
-                );
+                // Permission Set の展開定義
+                // PDS が include を展開する場合としない場合の両方に対応するため、
+                // 1. 生の include 文字列が含まれているか
+                // 2. 展開後の権限セットがすべて含まれているか
+                // のいずれかを満たせばOKとする
+                const PERMISSION_SET_EXPANSION = [
+                    "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema",
+                    "rpc?lxm=blue.rito.preference.getPreference&lxm=blue.rito.preference.putPreference&aud=*"
+                ];
 
-                // すべての必要スコープが含まれているか判定
-                const missing = replacedScope.filter(s => !scopeList.includes(s));
+                const missing = SCOPE.filter(required => {
+                    // 1. 完全一致チェック (include未展開のPDS対応)
+                    if (scopeList.includes(required)) return false;
+
+                    // 2. 展開チェック (include展開済みのPDS対応)
+                    if (required === "include:blue.rito.permissionSet") {
+                        const allExpandedFound = PERMISSION_SET_EXPANSION.every(s => scopeList.includes(s));
+                        if (allExpandedFound) return false;
+                    }
+
+                    // どちらも見つからない場合は不足
+                    return true;
+                });
 
                 if (missing.length > 0) {
                     notifications.show({
@@ -254,7 +265,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
             }
         })();
     }, [handle]);
-    
+
     useEffect(() => {
         if (!activeDid) return;
 

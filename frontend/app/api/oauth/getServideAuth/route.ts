@@ -40,6 +40,7 @@ export async function GET(req: NextRequest) {
     const scopes = scope.split(' ');
 
     const hasLxm = scopes.some(s => {
+        if (s === "include:blue.rito.permissionSet") return true;
         if (!s.startsWith('rpc?')) return false;
 
         const query = s.slice(4); // "lxm=...&lxm=...&aud=*"

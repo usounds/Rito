@@ -9,6 +9,8 @@ type PageProps = {
     handle?: string[];
     page?: string;
     comment?: string; // コメント優先フラグ
+    relationship?: string;
+    userDid?: string;
   };
 };
 
@@ -23,6 +25,8 @@ export async function LatestBookmark({ params, searchParams }: PageProps) {
     tag: query.tag,
     handle: query.handle,
     sort: query.sort as 'created' | 'updated',
+    relationship: query.relationship as 'following' | 'followers' | 'mutual' | undefined,
+    userDid: query.userDid,
   };
 
   const result = await fetchBookmarks(bookmarkQuery);

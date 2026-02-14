@@ -146,3 +146,15 @@ model PostToBookmark {
 
   @@map("PostToBookmark") 
 }
+
+model SocialGraph {
+  observerDid String
+  targetDid   String
+  type        String
+  indexedAt   DateTime @default(now())
+
+  @@id([observerDid, targetDid])
+  @@index([observerDid])
+  @@index([targetDid])
+  @@map("SocialGraph")
+}

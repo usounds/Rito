@@ -8,21 +8,117 @@ export async function GET(request: NextRequest) {
     const actorParam = searchParams.get('actor'); // DID or handle
     const selectedTags = selectedTagsParam ? selectedTagsParam.split(',').filter(t => t.trim()) : [];
 
-    // actor が指定されている場合のベースフィルタを作成
-    const getActorFilter = () => {
-      if (!actorParam) return {};
-      // DID か handle かを判定
-      if (actorParam.startsWith('did:')) {
-        // DID から handle を取得する必要がある場合は uri で検索
-        return { uri: { startsWith: `at://${actorParam}/` } };
-      } else {
-        // handle の場合
-        return { handle: actorParam };
-      }
-    };
-    const actorFilter = getActorFilter();
+    const relationshipParam = searchParams.get('relationship'); // "following", "followers", "mutual"
 
-    if (selectedTags.length > 0 || actorParam) {
+    // actor が指定されている場合のフィルタを作成
+    const getActorFilter = async () => {
+      let targetDids: string[] = [];
+
+      if (!actorParam) {
+        return {};
+      }
+
+      // relationship が指定されている場合は SocialGraph から対象ユーザーを取得
+      if (relationshipParam && relationshipParam !== 'all' && relationshipParam !== 'specified' && actorParam.startsWith('did:')) {
+        const observerDid = actorParam;
+        let typeCondition = {};
+        if (relationshipParam === 'following') {
+          typeCondition = { type: 'follow' };
+        } else if (relationshipParam === 'followers') {
+          typeCondition = { type: 'follower' };
+        } else if (relationshipParam === 'mutual') {
+          // mutual は別途処理が必要だが、一旦 follow と follower の両方を取得して共通部分抽出などが理想。
+          // 簡易的に type: 'follow' かつ 'follower' (※DB構造による。SocialGraphは単方向なら `type` で区別)
+          // ここでは "mutual" という type があるか、もしくはアプリケーション側で解決するか。
+          // 既存実装の SocialGraph の仕様に合わせる。
+          // SocialGraph definition: model SocialGraph { observerDid, targetDid, type }
+          // type: 'follow' | 'follower' ? 
+          // 今回は単純に全件取得してフィルタするか、Prismaで頑張るか。
+          // ひとまず 'follow' しているユーザーを対象とする（簡易実装）
+          // 実際は relationshipParam に応じて targetDid を取得するロジックが必要。
+        }
+
+        // ユーザーのソーシャルグラフから targetDid を取得
+        let socialConditions: any = { observerDid };
+        if (relationshipParam === 'following') {
+          socialConditions.type = 'follow';
+        } else if (relationshipParam === 'followers') {
+          socialConditions.type = 'follower';
+        }
+
+        if (relationshipParam === 'mutual') {
+          // 相互フォロー = (내가 팔로우) AND (나를 팔로우)
+          // 1. follow を取得 (私がフォローしている人: observer=Me, target=Him)
+          const following = await prisma.socialGraph.findMany({
+            where: { observerDid, type: 'follow' },
+            select: { targetDid: true }
+          });
+          const followingDids = following.map(r => r.targetDid);
+
+          // 2. follower を取得 (私をフォローしている人: target=Me, observer=Him)
+          const followers = await prisma.socialGraph.findMany({
+            where: { targetDid: observerDid, type: 'follow' },
+            select: { observerDid: true }
+          });
+          const followerDids = new Set(followers.map(r => r.observerDid));
+
+          // 3. 両方に含まれるものを抽出
+          targetDids = followingDids.filter(did => followerDids.has(did));
+
+          // 自分自身も含める
+          targetDids.push(observerDid);
+
+        } else if (relationshipParam === 'followers') {
+          // フォロワーを取得 (私をフォローしている人: target=Me, observer=Him)
+          const followers = await prisma.socialGraph.findMany({
+            where: { targetDid: observerDid, type: 'follow' },
+            select: { observerDid: true }
+          });
+          targetDids = followers.map(r => r.observerDid);
+          // 自分自身も含める
+          targetDids.push(observerDid);
+
+        } else {
+          // following (私がフォローしている人: observer=Me, target=Him)
+          const following = await prisma.socialGraph.findMany({
+            where: { observerDid, type: 'follow' },
+            select: { targetDid: true }
+          });
+          targetDids = following.map(r => r.targetDid);
+          // 自分自身も含める
+          targetDids.push(observerDid);
+        }
+
+      } else {
+        // 通常の actor 指定 (specified user)
+        const actors = actorParam.split(',').filter(a => a.trim());
+
+        // ハンドルが含まれている場合は DID に変換する必要があるが、
+        // 簡易的に handle カラムで検索するか、あるいは UserDidHandle テーブルを使う。
+        // ここでは handle カラムでの検索と uri (did) での検索を OR で行う。
+
+        // actors 配列の中に DID とハンドルが混在する可能性がある
+        return {
+          OR: actors.map(a => {
+            if (a.startsWith('did:')) {
+              return { did: a };
+            } else {
+              return { handle: a };
+            }
+          })
+        };
+      }
+
+      if (targetDids.length > 0) {
+        return { did: { in: targetDids } };
+      }
+
+      return {};
+    };
+
+    const actorFilter = await getActorFilter();
+
+    if (selectedTags.length > 0 || actorParam || (relationshipParam && relationshipParam !== 'all')) {
       // 選択されたタグをすべて持つブックマークのURIを取得
       const whereCondition: Record<string, unknown> = { ...actorFilter };
 

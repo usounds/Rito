@@ -5,6 +5,8 @@ import { Container } from "@mantine/core";
 import { SearchForm } from './SearchForm';
 import Breadcrumbs from "@/components/Breadcrumbs";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { verifySignedDid } from "@/logic/HandleOauthClientNode";
 
 export const metadata: Metadata = {
   robots: {
@@ -27,6 +29,7 @@ type PageProps = {
     tag?: string[];
     handle?: string[];
     comment?: 'comment' | 'ogp';
+    relationship?: string;
   }>;
 };
 
@@ -50,7 +53,7 @@ export default async function BookmarksPage(props: PageProps) {
       .map(t => t.trim())
       .filter(Boolean)
     : undefined;
-    
+
   // --- ハンドル ---
   const handle = searchParams.handle
     ? (Array.isArray(searchParams.handle)
@@ -66,17 +69,27 @@ export default async function BookmarksPage(props: PageProps) {
   // --- コメントフラグ ---
   const comment = searchParams.comment;
 
+  // --- 関係性 ---
+  const relationship = searchParams.relationship;
+
+  // --- ユーザーDID ---
+  const cookieStore = await cookies();
+  const signedDid = cookieStore.get("USER_DID")?.value;
+  const did = signedDid ? verifySignedDid(signedDid) : undefined;
+
   // --- LatestBookmark に渡す query ---
   const query: Record<string, string | string[]> = { page: pageStr };
   if (tag) query.tag = tag;
   if (handle) query.handle = handle;
   //if (sort) query.sort = sort;
   if (comment) query.comment = comment;
+  if (relationship) query.relationship = relationship;
+  if (did) query.userDid = did;
 
   return (
     <Container size="md" mx="auto" my="sx">
-      <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href:`/${locale}/bookmark/search`}, { label: t("header.browse") }]} />
-      <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} />
+      <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/${locale}/bookmark/search` }, { label: t("header.browse") }]} />
+      <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} defaultRelationship={relationship} />
       <LatestBookmark params={{ locale }} searchParams={query} />
     </Container>
   );

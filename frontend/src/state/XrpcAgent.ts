@@ -10,6 +10,7 @@ type State = {
   publicAgent: Client;
   thisClient: Client;
   isLoginProcess: boolean;
+  lastSyncedAt: number | null;
 };
 
 type Action = {
@@ -19,6 +20,7 @@ type Action = {
   setPublicAgent: (publicAgent: Client) => void;
   setThisClient: (thisClient: Client) => void;
   setIsLoginProcess: (isLoginProcess: boolean) => void;
+  setLastSyncedAt: (date: number | null) => void;
 };
 
 export const useXrpcAgentStore = create<State & Action>()(
@@ -46,6 +48,9 @@ export const useXrpcAgentStore = create<State & Action>()(
       setPublicAgent: (publicAgent: Client) => set({ publicAgent }),
       setThisClient: (thisClient: Client) => set({ thisClient }),
       setIsLoginProcess: (isLoginProcess: boolean) => set({ isLoginProcess }),
+
+      lastSyncedAt: null,
+      setLastSyncedAt: (date: number | null) => set({ lastSyncedAt: date }),
     }),
     {
       name: 'xrpc-agent-store',
@@ -53,6 +58,7 @@ export const useXrpcAgentStore = create<State & Action>()(
         activeDid: state.activeDid,
         handle: state.handle,
         isLoginProcess: state.isLoginProcess,
+        lastSyncedAt: state.lastSyncedAt,
       }),
     }
   ) as any

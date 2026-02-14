@@ -9,6 +9,8 @@ export type BookmarkQuery = {
     page?: number;
     comment?: string;
     did?: string;
+    relationship?: 'following' | 'followers' | 'mutual';
+    userDid?: string;
 };
 
 export async function fetchBookmarks(query: BookmarkQuery) {
@@ -20,6 +22,39 @@ export async function fetchBookmarks(query: BookmarkQuery) {
     const where: Prisma.BookmarkWhereInput = {
         NOT: [{ subject: '' }],
     };
+
+    if (query.relationship && query.userDid) {
+        if (query.relationship === 'following') {
+            const following = await prisma.socialGraph.findMany({
+                where: { observerDid: query.userDid, type: 'follow' },
+                select: { targetDid: true }
+            });
+            const dids = following.map(f => f.targetDid);
+            where.did = { in: dids };
+
+        } else if (query.relationship === 'followers') {
+            const followers = await prisma.socialGraph.findMany({
+                where: { targetDid: query.userDid, type: 'follow' },
+                select: { observerDid: true }
+            });
+            const dids = followers.map(f => f.observerDid);
+            where.did = { in: dids };
+
+        } else if (query.relationship === 'mutual') {
+            const following = await prisma.socialGraph.findMany({
+                where: { observerDid: query.userDid, type: 'follow' },
+                select: { targetDid: true }
+            });
+            const followers = await prisma.socialGraph.findMany({
+                where: { targetDid: query.userDid, type: 'follow' },
+                select: { observerDid: true }
+            });
+
+            const followingSet = new Set(following.map(f => f.targetDid));
+            const mutuals = followers.map(f => f.observerDid).filter(did => followingSet.has(did));
+            where.did = { in: mutuals };
+        }
+    }
 
     if (query.did) {
         const decodedDid = decodeURIComponent(query.did);

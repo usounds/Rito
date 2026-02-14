@@ -111,6 +111,21 @@
 			},
 			"commentpriority": {
 				"title": "Prioritize Website Description"
+			},
+			"mode": {
+				"title": "User Scope",
+				"all": "All",
+				"following": "Following",
+				"followers": "Followers",
+				"mutual": "Mutuals",
+				"specified": "Specified User"
+			},
+			"sync": {
+				"button": "Sync Social Graph",
+				"success": "Synced successfully",
+				"error": "Failed to sync",
+				"loading": "Syncing...",
+				"lastSynced": "Last Synced"
 			}
 		},
 		"button": {

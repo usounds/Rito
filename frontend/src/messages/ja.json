@@ -110,6 +110,21 @@
 			},
 			"commentpriority": {
 				"title": "Webサイトが提供する説明を優先する"
+			},
+			"mode": {
+				"title": "ユーザー範囲",
+				"all": "指定なし",
+				"following": "フォロー中",
+				"followers": "フォロワー",
+				"mutual": "相互フォロー",
+				"specified": "特定のユーザー"
+			},
+			"sync": {
+				"button": "フォロー情報を同期",
+				"success": "同期しました",
+				"error": "同期に失敗しました",
+				"loading": "同期中...",
+				"lastSynced": "最終同期"
 			}
 		},
 		"button": {

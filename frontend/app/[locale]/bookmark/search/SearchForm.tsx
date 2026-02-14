@@ -1,6 +1,6 @@
 'use client';
-import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box } from '@mantine/core';
-import { Search } from 'lucide-react';
+import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box, Select, ActionIcon, Tooltip } from '@mantine/core';
+import { Search, RotateCw } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
@@ -11,17 +11,20 @@ import { useMyBookmark } from "@/state/MyBookmark";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { TagRanking } from '@/type/ApiTypes';
+import { notifications } from '@mantine/notifications';
 
 type SearchFormProps = {
   locale: string;
   defaultTags?: string[];
   defaultHandles?: string[];
+  defaultRelationship?: string;
 };
 
 export function SearchForm({
   locale,
   defaultTags = [],
   defaultHandles = [],
+  defaultRelationship = 'all',
 }: SearchFormProps) {
   const [tags, setTags] = useState<string[]>(defaultTags);
   const [myTag, setMyTag] = useState<string[]>([]);
@@ -30,8 +33,14 @@ export function SearchForm({
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const tagRanking = useMyBookmark(state => state.tagRanking);
   const publicAgent = useXrpcAgentStore(state => state.publicAgent);
+  const activeDid = useXrpcAgentStore(state => state.activeDid);
+  const lastSyncedAt = useXrpcAgentStore(state => state.lastSyncedAt);
+  const setLastSyncedAt = useXrpcAgentStore(state => state.setLastSyncedAt);
+  const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
   const [commentPriority, setCommentPriority] = useState('comment');
+  const [relationship, setRelationship] = useState<string>(defaultRelationship);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
   const [copied, setCopied] = useState(false);
   const messages = useMessages();
   const router = useRouter();
@@ -42,13 +51,23 @@ export function SearchForm({
   const searchParams = useSearchParams();
 
   // 選択タグに基づいて関連タグを取得
-  const fetchRelatedTags = useCallback(async (selectedTags: string[]) => {
+  const fetchRelatedTags = useCallback(async (selectedTags: string[], targetHandles?: string[], targetRelationship?: string) => {
     try {
-      const url = selectedTags.length > 0
-        ? `/xrpc/blue.rito.feed.getLatestBookmarkTag?tags=${encodeURIComponent(selectedTags.join(','))}`
-        : `/xrpc/blue.rito.feed.getLatestBookmarkTag`;
+      const params = new URLSearchParams();
+      if (selectedTags.length > 0) {
+        params.set('tags', selectedTags.join(','));
+      }
+      const handlesToUse = targetHandles || handles;
+      const relationshipToUse = targetRelationship || relationship;
 
-      const res = await fetch(url);
+      if (relationshipToUse === 'specified' && handlesToUse.length > 0) {
+        params.set('actor', handlesToUse.join(','));
+      } else if (relationshipToUse !== 'all' && activeDid) {
+        params.set('relationship', relationshipToUse);
+        params.set('actor', activeDid);
+      }
+
+      const res = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag?${params.toString()}`);
       if (res.ok) {
         const data: TagRanking[] = await res.json();
         // タグリストを更新
@@ -64,27 +83,35 @@ export function SearchForm({
     } catch (err) {
       console.error("Error fetching related tags:", err);
     }
-  }, []);
+  }, [handles, relationship, activeDid]);
 
   useEffect(() => {
     if (!searchParams) return;
 
     const tagParam = searchParams.get('tag');
     const handleParam = searchParams.get('handle');
+    const relParam = searchParams.get('relationship');
 
     setCommentPriority(searchParams.get('comment') || 'comment');
     const initialTags = tagParam ? tagParam.split(',') : [];
     setTags(initialTags);
-    setHandles(handleParam ? handleParam.split(',') : []);
+    const initialHandles = handleParam ? handleParam.split(',') : [];
+    setHandles(initialHandles);
+
+    let initialRel = 'all';
+    if (relParam) initialRel = relParam;
+    else if (handleParam) initialRel = 'specified';
+    setRelationship(initialRel);
 
     // 初期ロード時に関連タグを取得
-    fetchRelatedTags(initialTags);
-  }, [searchParams, fetchRelatedTags]);
+    fetchRelatedTags(initialTags, initialHandles, initialRel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
-  // タグ変更時に関連タグを再取得
+  // タグ・ハンドル・モード変更時に関連タグを再取得
   useEffect(() => {
     fetchRelatedTags(tags);
-  }, [tags, fetchRelatedTags]);
+  }, [tags, handles, relationship, fetchRelatedTags]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,8 +119,13 @@ export function SearchForm({
 
     const params = new URLSearchParams();
     if (tags.length) params.set('tag', tags.join(','));
-    if (handles.length) params.set('handle', handles.join(','));
     if (commentPriority === 'ogp') params.set('comment', commentPriority);
+
+    if (relationship === 'specified') {
+      if (handles.length) params.set('handle', handles.join(','));
+    } else if (relationship !== 'all') {
+      params.set('relationship', relationship);
+    }
 
     loader.start();
     router.push(`/${locale}/bookmark/search?${params.toString()}`);
@@ -136,6 +168,44 @@ export function SearchForm({
     }
   };
 
+  const handleSync = async () => {
+    if (!activeDid) return;
+    setIsSyncing(true);
+    try {
+      const res = await fetch('/api/graph/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'both' }), // Always sync both
+      });
+      if (res.ok) {
+        setLastSyncedAt(Date.now());
+        notifications.show({
+          title: messages.search.field.sync.success,
+          message: '',
+          color: 'teal',
+        });
+      } else {
+        throw new Error('Failed');
+      }
+    } catch (e) {
+      notifications.show({
+        title: messages.search.field.sync.error,
+        message: '',
+        color: 'red',
+      });
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const relationshipOptions = [
+    { value: 'all', label: messages.search.field.mode.all },
+    { value: 'specified', label: messages.search.field.mode.specified },
+    { value: 'following', label: messages.search.field.mode.following, disabled: !activeDid },
+    { value: 'followers', label: messages.search.field.mode.followers, disabled: !activeDid },
+    { value: 'mutual', label: messages.search.field.mode.mutual, disabled: !activeDid },
+  ];
+
   return (
     <form onSubmit={handleSubmit}>
       <Group grow mb="xs">
@@ -162,20 +232,53 @@ export function SearchForm({
             />
           </Box>
 
-          {/* ユーザー入力 */}
-          <TagsInput
-            label={messages.search.field.user.title}
-            placeholder={messages.search.field.user.placeholder}
-            value={handles}
-            data={suggestions}
-            onChange={(value) => {
-              setHandles(value);
-              setSuggestions([]);
-            }}
-            onInput={handleInput}
-            styles={{ input: { fontSize: 16 } }}
-            clearable
-          />
+          {/* ユーザー入力 (モード選択 + ハンドル入力 or 同期ボタン) */}
+          <Box>
+            <Select
+              label={messages.search.field.mode.title}
+              data={relationshipOptions}
+              value={relationship}
+              onChange={(val) => setRelationship(val || 'all')}
+              mb="xs"
+              allowDeselect={false}
+            />
+
+            {relationship === 'specified' ? (
+              <TagsInput
+                label={messages.search.field.user.title}
+                placeholder={messages.search.field.user.placeholder}
+                value={handles}
+                data={suggestions}
+                onChange={(value) => {
+                  setHandles(value);
+                  setSuggestions([]);
+                }}
+                onInput={handleInput}
+                styles={{ input: { fontSize: 16 } }}
+                clearable
+              />
+            ) : (relationship !== 'all' && activeDid) ? (
+              <Box>
+                <Group align="center">
+                  <Button
+                    onClick={handleSync}
+                    loading={isSyncing}
+                    disabled={isLoginProcess}
+                    variant="light"
+                    leftSection={<RotateCw size={16} />}
+                    fullWidth
+                  >
+                    {messages.search.field.sync.button}
+                  </Button>
+                </Group>
+                {lastSyncedAt && (
+                  <Box mt={4} ta="right" fz="xs" c="dimmed">
+                    {messages.search.field.sync.lastSynced}: {new Date(lastSyncedAt).toLocaleString()}
+                  </Box>
+                )}
+              </Box>
+            ) : null}
+          </Box>
         </SimpleGrid>
       </Group>
 

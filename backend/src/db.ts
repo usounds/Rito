@@ -88,6 +88,7 @@ export interface BookmarkUpsertData {
     ogpImage?: string;
     moderationResult: string | null;
     handle: string;
+    category?: string | null;
     createdAt?: Date;
 }
 
@@ -102,6 +103,7 @@ export async function upsertBookmarkRecord(data: BookmarkUpsertData): Promise<vo
                 ogp_image: data.ogpImage,
                 moderation_result: data.moderationResult,
                 handle: data.handle,
+                category: data.category,
                 indexed_at: new Date(),
             },
             create: {
@@ -113,6 +115,7 @@ export async function upsertBookmarkRecord(data: BookmarkUpsertData): Promise<vo
                 ogp_image: data.ogpImage,
                 moderation_result: data.moderationResult,
                 handle: data.handle,
+                category: data.category,
                 created_at: data.createdAt ?? new Date(),
                 indexed_at: new Date(),
             },

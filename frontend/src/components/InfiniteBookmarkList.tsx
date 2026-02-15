@@ -92,6 +92,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
                                 date={displayDate}
                                 moderations={moderationList}
                                 likes={b.likes || []}
+                                category={b.category}
                             />
                         </div>
                     );

@@ -1,6 +1,6 @@
 export interface Bookmark {
   uri: string;
-//  did: string;             // DB に合わせて追加
+  //  did: string;             // DB に合わせて追加
   handle: string;          // 追加
   subject: string;
   ogpTitle: string | null;
@@ -12,6 +12,7 @@ export interface Bookmark {
   comments: Comment[];
   tags: string[];
   likes?: string[];
+  category: string | null;
 }
 
 export interface Comment {
@@ -47,4 +48,5 @@ export interface RawBookmark {
   moderation_result?: string | null;
   comments: RawComment[];
   tags?: { tag: { name: string } }[];
+  category?: string | null;
 }

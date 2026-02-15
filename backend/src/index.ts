@@ -112,6 +112,55 @@ async function checkModeration(texts: string[]): Promise<string[]> {
   }
 }
 
+/**
+ * ブックマークのタイトル、説明、コメント、タグからカテゴリーを分類する
+ */
+async function classifyCategory(title: string, description: string, comment: string, tags: string[]): Promise<string | null> {
+  try {
+    const prompt = `与えられたコンテンツを、以下のリストの中から最も適切なカテゴリーに分類してください。
+特に「タイトル」と「説明」（ウェブサイトのOGP情報）の内容を最優先の判定基準としてください。
+カテゴリーの「識別子（ID）」のみを文字列として返してください。余計な説明は一切不要です。
+
+カテゴリーIDリスト:
+- general: 一般的なニュース、速報、特定のカテゴリに当てはまらない話題。
+- atprotocol: AT Protocol, Bluesky, Fediverse, 分散型SNS関連の技術や話題。
+- social: 社会問題、時事、事件、政治、経済、ビジネス、金融。
+- technology: プログラミング、ガジェット、IT、AI、ハードウェア。
+- lifestyle: 暮らし、家事、育児、健康、教育、学び、雑学。
+- food: 料理、グルメ、レシピ、飲食店。
+- travel: 旅行、観光、地域情報、お出かけ。
+- entertainment: 映画、音楽、芸能、ドラマ、お笑い、ネタ、ユーモア。
+- anime_game: アニメ、マンガ、ゲーム、声優、VTuber。
+
+コンテンツ:
+タイトル: ${title}
+説明: ${description}
+タグ: ${tags.join(', ')}
+コメント: ${comment}`;
+
+    const response = await client.chat.completions.create({
+      model: "gpt-5-nano", // gpt-5-nano が利用不可の場合のデフォルト
+      messages: [
+        { role: "system", content: "あなたはコンテンツ分類の専門家です。カテゴリーIDのみを返してください。" },
+        { role: "user", content: prompt }
+      ],
+    });
+
+    const category = response.choices[0]?.message?.content?.trim().toLowerCase();
+    const validCategories = [
+      "general", "atprotocol", "social", "technology", "lifestyle", "food", "travel", "entertainment", "anime_game"
+    ];
+
+    if (category && validCategories.includes(category)) {
+      return category;
+    }
+    return "general"; // 判定不能な場合は一般
+  } catch (error) {
+    logger.error(`Classification error: ${error}`);
+    return null;
+  }
+}
+
 //const prisma = new PrismaClient();
 let cursor = "0";
 let prev_time_us = "0";
@@ -282,8 +331,18 @@ async function init() {
       const ogpTexts: string[] = [];
       if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
       if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
+      // DID->Handleテーブル
       const ogpFlaggedCategories = await checkModeration(ogpTexts);
       const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
+
+      // カテゴリー分類
+      const mainComment = record.comments?.[0]?.comment || "";
+      const category = await classifyCategory(
+        record.ogpTitle || "",
+        record.ogpDescription || "",
+        mainComment,
+        record.tags || []
+      );
 
       // DID->Handleテーブル
       //console.log("DID->Handleテーブル")
@@ -307,6 +366,7 @@ async function init() {
             ogp_image: record.ogpImage,
             moderation_result: ogpModerationResult,
             handle: handle,
+            category: category,
             indexed_at: new Date(),
           },
           create: {
@@ -318,6 +378,7 @@ async function init() {
             ogp_image: record.ogpImage,
             moderation_result: ogpModerationResult,
             handle: handle,
+            category: category,
             created_at: record.createdAt ? new Date(record.createdAt) : new Date(),
             indexed_at: new Date(),
           },
@@ -552,7 +613,7 @@ async function init() {
         return;
       }
 
-      let oggTitle = '';
+      let ogpTitle = '';
       let ogpDescription = '';
       let ogImage = '';
 
@@ -560,7 +621,7 @@ async function init() {
         const ogp = await fetch(`https://rito.blue/api/fetchOgp?url=${encodeURIComponent(urlString)}`);
         const ogpData = await ogp.json() as OgpResult;
 
-        if (ogpData.result?.ogTitle) oggTitle = ogpData.result.ogTitle;
+        if (ogpData.result?.ogTitle) ogpTitle = ogpData.result.ogTitle;
         if (ogpData.result?.ogDescription) ogpDescription = ogpData.result.ogDescription;
         if (ogpData.result?.ogImage?.[0]?.url) ogImage = ogpData.result.ogImage[0].url;
 
@@ -579,6 +640,14 @@ async function init() {
         logger.info(`Bookmark already exists for ${uniqueLinks[0]} by ${event.did}, skipping...`);
         return;
       }
+
+      // カテゴリー分類
+      const category = await classifyCategory(
+        ogpTitle,
+        ogpDescription,
+        record.text || "",
+        tags
+      );
 
       const session = await oauthClient.restore(event.did);
       const agent = new Agent(session);
@@ -616,11 +685,11 @@ async function init() {
           comments: [
             {
               lang: (exists as PostToBookmarkRecord).lang || 'ja',
-              title: oggTitle,
+              title: ogpTitle,
               comment: normalizeComment(record.text || ''),
             }
           ],
-          ogpTitle: oggTitle,
+          ogpTitle: ogpTitle,
           ogpDescription: (record.embed && isEmbedExternal(record.embed)) ? record.embed.external?.description || ogpDescription : ogpDescription,
           ogpImage: ogImage,
           tags

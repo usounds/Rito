@@ -4,10 +4,10 @@ import { PrismaClient } from '@prisma/client';
 
 
 export function withTrailingSlashVariants(uri: string) {
-    return uri.endsWith("/")
-      ? [uri, uri.slice(0, -1)]
-      : [uri, uri + "/"];
-  }
+  return uri.endsWith("/")
+    ? [uri, uri.slice(0, -1)]
+    : [uri, uri + "/"];
+}
 
 
 export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
@@ -39,10 +39,11 @@ export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
     })),
     tags: Array.isArray(b.tags)
       ? b.tags
-          .map(t => t.tag.name)
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          .sort((a, _b) => (a === 'Verified' ? -1 : 0))
+        .map(t => t.tag.name)
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        .sort((a, _b) => (a === 'Verified' ? -1 : 0))
       : [],
+    category: b.category ?? null,
   }));
 }
 export async function enrichBookmarks(

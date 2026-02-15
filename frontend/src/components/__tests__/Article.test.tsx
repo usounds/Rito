@@ -20,6 +20,15 @@ vi.mock('next/link', () => ({
     ),
 }));
 
+vi.mock('next-intl', () => ({
+    useLocale: () => 'ja',
+    useMessages: () => ({
+        detail: {
+            view: '詳細を見る',
+        },
+    }),
+}));
+
 vi.mock('next/dynamic', () => ({
     default: () => ({ children }: { children: string }) => <p>{children}</p>,
 }));
@@ -52,9 +61,16 @@ vi.mock('@/components/ArticleImage', () => ({
     default: ({ src }: { src: string }) => <img data-testid="article-image" src={src} alt="article" />,
 }));
 
+vi.mock('@/components/EditMenu', () => ({
+    default: () => <div data-testid="edit-menu" />,
+}));
+
 vi.mock('lucide-react', () => ({
     SquarePen: () => <span>✎</span>,
     Trash2: () => <span data-testid="trash-icon">🗑</span>,
+    CircleEllipsis: () => <span data-testid="circle-ellipsis">...</span>,
+    BookmarkPlus: () => <span data-testid="bookmark-plus">+</span>,
+    Share: () => <span data-testid="share">Share</span>,
 }));
 
 vi.mock('@atcute/lexicons/syntax', () => ({
@@ -90,10 +106,9 @@ describe('Article', () => {
         expect(screen.getByText(/user.bsky.social/)).toBeInTheDocument();
     });
 
-    it('aturiがある場合は編集・削除ボタンを表示', () => {
-        render(<Article {...defaultProps} atUri="at://did:plc:xxx/blue.rito.feed.bookmark/yyy" />);
-        expect(screen.getByText('✎')).toBeInTheDocument();
-        expect(screen.getByTestId('trash-icon')).toBeInTheDocument();
+    it('EditMenuを表示する', () => {
+        render(<Article {...defaultProps} />);
+        expect(screen.getByTestId('edit-menu')).toBeInTheDocument();
     });
 
     it('at:// URIを正しく解析して表示', () => {
@@ -130,25 +145,7 @@ describe('Article', () => {
         expect(img).toHaveAttribute('src', 'https://mysite.com/avatar.jpg');
     });
 
-    it('削除ボタンクリックでモーダルを表示', async () => {
-        render(<Article {...defaultProps} atUri="at://xxx" />);
-        fireEvent.click(screen.getByTestId('trash-icon'));
-        await waitFor(() => {
-            expect(screen.getByText('Delete Modal')).toBeInTheDocument();
-        });
-    });
 
-    it('ウィンドウリサイズ時にモーダルサイズを調整', () => {
-        render(<Article {...defaultProps} atUri="at://xxx" />);
-
-        // Initial check doesn't test much since we can't easily check Mantine Modal internal state via unit tests,
-        // but we trigger the branch.
-        global.innerWidth = 500;
-        fireEvent(window, new Event('resize'));
-
-        global.innerWidth = 1024;
-        fireEvent(window, new Event('resize'));
-    });
 
     it('無効なURLの場合は元のURLをドメインとして表示', () => {
         render(<Article {...defaultProps} url="invalid-url" />);

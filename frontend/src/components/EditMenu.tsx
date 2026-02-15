@@ -15,9 +15,11 @@ type Props = {
     subject: string;
     title: string;
     tags?: string[];
+    image?: string;
+    description?: string;
 };
 
-export default function EditMenu({ subject, title, tags }: Props) {
+export default function EditMenu({ subject, title, tags, image, description }: Props) {
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [shareOnBluesky, setShareOnBluesky] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -33,7 +35,7 @@ export default function EditMenu({ subject, title, tags }: Props) {
         // setData(prev => prev + " (processed on client)");
     }, []);
 
-    if (!activeDid) return null;
+
 
     const handleEdit = () => {
         const targetUrl = `/${locale}/bookmark/register?aturi=${encodeURIComponent(
@@ -77,10 +79,13 @@ export default function EditMenu({ subject, title, tags }: Props) {
                 closeOnClickOutside={false}
             >
                 <ShareOnBluesky
-                    subject={typeof window !== "undefined" ? window.location.href : ""}
+                    subject={`${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(subject)}`}
                     title={title}
                     tags={tags}
                     onClose={() => setShareOnBluesky(false)}
+                    originalUrl={subject}
+                    image={image}
+                    description={description}
                 />
             </Modal>
 

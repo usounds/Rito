@@ -23,6 +23,7 @@
 		"bookmark": "My Bookmarks",
 		"browse": "Search",
 		"discover": "Discover",
+		"about": "About",
 		"navigation": "Navigation",
 		"feature": {
 			"title": "Features",
@@ -359,7 +360,8 @@
 	"discover": {
 		"title": "Discover",
 		"latestbookmarbyusers": "Latest bookmarks by users",
-		"latestLike": "Latest liked bookmarks"
+		"latestLike": "Latest liked bookmarks",
+		"ogpDescription": "Browse {0} category bookmarks"
 	},
 	"settings": {
 		"title": "Settings",
@@ -379,5 +381,17 @@
 			"needlogin": "Need login",
 			"error": "A system error has occurred"
 		}
+	},
+	"category": {
+		"discover": "Explore",
+		"general": "General",
+		"social": "Social",
+		"technology": "Technology",
+		"lifestyle": "Lifestyle",
+		"food": "Food",
+		"travel": "Travel",
+		"entertainment": "Entertainment",
+		"anime_game": "Anime/Game",
+		"atprotocol": "AT Protocol"
 	}
 }

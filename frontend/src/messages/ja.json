@@ -23,6 +23,7 @@
 		"bookmark": "マイブックマーク",
 		"browse": "検索",
 		"discover": "見つける",
+		"about": "リトについて",
 		"navigation": "ナビゲーション",
 		"feature": {
 			"title": "機能",
@@ -358,7 +359,8 @@
 	"discover": {
 		"title": "見つける",
 		"latestbookmarbyusers": "ユーザーごとの最新ブックマーク",
-		"latestLike": "いいねされたブックマーク"
+		"latestLike": "いいねされたブックマーク",
+		"ogpDescription": "{0}カテゴリーのブックマークを参照する"
 	},
 	"settings": {
 		"title": "設定",
@@ -378,5 +380,17 @@
 			"needlogin": "ログインが必要です",
 			"error": "システムエラーが発生しました"
 		}
+	},
+	"category": {
+		"discover": "発見",
+		"general": "一般",
+		"social": "社会",
+		"technology": "テクノロジー",
+		"lifestyle": "暮らし",
+		"food": "食事",
+		"travel": "旅行",
+		"entertainment": "エンタメ",
+		"anime_game": "アニメ・ゲーム",
+		"atprotocol": "AT Protocol"
 	}
 }

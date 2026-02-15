@@ -20,7 +20,7 @@
 - PDS（認証およびデータ保存のため）
 - Google Analytics 4（アクセス解析のため）  
   → [Google プライバシーポリシー](https://policies.google.com/privacy)
-- OpenAI（モデレーション機能のため。なお、利用しているomni-moderation-latestは内容を学習しません）  
+- OpenAI（モデレーション機能およびコンテンツのカテゴリー分類のため。なお、利用しているモデルは入力内容を学習しません）  
   → [プライバシーポリシー](https://openai.com/policies/row-privacy-policy/)
 - UFOs（Lexicon 情報取得のため）  
   ※ Thank you [fig](https://bsky.app/profile/bad-example.com), developer of [microcosm](https://bsky.app/profile/microcosm.blue)
@@ -37,6 +37,7 @@
 本プライバシーポリシーの内容は、必要に応じて改定することがあります。改定は本サイト上で告知します。
 
 ## 8. 改訂履歴
+- 2026/02/15 カテゴリー分類におけるAI利用について追記
 - 2025/09/22 初版
 
 ## 9. お問い合わせ

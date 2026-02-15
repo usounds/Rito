@@ -33,7 +33,7 @@ The Service shall not be liable for any damages arising from the use of these ex
 
 - **PDS**: For authentication and data storage  
 - **Google Analytics 4**: For access and usage analysis  
-- **OpenAI**: For moderation of submitted content (using the omni-moderation-latest model; content is **not** used for training)
+- **OpenAI**: For moderation of submitted content and categorization (content is **not** used for training)
 
 ## Use of API
 - The Lexicon API provided by this service is available for free use.  
@@ -44,5 +44,6 @@ The terms of service may be revised as necessary.
 Revisions will be announced on this website.  
 
 ## Revision History
+- 2026/02/15 Added mention of AI usage for categorization
 - 2025/09/22 Prohibited conduct expanded to include all third parties
 - 2025/09/20 First edition

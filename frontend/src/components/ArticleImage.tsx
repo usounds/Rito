@@ -37,7 +37,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
   // YouTubeの場合
   if (youtubeId) {
     return (
-      <div style={{ position: "relative", width: "100%", height: 180 }}>
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
         <iframe
           width="100%"
           height="100%"
@@ -46,7 +46,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
-          style={{ objectFit: "cover", borderRadius: 8 }}
+          style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
         />
       </div>
     );
@@ -55,7 +55,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
   // ニコニコ動画の場合
   if (nicoId) {
     return (
-      <div style={{ position: "relative", width: "100%", height: 180 }}>
+      <div style={{ position: "relative", width: "100%", height: "100%" }}>
         <iframe
           width="100%"
           height="100%"
@@ -64,7 +64,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
           frameBorder="0"
           allow="autoplay; fullscreen"
           allowFullScreen
-          style={{ objectFit: "cover", borderRadius: 8 }}
+          style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
         />
       </div>
     );
@@ -77,8 +77,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
     <img
       src={imageUrl}
       alt={alt}
-      height={180}
-      style={{ width: "100%", objectFit: "cover" }}
+      style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }}
       onError={(e) => {
         e.currentTarget.onerror = null;
         e.currentTarget.src = dummyUrl;

@@ -110,7 +110,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             </Button>
           </Link>
 
-          <Link href={`/${locale}/bookmark/discover`} style={{ textDecoration: 'none' }}>
+          <Link href={`/${locale}/`} style={{ textDecoration: 'none' }}>
             <Button
               leftSection={<Compass size={14} />}
               variant="default"

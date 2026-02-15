@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },
 
+  async redirects() {
+    return [
+      {
+        source: '/:locale/bookmark/discover',
+        destination: '/:locale',
+        permanent: true,
+      },
+    ];
+  },
+
   async headers() {
     if (process.env.NODE_ENV === "development") {
       return [

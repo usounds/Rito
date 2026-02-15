@@ -114,6 +114,7 @@ export function MyBookmark() {
                                 moderations={[]}
                                 likes={b.likes || []}
                                 likeDisabled={true}
+                                category={b.category}
                             />
                         </div>
                     );

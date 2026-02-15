@@ -214,7 +214,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
     const uri = typeof search.uri === "string" ? search.uri : undefined;
     if (!uri) return <Container><Text c="dimmed">{t('detail.error.uriRequired')}</Text></Container>;
 
-    const { displayTitle, displayComment, moderations, bookmarks, subjectLikes } = await getBookmarkDisplayData(uri, locale);
+    const { displayTitle, displayComment, moderations, bookmarks, subjectLikes, displayImage } = await getBookmarkDisplayData(uri, locale);
 
     if (bookmarks.length === 0) return (
         <Container size="md" mx="auto">
@@ -233,7 +233,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
                 <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
                     <Flex justify="space-between" align="center" style={{ width: '100%' }}>
                         <Title order={4}>{displayTitle}</Title>
-                        <EditMenu subject={uri} title={displayTitle} tags={tags} />
+                        <EditMenu subject={uri} title={displayTitle} tags={tags} image={displayImage} description={displayComment} />
                     </Flex>
                     <Text size="md" component="div">
                         <Spoiler maxHeight={120} showLabel={t('detail.more')} hideLabel={t('detail.less')}>

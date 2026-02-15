@@ -20,7 +20,7 @@ The Service uses the following external services:
 - PDS (for authentication and data storage)
 - Google Analytics 4 (for access analysis)  
   → [Google Privacy Policy](https://policies.google.com/privacy)
-- OpenAI (for moderation purposes. Note that the model in use, omni-moderation-latest, does not learn from the content)
+- OpenAI (for moderation purposes and content categorization. Note that the models used do not learn from the input content)
   → [Privacy Policy](https://openai.com/policies/row-privacy-policy/)
 - UFOs (for obtaining Lexicon information)  
   ※ Thank you [fig](https://bsky.app/profile/bad-example.com), developer of [microcosm](https://bsky.app/profile/microcosm.blue)
@@ -37,6 +37,7 @@ The Service uses the following external services:
 This Privacy Policy may be revised as necessary. Revisions will be announced on this service.
 
 ## 8. Revision History
+- 2026/02/15 Added section on AI usage for categorization
 - 2025/09/22 First edition
 
 ## 9. Contact

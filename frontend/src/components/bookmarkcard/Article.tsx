@@ -1,8 +1,8 @@
 "use client"
 import { BlurReveal } from "@/components/BlurReveal";
 import { ModerationBadges } from "@/components/ModerationBadges";
-import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { TagBadge } from '@/components/TagBadge';
+import EditMenu from '@/components/EditMenu';
 import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
@@ -12,11 +12,8 @@ import {
     Card,
     Group,
     Stack,
-    Modal,
-    Spoiler,
     Text
 } from '@mantine/core';
-import { SquarePen, Trash2 } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -39,25 +36,16 @@ type ArticleCardProps = {
     likes?: string[];
     key?: string
     likeDisabled?: boolean
+    category?: string | null;
+    bookmarkCount?: number;
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes, likeDisabled = false }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes, likeDisabled = false, category, bookmarkCount }: ArticleCardProps) {
     const messages = useMessages();
-    const [deleteBookmark, setDeleteBookmark] = useState(false);
+
     const [isClicked, setIsClicked] = useState(false);
-    const [modalSize, setModalSize] = useState('70%')
     const locale = useLocale();
     const [imgSrc, setImgSrc] = useState(image || '');
-
-    useEffect(() => {
-        // モーダルサイズ調整
-        const updateSize = () => {
-            setModalSize(window.innerWidth < 768 ? '100%' : '70%');
-        }
-        updateSize();
-        window.addEventListener('resize', updateSize);
-        return () => window.removeEventListener('resize', updateSize);
-    }, [modalSize]);
 
     useEffect(() => {
         setIsClicked(false)
@@ -92,40 +80,66 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         }
     }, [image, domain]);
 
+    const categoryNames: Record<string, Record<string, string>> = {
+        general: { ja: "一般", en: "General" },
+        atprotocol: { ja: "AT Protocol", en: "AT Protocol" },
+        social: { ja: "社会・政治・経済", en: "Social/Politics/Economy" },
+        technology: { ja: "テクノロジー", en: "Technology" },
+        lifestyle: { ja: "暮らし・学び", en: "Lifestyle/Learning" },
+        food: { ja: "食事", en: "Food" },
+        travel: { ja: "旅行", en: "Travel" },
+        entertainment: { ja: "エンタメ・おもしろ", en: "Entertainment/Humor" },
+        anime_game: { ja: "アニメ・ゲーム", en: "Anime/Game" },
+    };
+
+    const categoryName = category && categoryNames[category]
+        ? categoryNames[category][locale] || categoryNames[category]["en"]
+        : category; // 文字列があればそのまま表示するフォールバックを追加
+
     return (
-        <Card withBorder radius="md" className={classes.card} style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
-            <Box style={{ position: 'relative' }} onClick={() => setIsClicked(!isClicked)}>
+        <Card withBorder radius="md" padding={0} className={classes.card}>
+            <Box style={{ position: 'relative', flex: 1 }} onClick={() => setIsClicked(!isClicked)}>
                 <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={messages.detail.view}>
-                    <Card.Section>
-                        <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}>
-                            <ArticleImage url={url} src={imgSrc} />
-                        </Link>
-                    </Card.Section>
-
-                    <Spoiler maxHeight={120} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
-                        <Text fw={500} c="inherit" >
-                            <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
-                                style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
-                                {title}
+                    <div className={classes.cardContent}>
+                        <div className={classes.imageWrapper}>
+                            <Link href={localUrl || ''} target="_blank">
+                                <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
+                                    <ArticleImage url={url} src={imgSrc} />
+                                </div>
                             </Link>
-                        </Text>
-                    </Spoiler>
+                        </div>
 
-                    <Spoiler maxHeight={110} showLabel={messages.detail.more} hideLabel={messages.detail.less}>
-                        <Text component="div" fz="sm" c="dimmed" mb="sm">
-                            <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
-                                {comment}
-                            </Markdown>
-                        </Text>
-                    </Spoiler>
+                        <div className={classes.textContent}>
+                            <div className={classes.title}>
+                                <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                    style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                                    {title}
+                                </Link>
+                            </div>
 
-                    <Group mb='xs'>
-                        <TagBadge tags={tags} locale={locale} />
-                    </Group>
+                            <div className={classes.comment}>
+                                <Markdown components={{ p: ({ ...props }) => <p style={{ margin: 0.3, whiteSpace: "pre-line" }} {...props} /> }}>
+                                    {comment}
+                                </Markdown>
+                            </div>
+
+                            <Group mb='xs' gap={4} align="center">
+                                {bookmarkCount !== undefined && bookmarkCount > 1 && (
+                                    <Text span c="red" fw={700} fz="sm" mr="xs" style={{ whiteSpace: 'nowrap' }}>
+                                        {bookmarkCount} users
+                                    </Text>
+                                )}
+                                <TagBadge tags={tags} locale={locale} />
+                            </Group>
+
+                        </div>
+                    </div>
                 </BlurReveal>
             </Box>
 
-            <ModerationBadges moderations={moderations} />
+            <div className={classes.moderation}>
+                <ModerationBadges moderations={moderations} />
+            </div>
 
             <Stack className={classes.footer} gap={4}>
                 {/* 1行目：アイコン群 */}
@@ -133,28 +147,9 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                     {
                         <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
                     }
-                    {atUri && (
-                        <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                            <Link href={`/${locale}/bookmark/register?aturi=${encodeURIComponent(atUri)}`}>
-                                <ActionIcon variant="transparent" color="gray" aria-label="Edit">
-                                    <SquarePen size={16} />
-                                </ActionIcon>
-                            </Link>
-                            <ActionIcon variant="transparent" color="red" aria-label="Delete" onClick={() => setDeleteBookmark(true)}>
-                                <Trash2 size={16} />
-                            </ActionIcon>
-
-                            <Modal
-                                opened={deleteBookmark}
-                                onClose={() => setDeleteBookmark(false)}
-                                size="md"
-                                title={messages.delete.title}
-                                centered
-                            >
-                                <DeleteBookmark aturi={atUri} onClose={() => setDeleteBookmark(false)} />
-                            </Modal>
-                        </div>
-                    )}
+                    <div style={{ marginLeft: 'auto' }}>
+                        <EditMenu subject={url} title={title} tags={tags} image={imgSrc} description={comment} />
+                    </div>
                 </Group>
 
                 {/* 2行目：Text */}

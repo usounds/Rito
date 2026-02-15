@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Rito Chrome Extension",
+  "name": "Rito Extension",
   "version": "1.0",
-  "description": "A basic Chrome extension template",
+  "description": "Rito's browser extension for bookmarking.",
   "permissions": [
     "activeTab",
     "storage"
@@ -16,5 +16,16 @@
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "rito-extension@rito.blue",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
   }
 }

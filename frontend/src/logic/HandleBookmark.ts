@@ -15,8 +15,8 @@ export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
     uri: b.uri,
     handle: b.handle ?? '',
     subject: b.subject,
-    ogpTitle: b.ogp_title ?? '',
-    ogpDescription: b.ogp_description ?? '',
+    ogpTitle: b.ogp_title?.slice(0, 255) ?? '',
+    ogpDescription: b.ogp_description?.slice(0, 255) ?? '',
     ogpImage: b.ogp_image ?? null,
     createdAt:
       typeof b.created_at === 'string'

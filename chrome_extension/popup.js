@@ -24,9 +24,12 @@ function applyLanguage(lang) {
   langSelect.value = lang;
 }
 
+// Cross-browser compatibility
+const api = typeof browser !== "undefined" ? browser : chrome;
+
 // 初期化: ストレージから取得
 let currentLang = "ja";
-chrome.storage.local.get("lang", (data) => {
+api.storage.local.get("lang", (data) => {
   currentLang = data.lang || "ja";
   applyLanguage(currentLang);
 });
@@ -34,16 +37,16 @@ chrome.storage.local.get("lang", (data) => {
 // 言語切り替えイベント
 langSelect.addEventListener("change", () => {
   currentLang = langSelect.value;
-  chrome.storage.local.set({ lang: currentLang });
+  api.storage.local.set({ lang: currentLang });
   applyLanguage(currentLang);
 });
 
 // ブックマークボタン処理
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   const button = document.getElementById('bookmarkButton');
 
-  button.addEventListener('click', function() {
-    chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
+  button.addEventListener('click', function () {
+    api.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       const currentTab = tabs[0];
       const url = encodeURIComponent(currentTab.url);
       const title = encodeURIComponent(currentTab.title || '');
@@ -53,7 +56,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const target = `https://rito.blue/${langPath}/bookmark/register`;
       const params = `?subject=${url}&title=${title}`;
 
-      chrome.tabs.create({
+      api.tabs.create({
         url: target + params
       });
     });

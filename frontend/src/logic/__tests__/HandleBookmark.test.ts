@@ -108,6 +108,17 @@ describe('HandleBookmark', () => {
             expect(result[0].ogpTitle).toBe('');
             expect(result[0].moderations).toEqual([]);
         });
+        it('ogpTitle と ogpDescription を 255 文字で切り捨てる', () => {
+            const longText = 'a'.repeat(300);
+            const longBookmark = {
+                ...mockRawBookmark,
+                ogp_title: longText,
+                ogp_description: longText,
+            };
+            const result = normalizeBookmarks([longBookmark as never]);
+            expect(result[0].ogpTitle).toHaveLength(255);
+            expect(result[0].ogpDescription).toHaveLength(255);
+        });
     });
 
     describe('enrichBookmarks', () => {

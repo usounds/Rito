@@ -51,8 +51,7 @@ export function Authentication() {
     },
   });
 
-  async function handleSubmit(values: typeof form.values) {
-    console.log('handleSubmit')
+  async function performLogin(values: { handle: string }, prompt?: "none" | "login" | "consent" | "select_account" | "create") {
     setIsLoading(true);
 
     notifications.show({
@@ -65,33 +64,33 @@ export function Authentication() {
 
 
     try {
-
-      try {
-        //　HTTP 解決
-        await resolveHandleViaHttp(values.handle);
-      } catch (e) {
-        console.warn('HTTP resolve failed, trying DoH:', e);
+      if (prompt !== 'create') {
         try {
-          // DoH 解決
-          await resolveHandleViaDoH(values.handle);
-        } catch (e2) {
-          console.error('DoH resolve failed:', e2);
-          // 両方ダメなら通知出して終了
-          notifications.update({
-            id: 'login-process',
-            title: 'Error',
-            message: messages.login.error.invalidhandle,
-            color: 'red',
-            loading: false,
-            autoClose: true,
-            icon: <X />
-          });
-          setIsLoading(false);
-          return;
+          //　HTTP 解決
+          await resolveHandleViaHttp(values.handle);
+        } catch (e) {
+          console.warn('HTTP resolve failed, trying DoH:', e);
+          try {
+            // DoH 解決
+            await resolveHandleViaDoH(values.handle);
+          } catch (e2) {
+            console.error('DoH resolve failed:', e2);
+            // 両方ダメなら通知出して終了
+            notifications.update({
+              id: 'login-process',
+              title: 'Error',
+              message: messages.login.error.invalidhandle,
+              color: 'red',
+              loading: false,
+              autoClose: true,
+              icon: <X />
+            });
+            setIsLoading(false);
+            return;
+          }
         }
+        setHandle(values.handle)
       }
-
-      setHandle(values.handle)
 
     } catch (e) {
       // 想定外の例外キャッチ
@@ -126,7 +125,9 @@ export function Authentication() {
       loader.start()
       setIsLoginProcess(true)
       const cleanHandle = values.handle.replace(/^@/, ''); // 先頭の@を除去
-      setHandle(cleanHandle);
+      if (prompt !== 'create') {
+        setHandle(cleanHandle);
+      }
 
       const csrf = await fetch("/api/csrf").then(r => r.json());
       loader.start()
@@ -139,6 +140,7 @@ export function Authentication() {
           handle: cleanHandle,
           returnTo,
           csrf: csrf.csrfToken,
+          prompt,
         }),
       });
 
@@ -165,6 +167,10 @@ export function Authentication() {
       //なにもしない
     }
 
+  }
+
+  async function handleSubmit(values: typeof form.values) {
+    await performLogin(values);
   }
 
   const linkStyle = {
@@ -259,12 +265,13 @@ export function Authentication() {
 
       <Group justify="space-between" mt="xl">
         <Anchor
-          component="a"
-          href="https://bsky.app/"
-          target="_blank"
-          rel="noopener noreferrer"
+          component="button"
+          type="button"
+          onClick={() => performLogin({ handle: 'https://bsky.social' }, 'create')}
           c="dimmed"
           size="xs"
+          disabled={!checked}
+          style={{ opacity: checked ? 1 : 0.5, cursor: checked ? 'pointer' : 'not-allowed' }}
         >
           {messages.login.create}
         </Anchor>

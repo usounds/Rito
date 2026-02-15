@@ -5,6 +5,7 @@ type Body = {
   handle: string;
   returnTo?: string;
   csrf: string;
+  prompt?: "none" | "login" | "consent" | "select_account" | "create";
 };
 
 export async function POST(req: NextRequest) {
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Invalid JSON", { status: 400 });
   }
 
-  const { handle, returnTo = "/", csrf } = body;
+  const { handle, returnTo = "/", csrf, prompt } = body;
 
   const csrfCookie = req.cookies.get("CSRF_TOKEN")?.value;
   if (!csrf || !csrfCookie || csrf !== csrfCookie) {
@@ -39,9 +40,16 @@ export async function POST(req: NextRequest) {
   let url: URL;
   const client = await getOAuthClient();
   try {
-    url = await client.authorize(handle, { prompt: "none" });
-  } catch {
-    url = await client.authorize(handle);
+    // prompt が指定されている場合はそれを優先、なければ none を試行
+    url = await client.authorize(handle, { prompt: prompt || "none" });
+  } catch (e) {
+    if (prompt) {
+      // prompt が指定されていてエラーになった場合は、そのままの prompt で再試行（内部的な fallback に期待）
+      url = await client.authorize(handle, { prompt: prompt });
+    } else {
+      // prompt なしでエラーになった場合は通常の認可画面へ
+      url = await client.authorize(handle);
+    }
   }
 
   const response = NextResponse.json({ url: url.toString() });

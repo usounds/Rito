@@ -11,7 +11,20 @@ export async function GET(request: Request) {
   }
 
   try {
-    const data = await ogs({ url });
+    const data = await ogs({
+      url,
+      fetchOptions: {
+        headers: {
+          'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
+        },
+      },
+    });
+
+    if (data.result) {
+      if (data.result.ogTitle) data.result.ogTitle = data.result.ogTitle.slice(0, 255);
+      if (data.result.ogDescription) data.result.ogDescription = data.result.ogDescription.slice(0, 255);
+    }
+
     return NextResponse.json(data, { status: 200 });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });

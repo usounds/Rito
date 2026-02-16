@@ -28,6 +28,7 @@ const isEmbedExternal = (v: unknown): v is AppBskyEmbedExternal.Main =>
 const isTagFeature = (v: unknown): v is AppBskyRichTextFacet.Tag =>
   !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.richtext.facet#tag';
 const queue = new PQueue({ concurrency: 1 });
+const analysisQueue = new PQueue({ concurrency: 2 });
 
 // Type definitions for API responses
 interface DidDocument {
@@ -199,6 +200,68 @@ async function loadCursor(): Promise<string> {
 async function init() {
   cursor = await loadCursor();
 
+  // リカバリ: 未分類のブックマークを再キューイング
+  const unclassifiedBookmarks = await prisma.bookmark.findMany({
+    where: { category: null },
+    select: { uri: true, did: true, subject: true, ogp_title: true, ogp_description: true, ogp_image: true, tags: { select: { tag: { select: { name: true } } } }, comments: true }
+  });
+
+  logger.info(`Found ${unclassifiedBookmarks.length} unclassified bookmarks. Queueing for analysis...`);
+
+  for (const b of unclassifiedBookmarks) {
+    analysisQueue.add(async () => {
+      try {
+        const tags = b.tags.map(t => t.tag.name);
+        const mainComment = b.comments.find(c => c.lang === 'ja')?.comment || b.comments[0]?.comment || "";
+
+        // モデレーション (OGP)
+        const ogpTexts: string[] = [];
+        if (b.ogp_title) ogpTexts.push(b.ogp_title);
+        if (b.ogp_description) ogpTexts.push(b.ogp_description);
+        const ogpFlaggedCategories = await checkModeration(ogpTexts);
+        const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
+
+        // カテゴリー分類
+        const category = await classifyCategory(
+          b.ogp_title || "",
+          b.ogp_description || "",
+          mainComment,
+          tags
+        );
+
+        // Bookmark Update
+        await dbLimit(() =>
+          prisma.bookmark.update({
+            where: { uri: b.uri },
+            data: {
+              category: category,
+              moderation_result: ogpModerationResult,
+            }
+          })
+        );
+        // Comments Moderation (Recovery)
+        for (const c of b.comments) {
+          const commentTexts: string[] = [];
+          if (c.title) commentTexts.push(c.title);
+          if (c.comment) commentTexts.push(c.comment);
+          const commentFlaggedCategories = await checkModeration(commentTexts);
+          const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
+
+          await dbLimit(() =>
+            prisma.comment.update({
+              where: { id: c.id },
+              data: { moderation_result: commentModerationResult }
+            })
+          );
+        }
+
+        logger.info(`Recovery analysis complete for ${b.uri}: ${category}`);
+      } catch (e) {
+        logger.error(`Recovery analysis failed for ${b.uri}: ${e}`);
+      }
+    });
+  }
+
   const jetstream = new Jetstream({
     wantedCollections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
     endpoint: JETSREAM_URL,
@@ -327,23 +390,6 @@ async function init() {
     }
 
     try {
-      // OGP用のmoderation
-      const ogpTexts: string[] = [];
-      if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
-      if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
-      // DID->Handleテーブル
-      const ogpFlaggedCategories = await checkModeration(ogpTexts);
-      const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
-
-      // カテゴリー分類
-      const mainComment = record.comments?.[0]?.comment || "";
-      const category = await classifyCategory(
-        record.ogpTitle || "",
-        record.ogpDescription || "",
-        mainComment,
-        record.tags || []
-      );
-
       // DID->Handleテーブル
       //console.log("DID->Handleテーブル")
       await dbLimit(() =>
@@ -364,9 +410,9 @@ async function init() {
             ogp_title: record.ogpTitle,
             ogp_description: record.ogpDescription,
             ogp_image: record.ogpImage,
-            moderation_result: ogpModerationResult,
+            moderation_result: null, // Async will handle this
             handle: handle,
-            category: category,
+            category: null, // Async will handle this
             indexed_at: new Date(),
           },
           create: {
@@ -376,9 +422,9 @@ async function init() {
             ogp_title: record.ogpTitle,
             ogp_description: record.ogpDescription,
             ogp_image: record.ogpImage,
-            moderation_result: ogpModerationResult,
+            moderation_result: null,
             handle: handle,
-            category: category,
+            category: null,
             created_at: record.createdAt ? new Date(record.createdAt) : new Date(),
             indexed_at: new Date(),
           },
@@ -389,13 +435,6 @@ async function init() {
 
       // コメントの upsert（個別に moderation）
       for (const c of record.comments ?? []) {
-        const commentTexts: string[] = [];
-        if (c.title) commentTexts.push(c.title);
-        if (c.comment) commentTexts.push(c.comment);
-
-        const commentFlaggedCategories = await checkModeration(commentTexts);
-        const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
-
         // コメントの upsert
         //console.log("コメントの upsert")
         await dbLimit(() =>
@@ -409,14 +448,14 @@ async function init() {
             update: {
               title: c.title,
               comment: c.comment,
-              moderation_result: commentModerationResult,
+              moderation_result: null,
             },
             create: {
               bookmark_uri: aturi,
               lang: c.lang,
               title: c.title,
               comment: c.comment,
-              moderation_result: commentModerationResult,
+              moderation_result: null,
             },
           })
         );
@@ -493,7 +532,67 @@ async function init() {
         );
       }
 
-      logger.info(`Upserted bookmark: ${aturi}, Verify: ${isVerify},  OGP moderation: ${ogpModerationResult}`);
+      // analysisQueue にジョブ追加
+      analysisQueue.add(async () => {
+        try {
+          // OGP用のmoderation
+          const ogpTexts: string[] = [];
+          if (record.ogpTitle) ogpTexts.push(record.ogpTitle);
+          if (record.ogpDescription) ogpTexts.push(record.ogpDescription);
+          // DID->Handleテーブル
+          const ogpFlaggedCategories = await checkModeration(ogpTexts);
+          const ogpModerationResult = ogpFlaggedCategories.length > 0 ? ogpFlaggedCategories.join(',') : null;
+
+          // カテゴリー分類
+          const mainComment = record.comments?.[0]?.comment || "";
+          const category = await classifyCategory(
+            record.ogpTitle || "",
+            record.ogpDescription || "",
+            mainComment,
+            record.tags || []
+          );
+
+          // Update Bookmark with analysis results
+          await dbLimit(() =>
+            prisma.bookmark.update({
+              where: { uri: aturi },
+              data: {
+                category: category,
+                moderation_result: ogpModerationResult,
+              }
+            })
+          );
+
+          // Comments Moderation
+          for (const c of record.comments ?? []) {
+            const commentTexts: string[] = [];
+            if (c.title) commentTexts.push(c.title);
+            if (c.comment) commentTexts.push(c.comment);
+
+            const commentFlaggedCategories = await checkModeration(commentTexts);
+            const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
+
+            await dbLimit(() =>
+              prisma.comment.update({
+                where: {
+                  bookmark_uri_lang: {
+                    bookmark_uri: aturi,
+                    lang: c.lang
+                  }
+                },
+                data: { moderation_result: commentModerationResult }
+              })
+            );
+          }
+          logger.info(`Async analysis complete for ${aturi}: ${category} and Moderation: ${ogpModerationResult}`);
+
+        } catch (err) {
+          logger.error(`Async analysis failed for ${aturi}: ${err}`);
+        }
+      });
+
+
+      logger.info(`Upserted bookmark (queued for analysis): ${aturi}, Verify: ${isVerify}`);
     } catch (err) {
       logger.error(`Error in upsert: ${err}`);
     }
@@ -641,13 +740,7 @@ async function init() {
         return;
       }
 
-      // カテゴリー分類
-      const category = await classifyCategory(
-        ogpTitle,
-        ogpDescription,
-        record.text || "",
-        tags
-      );
+      // REMOVED await classifyCategory(...)
 
       const session = await oauthClient.restore(event.did);
       const agent = new Agent(session);
@@ -798,190 +891,70 @@ async function init() {
 
         const reversedHandle = handle.split('.').reverse().join('.');
         if (handle && nsid.startsWith(reversedHandle)) {
-          logger.info(`Verified via Profile: ${did} -> ${reversedHandle}`);
           verified = true;
+          logger.info(`Verified handle: ${nsid} matches ${reversedHandle}`);
+        } else {
+          logger.warn(`Verification failed: ${nsid} does not match ${reversedHandle}`);
         }
       } catch (err) {
-        logger.error(`Error fetching profile for ${did}: ${err}`);
+        logger.error(`Verification error for ${event.did}: ${err}`);
       }
     }
 
-    try {
-      await dbLimit(() =>
-        prisma.resolver.upsert({
-          where: { nsid_did: { nsid, did } },
-          update: { schema, verified, indexed_at: new Date() },
-          create: { nsid, did, schema, verified, indexed_at: new Date() },
-        })
-      );
 
-      logger.info(
-        `Upserted resolver: nsid=${nsid}, ${did}, handle=${handle}, verified=${verified}`
-      );
+    try {
+      if (verified) {
+        const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+        await prisma.resolver.upsert({
+          where: { nsid_did: { nsid: nsid, did: did } }, // 複合主キーで検索
+          update: {
+            schema: schema,
+            verified: verified,
+            indexed_at: new Date()
+          },
+          create: {
+            nsid: nsid,
+            did: did,
+            schema: schema,
+            verified: verified,
+            indexed_at: new Date()
+          },
+        });
+        logger.info(`Upserted resolver: ${nsid} -> ${did}`);
+      }
     } catch (err) {
-      logger.error(`Error in upsertResolver for nsid=${nsid}, did=${did}: ${err}`);
+      logger.error(`Error in upsertResolver: ${err}`);
     }
   }
 
-  async function upsertLike(
-    event: CommitCreateEvent<"blue.rito.feed.like"> | CommitUpdateEvent<"blue.rito.feed.like">
-  ) {
+  async function upsertLike(event: CommitCreateEvent<typeof LIKE> | CommitUpdateEvent<typeof LIKE>) {
     const record = event.commit.record as BlueRitoFeedLike.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-    const subject = record?.subject;
-    if (!subject) return;
+    const subject = typeof record.subject === 'string' ? record.subject : (record.subject as any).uri;
+    const did = event.did;
 
-    let handle = 'no handle';
-    const maxAttempts = 2;
-
-    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-      try {
-        const res = await fetch(`https://plc.directory/${event.did}`);
-        if (res.ok) {
-          const didData = await res.json() as DidDocument;
-          handle = didData.alsoKnownAs?.[0]?.replace(/^at:\/\//, '') ?? handle;
-          logger.info(`Handle successed for DID: ${event.did}, handle: ${handle}`);
-          break; // 成功したらループを抜ける
-        } else {
-          logger.warn(`Attempt ${attempt}: plc.directory fetch failed with status ${res.status}`);
-        }
-      } catch (err) {
-        logger.warn(`Attempt ${attempt}: plc.directory fetch error for DID: ${event.did}`);
-      }
-
-    }
-
-    if (!handle) {
-      logger.warn(`Failed to fetch handle after ${maxAttempts} attempts for DID: ${event.did}`);
-      try {
-        const userProfile = await publicAgent.get('app.bsky.actor.getProfile', {
-          params: { actor: event.did as ActorIdentifier },
-        });
-        if (userProfile.ok && userProfile.data?.handle) {
-          handle = userProfile.data.handle;
-        } else {
-          logger.error(`Error fetching handle from publicAgent: ${event.did}`);
-          return;
-        }
-      } catch (err) {
-        logger.error(`Error fetching handle from publicAgent: ${err}`);
-      }
-    }
-
-    await dbLimit(() =>
-      prisma.userDidHandle.upsert({
-        where: { did: event.did },
-        update: { handle: handle },
-        create: { did: event.did, handle: handle },
-      })
-    );
-
-    await dbLimit(() =>
-      prisma.like.upsert({
-        where: { aturi },
-        update: { created_at: new Date(record.createdAt) },
-        create: { aturi, subject: subject, did: event.did, created_at: new Date(record.createdAt) },
-      })
-    );
-
-    logger.info(`Upserted like: ${aturi}, subject=${subject}, did=${event.did}`);
-  }
-
-  jetstream.onDelete(BOOKMARK, event =>
-    queue.add(async () => {
-      cursor = event.time_us.toString();
-      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-      try {
-        const result = await dbLimit(() =>
-          prisma.bookmark.deleteMany({ where: { uri: aturi } })
-        );
-
-        if (result.count > 0) {
-          logger.info(`Deleted bookmark: ${aturi} (${result.count} records)`);
-        }
-      } catch (err) {
-        logger.error(`Error in onDelete bookmark: ${err}`);
-      }
-    })
-  );
-
-  jetstream.onDelete(LIKE, event =>
-    queue.add(async () => {
-      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-      try {
-        const result = await dbLimit(() =>
-          prisma.like.deleteMany({ where: { aturi } })
-        );
-
-        if (result.count > 0) {
-          logger.info(`Deleted like: ${aturi} (${result.count} records)`);
-        }
-      } catch (err) {
-        logger.error(`Error in onDelete like: ${err}`);
-      }
-    })
-  );
-
-  jetstream.onDelete(SERVICE, event =>
-    queue.add(async () => {
-      const nsid = event.commit.rkey;
-      const did = event.did;
-      try {
-        const result = await dbLimit(() =>
-          prisma.resolver.deleteMany({ where: { nsid, did } })
-        );
-
-        if (result.count > 0) {
-          logger.info(`Deleted resolver: nsid=${nsid}, did=${did} (${result.count} records)`);
-        }
-      } catch (err) {
-        logger.error(`Error in onDelete resolver: ${err}`);
-      }
-    })
-  );
-
-  /*  jetstream.onDelete(POST_COLLECTION, event =>
-  queue.add(async () => {
-    cursor = event.time_us.toString();
-    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     try {
-      // 1. Post に紐づく PostUri を先に削除
-      await dbLimit(() =>
-        prisma.postUri.deleteMany({ where: { postUri: aturi } })
-      );
- 
-      // 2. Post を削除
-      const deletedPosts = await dbLimit(() =>
-        prisma.post.deleteMany({ where: { uri: aturi } })
-      );
- 
-      if (deletedPosts.count > 0) {
-        logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
-      }
+      await prisma.like.upsert({
+        where: { aturi: aturi },
+        update: {
+          subject: subject,
+          did: did,
+          created_at: new Date(record.createdAt),
+        },
+        create: {
+          aturi: aturi,
+          subject: subject,
+          did: did,
+          created_at: new Date(record.createdAt),
+        },
+      });
+      logger.info(`Upserted like: ${aturi}, subject: ${subject}`);
     } catch (err) {
-      logger.error(`Error in onDelete post for ${aturi}: ${err}`);
+      logger.error(`Error in upsertLike: ${err}`);
     }
-  })
-    );
-    */
-
-
-  jetstream.on('close', () => {
-    clearInterval(cursorUpdateInterval);
-    logger.warn(`Jetstream connection closed.`);
-    process.exit(1);
-  });
-
-  jetstream.on('error', (error) => {
-    logger.error(`Jetstream error: ${error.message}`);
-    jetstream.close();
-    process.exit(1);
-  });
+  }
 
   jetstream.start();
 }
 
-init().catch(err => {
-  logger.error('Failed to initialize Jetstream:', err);
-  process.exit(1);
-});
+init();

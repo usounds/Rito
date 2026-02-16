@@ -81,6 +81,13 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
           did: r.did,
           created_at: r._max.created_at!,
         })),
+        // generalカテゴリーの場合は、categoryがnullのもの（未分類）も表示する
+        // ...(currentCategory === 'general' ? {
+        //   OR: [
+        //     { category: 'general' },
+        //     { category: null }
+        //   ]
+        // } : {})
       },
       orderBy: [
         { created_at: 'desc' }, // 全体として最新順
@@ -227,7 +234,12 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     // Category filtered
     const bookmarks = await prisma.bookmark.findMany({
       where: {
-        category: currentCategory,
+        OR: currentCategory === 'general' ? [
+          { category: 'general' },
+          { category: null }
+        ] : [
+          { category: currentCategory }
+        ]
       },
       orderBy: { created_at: 'desc' },
       take: 50, // Match fetchCategoryBookmarks TAKE constant

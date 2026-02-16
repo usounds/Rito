@@ -71,6 +71,8 @@ vi.mock('lucide-react', () => ({
     CircleEllipsis: () => <span data-testid="circle-ellipsis">...</span>,
     BookmarkPlus: () => <span data-testid="bookmark-plus">+</span>,
     Share: () => <span data-testid="share">Share</span>,
+    Globe: () => <span data-testid="globe">🌐</span>,
+    Users: () => <span data-testid="users">👥</span>,
 }));
 
 vi.mock('@atcute/lexicons/syntax', () => ({

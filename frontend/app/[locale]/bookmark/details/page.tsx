@@ -21,6 +21,7 @@ import { Library } from 'lucide-react';
 import publicSuffixList from '@/data/publicSuffixList.json';
 import type { Metadata } from "next";
 import { FaBluesky } from "react-icons/fa6";
+import { stripTrackingParams } from "@/logic/stripTrackingParams";
 
 const MICROCOSM_USER_AGENT = "Rito @rito.blue";
 
@@ -48,13 +49,16 @@ async function getBookmarkDisplayData(uri: string, locale: string): Promise<Disp
             : [uri, uri + "/"];
     }
 
-    const [uri1, uri2] = withTrailingSlashVariants(uri);
+    const normalizedUri = stripTrackingParams(uri);
+    const [uri1, uri2] = withTrailingSlashVariants(normalizedUri);
+    const baseUri = normalizedUri.endsWith('/') ? normalizedUri.slice(0, -1) : normalizedUri;
 
-    const bookmarksRaw = await prisma.bookmark.findMany({
+    const bookmarksRawUnfiltered = await prisma.bookmark.findMany({
         where: {
             OR: [
                 { subject: uri1 },
-                { subject: uri2 }
+                { subject: uri2 },
+                { subject: { startsWith: baseUri } },
             ],
         },
         orderBy: { indexed_at: "desc" },
@@ -62,6 +66,13 @@ async function getBookmarkDisplayData(uri: string, locale: string): Promise<Disp
             comments: true,
             tags: { include: { tag: true } },
         },
+    });
+
+    // startsWith の誤マッチを除外
+    const bookmarksRaw = bookmarksRawUnfiltered.filter(b => {
+        const norm = stripTrackingParams(b.subject);
+        const key = norm.endsWith('/') ? norm.slice(0, -1) : norm;
+        return key === baseUri;
     });
 
     const bookmarks = normalizeBookmarks(bookmarksRaw);

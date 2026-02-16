@@ -5,6 +5,8 @@ import { SimpleGrid } from '@mantine/core';
 import { useIntersection } from '@mantine/hooks';
 import { useEffect, useRef, useState } from 'react';
 import { fetchCategoryBookmarks } from '@app/actions/fetchCategoryBookmarks';
+import { stripTrackingParams } from '@/logic/stripTrackingParams';
+import classes from './Discover.module.scss';
 
 type DiscoverFeedProps = {
     initialBookmarks: any[];
@@ -21,7 +23,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
     // Keep track of Uris to avoid duplication across pages
     const seenUris = useRef(new Set(initialBookmarks.map(b => b.uri)));
     // Also track subjects for URL deduplication logic
-    const seenSubjects = useRef(new Set(initialBookmarks.map(b => b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject)));
+    const seenSubjects = useRef(new Set(initialBookmarks.map(b => stripTrackingParams(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject))));
 
     const { ref, entry } = useIntersection({
         root: null,
@@ -34,7 +36,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
         setPage(1);
         setHasMore(true);
         seenUris.current = new Set(initialBookmarks.map(b => b.uri));
-        seenSubjects.current = new Set(initialBookmarks.map(b => b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject));
+        seenSubjects.current = new Set(initialBookmarks.map(b => stripTrackingParams(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject)));
     }, [category, initialBookmarks]);
 
     useEffect(() => {
@@ -58,7 +60,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
             for (const b of newBookmarks) {
                 if (seenUris.current.has(b.uri)) continue;
 
-                const normalizedSubject = b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject;
+                const normalizedSubject = stripTrackingParams(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject);
                 if (seenSubjects.current.has(normalizedSubject)) continue;
 
                 seenUris.current.add(b.uri);
@@ -117,7 +119,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
         const displayDate = new Date(b.createdAt || b.created_at);
 
         return (
-            <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+            <div key={b.uri} className={classes.articleItem}>
                 <Article
                     url={b.subject}
                     title={displayTitle}
@@ -137,12 +139,22 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
 
     return (
         <>
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-                {bookmarks.map((b) => renderArticle(b))}
-            </SimpleGrid>
+            <div className={classes.articleGrid}>
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
+                    {bookmarks.map((b) => renderArticle(b))}
+                </SimpleGrid>
+            </div>
             {hasMore && (
-                <div ref={ref} style={{ height: 50, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    {loading && <span>Loading...</span>}
+                <div ref={ref} className={classes.loadingContainer}>
+                    {loading && (
+                        <>
+                            <div className={classes.loadingDots}>
+                                <div className={classes.loadingDot} />
+                                <div className={classes.loadingDot} />
+                                <div className={classes.loadingDot} />
+                            </div>
+                        </>
+                    )}
                 </div>
             )}
         </>

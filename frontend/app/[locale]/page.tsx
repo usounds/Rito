@@ -1,15 +1,16 @@
 import { Article } from '@/components/bookmarkcard/Article';
-import Breadcrumbs from "@/components/Breadcrumbs";
 import { enrichBookmarks, withTrailingSlashVariants } from '@/logic/HandleBookmark';
+import { stripTrackingParams } from '@/logic/stripTrackingParams';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Alert, Container, SimpleGrid, Text } from '@mantine/core';
-import { Info } from 'lucide-react';
+import { Heart, Clock, Info } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import DiscoverTabs from './bookmark/discover/DiscoverTabs';
 import DiscoverContentWrapper from './bookmark/discover/DiscoverContentWrapper';
 import { Suspense } from 'react';
 import DiscoverSkeleton from './bookmark/discover/DiscoverSkeleton';
 import DiscoverFeed from './bookmark/discover/DiscoverFeed';
+import classes from './bookmark/discover/Discover.module.scss';
 
 export const dynamic = 'force-dynamic';
 
@@ -181,15 +182,45 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
 
     bookmarksContent = (
       <>
-        <Text mt='sm' c="dimmed">{t('discover.latestLike')}</Text>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-          {latestLikedBookmarks.map((b) => renderArticle(b, locale))}
-        </SimpleGrid>
+        {/* いいねセクション */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 20, marginBottom: 14 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+            background: 'linear-gradient(135deg, #ff6b6b, #ee5a24)', color: 'white'
+          }}>
+            <Heart size={16} />
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
+            {t('discover.latestLike')}
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(0,0,0,0.08), transparent)', marginLeft: 8 }} />
+        </div>
+        <div className={classes.articleGrid}>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
+            {latestLikedBookmarks.map((b) => renderArticle(b, locale))}
+          </SimpleGrid>
+        </div>
 
-        <Text mt='sm' c="dimmed">{t('discover.latestbookmarbyusers')}</Text>
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-          {bookmarksWithLikes.map((b) => renderArticle(b, locale))}
-        </SimpleGrid>
+        {/* 最新ブックマークセクション */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 28, marginBottom: 14 }}>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 10, flexShrink: 0,
+            background: 'linear-gradient(135deg, #4facfe, #00f2fe)', color: 'white'
+          }}>
+            <Clock size={16} />
+          </div>
+          <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
+            {t('discover.latestbookmarbyusers')}
+          </span>
+          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(0,0,0,0.08), transparent)', marginLeft: 8 }} />
+        </div>
+        <div className={classes.articleGrid}>
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
+            {bookmarksWithLikes.map((b) => renderArticle(b, locale))}
+          </SimpleGrid>
+        </div>
       </>
     );
   } else {
@@ -210,19 +241,17 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     const enrichedBookmarks = await enrichBookmarks(bookmarks, prisma);
 
     // Deduplicate by URL (subject)
-    const uniqueBookmarks = [];
-    const seenSubjects = new Set();
+    const uniqueBookmarks: any[] = [];
+    const seenSubjects = new Set<string>();
 
     for (const b of enrichedBookmarks) {
-      // Normalize subject to handle trailing slashes roughly if needed, 
-      // but enrichBookmarks already handles variants for counting.
-      // Here we just want to avoid showing the exact same link twice in the list.
-      // We can use the subject directly or normalize simple trailing slash.
-      const normalizedSubject = b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject;
+      const normalizedSubject = stripTrackingParams(
+        b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject
+      );
 
       if (!seenSubjects.has(normalizedSubject)) {
-        uniqueBookmarks.push(b);
         seenSubjects.add(normalizedSubject);
+        uniqueBookmarks.push(b);
       }
     }
 
@@ -245,7 +274,19 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         </Suspense>
       </DiscoverContentWrapper>
 
-      <Alert my="sm" variant="light" color="blue" title={t('inform.1minutes')} icon={<Info size={18} />} />
+      <Alert
+        my="sm"
+        variant="light"
+        color="blue"
+        title={t('inform.1minutes')}
+        icon={<Info size={18} />}
+        radius="lg"
+        styles={{
+          root: {
+            border: '1px solid var(--mantine-color-blue-2)',
+          }
+        }}
+      />
 
     </Container>
   );
@@ -279,7 +320,7 @@ function renderArticle(b: any, locale: string) {
   const bookmarkCount = b.commentCount || 0;
 
   return (
-    <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div key={b.uri} className={classes.articleItem}>
       <Article
         url={b.subject}
         title={displayTitle}

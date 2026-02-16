@@ -20,6 +20,7 @@ import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import { Authentication } from "@/components/Authentication";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { buildPost } from "@/logic/HandleBluesky";
+import { stripTrackingParams } from "@/logic/stripTrackingParams";
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -81,23 +82,14 @@ export default function RegistBookmarkPage() {
     const tagRanking = useMyBookmark(state => state.tagRanking);
 
     useEffect(() => {
-        if (myTag.length > 0) return;
         const allMyTags = myBookmark
             .flatMap((b) => b.tags)
             .filter((t, i, arr) => arr.indexOf(t) === i)
             .filter((t) => t !== "Verified");
         setMyTag(allMyTags);
-
     }, [myBookmark]);
 
     useEffect(() => {
-
-        const allMyTags = myBookmark
-            .flatMap((b) => b.tags)
-            .filter((t, i, arr) => arr.indexOf(t) === i)
-            .filter((t) => t !== "Verified");
-        setMyTag(allMyTags);
-
         if (!subjectParam && !titleParam && !aturi) {
             setIsSettingUp(false)
             return
@@ -106,29 +98,7 @@ export default function RegistBookmarkPage() {
         if (subjectParam) {
             try {
                 const decodedUrl = decodeURIComponent(subjectParam);
-                const urlObj = new URL(decodedUrl);
-
-                // 除外したいトラッキング系のクエリパラメータ
-                const removeKeys = [
-                    "utm_source",
-                    "utm_medium",
-                    "utm_campaign",
-                    "utm_term",
-                    "utm_content",
-                    "gclid",
-                    "fbclid",
-                    "msclkid",
-                    "mc_cid",
-                    "mc_eid",
-                    "pk_campaign",
-                    "pk_kwd",
-                    "ref",
-                    "affiliate_id"
-                ];
-
-                removeKeys.forEach(key => urlObj.searchParams.delete(key));
-
-                setUrl(urlObj.toString());
+                setUrl(stripTrackingParams(decodedUrl));
             } catch (err) {
                 console.error("Invalid URL:", subjectParam, err);
                 setUrl(decodeURIComponent(subjectParam)); // fallback
@@ -156,7 +126,6 @@ export default function RegistBookmarkPage() {
                 return
             }
             try {
-
                 // ① Zustand から先に初期表示用データを探す
                 const localBookmark = useMyBookmark.getState().myBookmark.find(
                     (b: Bookmark) => b.uri === aturi
@@ -232,7 +201,7 @@ export default function RegistBookmarkPage() {
 
         fetchBookmark();
 
-    }, [subjectParam, titleParam, locale, aturi, myBookmark]);
+    }, [subjectParam, titleParam, locale, aturi]);
 
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {

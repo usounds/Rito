@@ -1,6 +1,7 @@
 // Note : Include Prisma Client. Please use Server Components or APIs only. 
 import { RawBookmark, Bookmark } from '@/type/ApiTypes'
 import { PrismaClient } from '@prisma/client';
+import { stripTrackingParams } from './stripTrackingParams';
 
 
 export function withTrailingSlashVariants(uri: string) {
@@ -57,31 +58,58 @@ export async function enrichBookmarks(
     withTrailingSlashVariants(b.subject),
   );
 
-  // 2. Bookmark テーブル検索
+  // 正規化した base URL（トラッキングパラメータ除去 + 末尾スラッシュ除去）
+  const baseUrls = [...new Set(normalized.map(b => {
+    const stripped = stripTrackingParams(b.subject);
+    return stripped.endsWith('/') ? stripped.slice(0, -1) : stripped;
+  }))];
+
+  // 2. Bookmark テーブル検索（完全一致 + startsWith でトラッキングパラメータ付きも取得）
   const bookmarksFromDb = await prisma.bookmark.findMany({
-    where: { subject: { in: subjectVariants } },
+    where: {
+      OR: [
+        { subject: { in: subjectVariants } },
+        ...baseUrls.map(url => ({ subject: { startsWith: url } })),
+      ]
+    },
     select: { uri: true, subject: true },
   });
 
-  // subject → 件数
-  const subjectCountMap: Record<string, number> = {};
-  bookmarksFromDb.forEach(b => {
-    subjectCountMap[b.subject] = (subjectCountMap[b.subject] ?? 0) + 1;
+  // 正規化した subject でフィルタ（startsWith の誤マッチを除外）
+  const validBaseUrls = new Set(baseUrls);
+  const filteredBookmarksFromDb = bookmarksFromDb.filter(b => {
+    const norm = stripTrackingParams(b.subject);
+    const key = norm.endsWith('/') ? norm.slice(0, -1) : norm;
+    return validBaseUrls.has(key);
+  });
+
+  // subject → 件数（正規化URLごとにカウント）
+  const normalizedCountMap: Record<string, number> = {};
+  filteredBookmarksFromDb.forEach(b => {
+    const norm = stripTrackingParams(b.subject);
+    const key = norm.endsWith('/') ? norm.slice(0, -1) : norm;
+    normalizedCountMap[key] = (normalizedCountMap[key] ?? 0) + 1;
   });
 
   // URL variant → URIs（複数対応）
   const urlToUrisMap: Record<string, string[]> = {};
-  bookmarksFromDb.forEach(b => {
+  filteredBookmarksFromDb.forEach(b => {
     withTrailingSlashVariants(b.subject).forEach(v => {
       if (!urlToUrisMap[v]) urlToUrisMap[v] = [];
       urlToUrisMap[v].push(b.uri);
+    });
+    // 正規化URLでもマッピング
+    const norm = stripTrackingParams(b.subject);
+    withTrailingSlashVariants(norm).forEach(v => {
+      if (!urlToUrisMap[v]) urlToUrisMap[v] = [];
+      if (!urlToUrisMap[v].includes(b.uri)) urlToUrisMap[v].push(b.uri);
     });
   });
 
   // 3. Like 検索
   const targets = [
     ...Object.keys(urlToUrisMap),
-    ...bookmarksFromDb.map(b => b.uri),
+    ...filteredBookmarksFromDb.map(b => b.uri),
   ];
 
   const likes = await prisma.like.findMany({
@@ -117,11 +145,9 @@ export async function enrichBookmarks(
 
   // 5. normalized にマージ
   return normalized.map(bookmark => {
-    const variants = withTrailingSlashVariants(bookmark.subject);
-    const commentCount = variants.reduce(
-      (acc, v) => acc + (subjectCountMap[v] ?? 0),
-      0,
-    );
+    const normKey = stripTrackingParams(bookmark.subject);
+    const key = normKey.endsWith('/') ? normKey.slice(0, -1) : normKey;
+    const commentCount = normalizedCountMap[key] ?? 0;
 
     return {
       ...bookmark,

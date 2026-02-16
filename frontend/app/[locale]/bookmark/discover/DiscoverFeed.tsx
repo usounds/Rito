@@ -61,7 +61,31 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
                 if (seenUris.current.has(b.uri)) continue;
 
                 const normalizedSubject = stripTrackingParams(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject);
-                if (seenSubjects.current.has(normalizedSubject)) continue;
+
+                // Check if we already have this subject (conceptually the same article)
+                if (seenSubjects.current.has(normalizedSubject)) {
+                    // It's a duplicate subject (different URI maybe, or same), so we should MERGE tags
+                    // into the existing bookmark in state.
+                    setBookmarks(prev => prev.map(existing => {
+                        const existingNorm = stripTrackingParams(existing.subject.endsWith('/') ? existing.subject.slice(0, -1) : existing.subject);
+                        if (existingNorm === normalizedSubject) {
+                            // Merge tags
+                            const mergedTags = new Set(existing.tags);
+                            if (Array.isArray(b.tags)) {
+                                b.tags.forEach((t: string) => mergedTags.add(t));
+                            }
+                            return {
+                                ...existing,
+                                tags: Array.from(mergedTags).sort((a: any, _b: any) => (a === 'Verified' ? -1 : 0))
+                            };
+                        }
+                        return existing;
+                    }));
+
+                    // Mark this specific URI as seen so we don't process it again loosely
+                    seenUris.current.add(b.uri);
+                    continue;
+                }
 
                 seenUris.current.add(b.uri);
                 seenSubjects.current.add(normalizedSubject);

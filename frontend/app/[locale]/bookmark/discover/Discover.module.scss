@@ -133,7 +133,7 @@ $mantine-breakpoint-md: 62em;
     flex: 1;
     height: 1px;
     background: linear-gradient(to right,
-            light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08)),
+            light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.25)),
             transparent);
     margin-left: 8px;
 }

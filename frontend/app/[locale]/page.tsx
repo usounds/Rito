@@ -194,7 +194,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
           <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
             {t('discover.latestLike')}
           </span>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(0,0,0,0.08), transparent)', marginLeft: 8 }} />
+          <div className={classes.sectionDivider} />
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
@@ -214,7 +214,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
           <span style={{ fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em' }}>
             {t('discover.latestbookmarbyusers')}
           </span>
-          <div style={{ flex: 1, height: 1, background: 'linear-gradient(to right, rgba(0,0,0,0.08), transparent)', marginLeft: 8 }} />
+          <div className={classes.sectionDivider} />
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
@@ -241,19 +241,26 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     const enrichedBookmarks = await enrichBookmarks(bookmarks, prisma);
 
     // Deduplicate by URL (subject)
-    const uniqueBookmarks: any[] = [];
-    const seenSubjects = new Set<string>();
+    // Deduplicate by URL (subject) and merge tags
+    const uniqueBookmarksMap = new Map<string, any>();
 
     for (const b of enrichedBookmarks) {
       const normalizedSubject = stripTrackingParams(
         b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject
       );
 
-      if (!seenSubjects.has(normalizedSubject)) {
-        seenSubjects.add(normalizedSubject);
-        uniqueBookmarks.push(b);
+      if (uniqueBookmarksMap.has(normalizedSubject)) {
+        // Merge tags
+        const existing = uniqueBookmarksMap.get(normalizedSubject);
+        const existingTags = new Set(existing.tags);
+        b.tags.forEach((t: string) => existingTags.add(t));
+        existing.tags = Array.from(existingTags).sort((a, _b) => (a === 'Verified' ? -1 : 0));
+      } else {
+        uniqueBookmarksMap.set(normalizedSubject, b);
       }
     }
+
+    const uniqueBookmarks = Array.from(uniqueBookmarksMap.values());
 
     bookmarksContent = (
       <DiscoverFeed

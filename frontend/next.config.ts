@@ -10,6 +10,20 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },
 
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+      {
+        protocol: 'http',
+        hostname: '**',
+      },
+    ],
+    minimumCacheTTL: 86400, // 24時間
+  },
+
   async redirects() {
     return [
       {
@@ -51,6 +65,17 @@ const nextConfig: NextConfig = {
           {
             key: "Cache-Control",
             value: "public,max-age=0,must-revalidate",
+          },
+        ],
+      },
+      {
+        // 画像最適化用のエンドポイントに対するキャッシュ設定
+        source: "/_next/image(.*)",
+        headers: [
+          {
+            key: "Cache-Control",
+            // CDNにキャッシュさせる（24時間キャッシュ、再検証中も60秒は古いものを返す）
+            value: "public, max-age=86400, stale-while-revalidate=60",
           },
         ],
       },

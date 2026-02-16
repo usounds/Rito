@@ -68,7 +68,8 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     })();
 
     const domain = (() => {
-        try { return new URL(localUrl || '').hostname; }
+        if (!localUrl) return url;
+        try { return new URL(localUrl).hostname; }
         catch { return url; }
     })();
 

@@ -655,7 +655,7 @@ export default function RegistBookmarkPage() {
         <Container size="md" mx="auto" >
             <Breadcrumbs
                 items={[
-                    { label: messages.header.bookmarkMenu, href: `/${locale}/bookmark/search` },
+                    { label: messages.header.bookmarkMenu, href: `/bookmark/search` },
 
                     { label: messages.create.button.regist }
                 ]}

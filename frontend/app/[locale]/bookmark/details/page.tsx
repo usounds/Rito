@@ -239,7 +239,7 @@ export default async function DetailsPage({ params, searchParams }: PageProps) {
 
     return (
         <Container size="md" mx="auto">
-            <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/${locale}/bookmark/search` }, { label: t("header.details") }]} />
+            <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/bookmark/search` }, { label: t("header.details") }]} />
             <Stack gap={4}>
                 <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={t('detail.view')}>
                     <Flex justify="space-between" align="center" style={{ width: '100%' }}>

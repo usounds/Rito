@@ -34,7 +34,7 @@ $mantine-breakpoint-xl: 88em;
   display: flex;
   align-items: center;
   padding-left: 0.5;
-  padding-right:0.5;
+  padding-right: 0.5;
   text-decoration: none;
   color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
   font-weight: 500;
@@ -54,7 +54,7 @@ $mantine-breakpoint-xl: 88em;
   position: absolute;
   height: auto !important;
   left: 50%;
-  transform: translateX(-50%); 
+  transform: translateX(-50%);
   display: flex;
   gap: var(--mantine-spacing-md);
 }

@@ -1,20 +1,44 @@
 "use client";
 
-import { Tabs, ScrollArea } from '@mantine/core';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { useEffect, useRef } from 'react';
 import { categories } from './categories';
+import classes from './Discover.module.scss';
+import {
+    Compass,
+    AtSign,
+    Cpu,
+    Globe,
+    Gamepad2,
+    Sparkles,
+    Heart,
+    Utensils,
+    Plane,
+    Layers,
+} from 'lucide-react';
+
+const categoryIcons: Record<string, React.ReactNode> = {
+    discover: <Compass size={15} />,
+    atprotocol: <AtSign size={15} />,
+    technology: <Cpu size={15} />,
+    social: <Globe size={15} />,
+    anime_game: <Gamepad2 size={15} />,
+    entertainment: <Sparkles size={15} />,
+    lifestyle: <Heart size={15} />,
+    food: <Utensils size={15} />,
+    travel: <Plane size={15} />,
+    general: <Layers size={15} />,
+};
 
 export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const t = useTranslations();
-    const viewportRef = useRef<HTMLDivElement>(null);
+    const scrollRef = useRef<HTMLDivElement>(null);
 
-    const handleTabChange = (value: string | null) => {
-        if (!value) return;
+    const handleTabClick = (value: string) => {
         const params = new URLSearchParams(searchParams);
         if (value === 'discover') {
             params.delete('category');
@@ -25,10 +49,10 @@ export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
     };
 
     useEffect(() => {
-        if (viewportRef.current) {
-            const activeTabElement = viewportRef.current.querySelector(`button[data-value="${activeTab}"]`) as HTMLElement;
-            if (activeTabElement) {
-                activeTabElement.scrollIntoView({
+        if (scrollRef.current) {
+            const activeElement = scrollRef.current.querySelector(`[data-value="${activeTab}"]`) as HTMLElement;
+            if (activeElement) {
+                activeElement.scrollIntoView({
                     behavior: 'smooth',
                     block: 'nearest',
                     inline: 'center'
@@ -38,16 +62,23 @@ export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
     }, [activeTab]);
 
     return (
-        <Tabs value={activeTab} onChange={handleTabChange} radius="md" mb="md">
-            <ScrollArea type="hover" scrollbarSize={2} offsetScrollbars viewportRef={viewportRef}>
-                <Tabs.List style={{ flexWrap: 'nowrap', width: '100%', minWidth: 'max-content' }}>
+        <div className={classes.tabsContainer}>
+            <div className={classes.tabsScroll} ref={scrollRef}>
+                <div className={classes.tabsList}>
                     {categories.map((category) => (
-                        <Tabs.Tab key={category} value={category} data-value={category} style={{ whiteSpace: 'nowrap' }}>
+                        <button
+                            key={category}
+                            data-value={category}
+                            className={`${classes.tabItem} ${activeTab === category ? classes.tabItemActive : ''}`}
+                            onClick={() => handleTabClick(category)}
+                            type="button"
+                        >
+                            {categoryIcons[category]}
                             {t(`category.${category}`)}
-                        </Tabs.Tab>
+                        </button>
                     ))}
-                </Tabs.List>
-            </ScrollArea>
-        </Tabs>
+                </div>
+            </div>
+        </div>
     );
 }

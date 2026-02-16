@@ -7,12 +7,10 @@ import TimeAgo from "@/components/TimeAgo";
 import { nsidSchema } from "@/nsid/mapping";
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import {
-    ActionIcon,
     Box,
     Card,
     Group,
     Stack,
-    Text
 } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
@@ -20,6 +18,7 @@ import { useEffect, useState } from 'react';
 import Like from "@/components/Like";
 import classes from './Article.module.scss';
 import ArticleImage from "@/components/ArticleImage";
+import { Globe, Users } from 'lucide-react';
 import dynamic from 'next/dynamic';
 const Markdown = dynamic(() => import('react-markdown'), { ssr: false });
 
@@ -110,6 +109,15 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         </div>
 
                         <div className={classes.textContent}>
+                            <Link
+                                href={localUrl || ''}
+                                target="_blank"
+                                className={classes.sourceLabel}
+                            >
+                                <Globe size={11} />
+                                {domain}
+                            </Link>
+
                             <div className={classes.title}>
                                 <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
                                     style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
@@ -125,9 +133,10 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
                             <Group mb='xs' gap={4} align="center">
                                 {bookmarkCount !== undefined && bookmarkCount > 1 && (
-                                    <Text span c="red" fw={700} fz="sm" mr="xs" style={{ whiteSpace: 'nowrap' }}>
+                                    <span className={classes.usersCount}>
+                                        <Users size={11} />
                                         {bookmarkCount} users
-                                    </Text>
+                                    </span>
                                 )}
                                 <TagBadge tags={tags} locale={locale} />
                             </Group>
@@ -142,34 +151,30 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
             </div>
 
             <Stack className={classes.footer} gap={4}>
-                {/* 1行目：アイコン群 */}
-                <Group align="center" style={{ width: '100%' }}>
-                    {
-                        <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
-                    }
+                {/* アクション行 */}
+                <div className={classes.footerActions}>
+                    <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
                     <div style={{ marginLeft: 'auto' }}>
                         <EditMenu subject={url} title={title} tags={tags} image={imgSrc} description={comment} />
                     </div>
-                </Group>
+                </div>
 
-                {/* 2行目：Text */}
-                <Text fz="xs" c="dimmed">
-                    <Link
-                        href={localUrl || ''}
-                        target="_blank"
-                        style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}
-                    >
-                        {domain + ' '}
-                    </Link>
-                    <Link
-                        href={`/${locale}/profile/${encodeURIComponent(handle || '')}`}
-                        prefetch={false}
-                        style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}
-                    >
-                        {handle ? "by @" + handle + ' ' : ""}
-                    </Link>
+                {/* メタ情報行 */}
+                <div className={classes.metaRow}>
+                    {handle && (
+                        <>
+                            <Link
+                                href={`/${locale}/profile/${encodeURIComponent(handle)}`}
+                                prefetch={false}
+                                className={classes.metaHandle}
+                            >
+                                @{handle}
+                            </Link>
+                            <span className={classes.metaSeparator} />
+                        </>
+                    )}
                     <TimeAgo date={date} locale={locale} />
-                </Text>
+                </div>
             </Stack>
 
         </Card>

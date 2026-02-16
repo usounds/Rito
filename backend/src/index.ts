@@ -123,7 +123,7 @@ async function classifyCategory(title: string, description: string, comment: str
 
 カテゴリーIDリスト:
 - general: 一般的なニュース、速報、特定のカテゴリに当てはまらない話題。
-- atprotocol: AT Protocol, Bluesky, Fediverse, 分散型SNS関連の技術や話題。
+- atprotocol: AT Protocol, Bluesky, Atmosphere, Fediverse, 分散型SNS関連の技術や話題。
 - social: 社会問題、時事、事件、政治、経済、ビジネス、金融。
 - technology: プログラミング、ガジェット、IT、AI、ハードウェア。
 - lifestyle: 暮らし、家事、育児、健康、教育、学び、雑学。

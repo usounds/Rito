@@ -1,4 +1,5 @@
 import { useComputedColorScheme } from "@mantine/core";
+import Image from "next/image";
 import React, { useEffect, useState } from "react";
 
 interface ArticleImageProps {
@@ -71,17 +72,50 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
   }
 
   // 通常画像
-  const imageUrl = src && src.trim() !== "" ? src : dummyUrl;
+  const normalizeUrl = (url?: string | null) => {
+    if (!url || typeof url !== 'string') return null;
+    if (url.startsWith('//')) return `https:${url}`;
+    return url;
+  };
+
+  const isValidUrl = (url?: string | null) => {
+    if (!url || typeof url !== 'string') return false;
+    // データURI、Blob、またはhttp/httpsで始まる絶対URL、あるいはスラッシュで始まる相対パス
+    return url.startsWith('http') || url.startsWith('/') || url.startsWith('data:') || url.startsWith('blob:');
+  };
+
+  const initialRaw = normalizeUrl(src);
+  const initialSrc = isValidUrl(initialRaw) ? initialRaw! : dummyUrl;
+  const [imgSrc, setImgSrc] = useState<string>(initialSrc);
+  const [unoptimized, setUnoptimized] = useState(false);
+
+  useEffect(() => {
+    const normalized = normalizeUrl(src);
+    setImgSrc(isValidUrl(normalized) ? normalized! : dummyUrl);
+    setUnoptimized(false);
+  }, [src, dummyUrl]);
 
   return (
-    <img
-      src={imageUrl}
+    <Image
+      src={imgSrc}
       alt={alt}
-      style={{ width: "100%", height: "100%", objectFit: "cover", position: "absolute", top: 0, left: 0 }}
-      onError={(e) => {
-        e.currentTarget.onerror = null;
-        e.currentTarget.src = dummyUrl;
+      fill
+      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      style={{ objectFit: "cover" }}
+      onError={() => {
+        if (imgSrc === dummyUrl) return;
+
+        if (!unoptimized) {
+          // まずは最適化を無効にしてリトライ（Google画像などBot判定されるケース対策）
+          setUnoptimized(true);
+        } else {
+          // それでもだめならダミー画像
+          setImgSrc(dummyUrl);
+          // ダミー画像は最適化したいのでフラグをリセット
+          setUnoptimized(false);
+        }
       }}
+      unoptimized={unoptimized || imgSrc.startsWith('data:') || imgSrc.startsWith('blob:')} // データURI系またはリトライ時は最適化しない
     />
   );
 };

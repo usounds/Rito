@@ -153,4 +153,20 @@ describe('Article', () => {
         render(<Article {...defaultProps} url="invalid-url" />);
         expect(screen.getByText(/invalid-url/)).toBeInTheDocument();
     });
+
+    it('http://で始まる画像URLをそのまま使用する（二重プレフィックス防止）', () => {
+        const url = 'https://www.tsubame-grill.co.jp/';
+        const image = 'http://www.tsubame-grill.co.jp/wordpress/wp-content/themes/original/img/common/logo_sns.jpg';
+
+        render(<Article {...defaultProps} url={url} image={image} />);
+
+        const img = screen.getByTestId('article-image');
+        // src属性が二重プレフィックスになっていないことを確認
+        expect(img).toHaveAttribute('src', image);
+    });
+
+    it('http://で始まるブックマークURLからドメインを正しく抽出する', () => {
+        render(<Article {...defaultProps} url="http://example.com/page" />);
+        expect(screen.getByText('example.com')).toBeInTheDocument();
+    });
 });

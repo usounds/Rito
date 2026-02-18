@@ -52,7 +52,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
 
     const localUrl = (() => {
-        if (url.startsWith('https://')) return url;
+        if (url.startsWith('https://') || url.startsWith('http://')) return url;
         if (url.startsWith('at://')) {
             const result = parseCanonicalResourceUri(url);
             if (result.ok) {
@@ -75,7 +75,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
     // 相対パスの場合のみ imgSrc を更新
     useEffect(() => {
-        if (image && !image.startsWith('https://') && domain) {
+        if (image && !image.startsWith('https://') && !image.startsWith('http://') && domain) {
             setImgSrc(`https://${domain}/${image}`);
         }
     }, [image, domain]);

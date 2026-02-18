@@ -57,11 +57,6 @@ $mantine-breakpoint-md: 62em;
                 rgba(255, 255, 255, 0.08));
         border-color: light-dark(rgba(0, 0, 0, 0.15),
                 rgba(255, 255, 255, 0.15));
-        transform: translateY(-1px);
-    }
-
-    &:active {
-        transform: translateY(0px);
     }
 
     svg {

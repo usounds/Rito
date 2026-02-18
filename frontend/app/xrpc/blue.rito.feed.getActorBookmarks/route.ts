@@ -38,24 +38,37 @@ export async function GET(req: Request) {
 
     const normalized: Bookmark[] = normalizeBookmarks(bookmarks);
 
-    // 2. Likes を取得
+    // 2. Likes を取得（AT URI と HTTP URL の両方を対象に）
+    const allTargets = normalized.flatMap(b => {
+      const variants = [b.uri]; // AT URI
+      // HTTP URL + 末尾スラッシュバリエーション
+      if (b.subject) {
+        variants.push(b.subject);
+        variants.push(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject + '/');
+      }
+      return variants;
+    });
+    const uniqueTargets = Array.from(new Set(allTargets));
+
     const likes: { subject: string; aturi: string }[] = await prisma.like.findMany({
-      where: { subject: { in: normalized.map(b => b.uri) } },
+      where: { subject: { in: uniqueTargets } },
       select: { subject: true, aturi: true },
     });
 
-    // 3. subject → aturi 配列のマップを作成
-    const likesMap: Record<string, string[]> = {};
-    likes.forEach(like => {
-      if (!likesMap[like.subject]) likesMap[like.subject] = [];
-      likesMap[like.subject].push(like.aturi);
+    // 3. bookmark.uri → aturi 配列のマップを作成（AT URI + HTTP URL の Like を統合）
+    const bookmarksWithLikes = normalized.map(bookmark => {
+      const subjectVariants = new Set([
+        bookmark.uri,
+        bookmark.subject,
+        bookmark.subject.endsWith('/') ? bookmark.subject.slice(0, -1) : bookmark.subject + '/',
+      ]);
+      const matchingLikes = [...new Set(
+        likes
+          .filter(like => subjectVariants.has(like.subject))
+          .map(like => like.aturi)
+      )];
+      return { ...bookmark, likes: matchingLikes };
     });
-
-    // 4. Bookmark に likes をセット
-    const bookmarksWithLikes = normalized.map(bookmark => ({
-      ...bookmark,
-      likes: likesMap[bookmark.uri] || [],
-    }));
     return NextResponse.json(bookmarksWithLikes, {
       status: 200,
       headers: {

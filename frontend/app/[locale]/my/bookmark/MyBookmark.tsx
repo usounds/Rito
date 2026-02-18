@@ -8,6 +8,7 @@ import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert } from '@mant
 import { useLocale, useMessages } from 'next-intl';
 import { Info } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
+import classes from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
 export function MyBookmark() {
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -102,7 +103,7 @@ export function MyBookmark() {
                     const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
 
                     return (
-                        <div key={b.uri}>
+                        <div key={b.uri} className={classes.articleItem}>
                             <Article
                                 url={b.subject}
                                 title={selectedComment?.title ?? ""}

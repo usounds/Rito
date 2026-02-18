@@ -8,4 +8,5 @@ Rito is a social bookmarking service that operates on ATProto. Additionally, sit
 [Public Suffix List](https://publicsuffix.org/)<br />
 [StevenBlack Host](https://github.com/StevenBlack/hosts)<br />
 [UFOs](https://ufos.microcosm.blue/)<br />
+[so asano](https://bsky.app/profile/so-asano.com)<br />
 Bluesky Hackers' Space(JP) community members.

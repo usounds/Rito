@@ -5,7 +5,7 @@ import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import classes from './Features.module.scss';
 import { BookmarkCheck } from 'lucide-react';
-import { FaChrome } from "react-icons/fa6";
+import { FaChrome, FaFirefoxBrowser } from "react-icons/fa6";
 
 interface FeaturesGridProps {
   t: Awaited<ReturnType<typeof getTranslations>>;
@@ -81,6 +81,12 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
       description: t('header.feature.chrome.longdescription'),
     },
     {
+      icon: FaFirefoxBrowser,
+      title: t('header.feature.firefox.title'),
+      href: 'https://addons.mozilla.org/en-US/firefox/addon/rito-extension/',
+      description: t('header.feature.firefox.longdescription'),
+    },
+    {
       icon: Star,
       title: t('header.feature.bookmarklet.title'),
       href: t('header.feature.bookmarklet.href'),
@@ -89,7 +95,9 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
   ];
 
   const features = MOCKDATA.map((feature, index) => (
-    <Features {...feature} key={index} />
+    <div className={classes.featureItem} key={index}>
+      <Features {...feature} />
+    </div>
   ));
 
   return (

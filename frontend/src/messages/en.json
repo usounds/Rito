@@ -46,6 +46,10 @@
 				"title": "Chrome Extension",
 				"longdescription": "You can quickly bookmark to Rito from the extension tab. Tab here for details."
 			},
+			"firefox": {
+				"title": "Firefox Add-on",
+				"longdescription": "You can quickly bookmark to Rito from the Firefox add-on. Tap here for details."
+			},
 			"bookmarklet": {
 				"title": "Bookmarklet",
 				"href": "https://blog.usounds.work/posts/rito-update-20250923-en",

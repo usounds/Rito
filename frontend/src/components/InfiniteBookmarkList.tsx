@@ -7,6 +7,7 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { BookmarkQuery } from '../../app/[locale]/bookmark/search/latestbookmark/data';
 import { fetchBookmarksAction } from '../../app/[locale]/bookmark/search/latestbookmark/actions';
 import { Bookmark } from '@/type/ApiTypes';
+import classes from '../../app/[locale]/bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
 import { useTranslations } from 'next-intl';
 
@@ -81,7 +82,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
                     const displayDate = new Date(b[dateField]);
 
                     return (
-                        <div key={b.uri} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <div key={b.uri} className={classes.articleItem}>
                             <Article
                                 url={b.subject}
                                 title={displayTitle}

@@ -116,43 +116,55 @@ async function checkModeration(texts: string[]): Promise<string[]> {
 /**
  * ブックマークのタイトル、説明、コメント、タグからカテゴリーを分類する
  */
+const CLASSIFY_SYSTEM_PROMPT = `あなたはウェブコンテンツを自動分類する専門AIです。
+
+## タスク
+与えられたコンテンツ情報を分析し、最も適切なカテゴリーIDを1つだけ返してください。
+
+## 判定基準の優先順位
+1. タイトルと説明（ウェブサイトのOGP情報）を最優先
+2. タグ情報を補助的に使用
+3. コメントは参考程度
+
+## カテゴリーID一覧
+- general: 一般的なニュース、速報、特定のカテゴリに当てはまらない話題
+- atprotocol: AT Protocol, Bluesky, Atmosphere, Fediverse, 分散型SNS関連の技術や話題
+- social: 社会問題、時事、事件、政治、経済、ビジネス、金融
+- technology: プログラミング、ガジェット、IT、AI、ハードウェア
+- lifestyle: 暮らし、家事、育児、健康、教育、学び、雑学
+- food: 料理、グルメ、レシピ、飲食店
+- travel: 旅行、観光、地域情報、お出かけ
+- entertainment: 映画、音楽、芸能、ドラマ、お笑い、ネタ、ユーモア
+- anime_game: アニメ、マンガ、ゲーム、声優、VTuber
+
+## 出力ルール
+- 上記のカテゴリーIDのいずれか1つのみを返すこと
+- 余計な説明、記号、改行は一切含めないこと
+- 複数カテゴリーに該当する場合は、最も主要なものを1つ選ぶこと
+- 判断に迷う場合は "general" を返すこと`;
+
+const VALID_CATEGORIES = [
+  "general", "atprotocol", "social", "technology", "lifestyle", "food", "travel", "entertainment", "anime_game"
+];
+
 async function classifyCategory(title: string, description: string, comment: string, tags: string[]): Promise<string | null> {
   try {
-    const prompt = `与えられたコンテンツを、以下のリストの中から最も適切なカテゴリーに分類してください。
-特に「タイトル」と「説明」（ウェブサイトのOGP情報）の内容を最優先の判定基準としてください。
-カテゴリーの「識別子（ID）」のみを文字列として返してください。余計な説明は一切不要です。
-
-カテゴリーIDリスト:
-- general: 一般的なニュース、速報、特定のカテゴリに当てはまらない話題。
-- atprotocol: AT Protocol, Bluesky, Atmosphere, Fediverse, 分散型SNS関連の技術や話題。
-- social: 社会問題、時事、事件、政治、経済、ビジネス、金融。
-- technology: プログラミング、ガジェット、IT、AI、ハードウェア。
-- lifestyle: 暮らし、家事、育児、健康、教育、学び、雑学。
-- food: 料理、グルメ、レシピ、飲食店。
-- travel: 旅行、観光、地域情報、お出かけ。
-- entertainment: 映画、音楽、芸能、ドラマ、お笑い、ネタ、ユーモア。
-- anime_game: アニメ、マンガ、ゲーム、声優、VTuber。
-
-コンテンツ:
-タイトル: ${title}
+    const userPrompt = `タイトル: ${title}
 説明: ${description}
 タグ: ${tags.join(', ')}
 コメント: ${comment}`;
 
     const response = await client.chat.completions.create({
-      model: "gpt-5-nano", // gpt-5-nano が利用不可の場合のデフォルト
+      model: "gpt-5-nano",
       messages: [
-        { role: "system", content: "あなたはコンテンツ分類の専門家です。カテゴリーIDのみを返してください。" },
-        { role: "user", content: prompt }
+        { role: "system", content: CLASSIFY_SYSTEM_PROMPT },
+        { role: "user", content: userPrompt }
       ],
     });
 
     const category = response.choices[0]?.message?.content?.trim().toLowerCase();
-    const validCategories = [
-      "general", "atprotocol", "social", "technology", "lifestyle", "food", "travel", "entertainment", "anime_game"
-    ];
 
-    if (category && validCategories.includes(category)) {
+    if (category && VALID_CATEGORIES.includes(category)) {
       return category;
     }
     return "general"; // 判定不能な場合は一般

@@ -97,21 +97,29 @@ async function getBookmarkDisplayData(uri: string, locale: string): Promise<Disp
         select: { subject: true, aturi: true },
     });
 
-    // 4. すべての aturi をまとめた配列にする
-    const subjectLikes: string[] = likes
-        .filter(like => like.subject === uri1 || like.subject === uri2)
-        .map(like => like.aturi);
+    // 4. すべての aturi をまとめた配列にする（HTTP URL + AT URI の両方のLikeを集約）
+    const allBookmarkUris = new Set(bookmarks.map(bm => bm.uri));
+    const subjectLikes: string[] = [...new Set(
+        likes
+            .filter(like =>
+                like.subject === uri1 ||
+                like.subject === uri2 ||
+                allBookmarkUris.has(like.subject) // AT URI への Like も含める
+            )
+            .map(like => like.aturi)
+    )];
 
 
-    // 5. bookmarks 配列に bookmarkLikes を埋め込む
+    // 5. bookmarks 配列に bookmarkLikes を埋め込む（AT URI + HTTP URL の両方のLikeを集約）
     const bookmarksWithLikes = bookmarks.map(bm => {
-        const bookmarkLikes = likes
-            .filter(like => like.subject === bm.uri) // bm.uri と比較
-            .map(like => like.aturi);
+        const matchingLikes = likes.filter(like =>
+            like.subject === bm.uri || // AT URI への Like
+            withTrailingSlashVariants(bm.subject).includes(like.subject) // HTTP URL への Like
+        ).map(like => like.aturi);
 
         return {
             ...bm,
-            likes: bookmarkLikes,
+            likes: [...new Set(matchingLikes)],
         };
     });
 

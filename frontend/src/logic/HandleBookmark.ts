@@ -149,9 +149,42 @@ export async function enrichBookmarks(
     const key = normKey.endsWith('/') ? normKey.slice(0, -1) : normKey;
     const commentCount = normalizedCountMap[key] ?? 0;
 
+    // AT URI と HTTP URL (+ バリアント) の両方から Like を集約
+    const allLikes: string[] = [];
+
+    // bookmark.uri (AT URI) に紐づく Like
+    if (uriLikesMap[bookmark.uri]) {
+      allLikes.push(...uriLikesMap[bookmark.uri]);
+    }
+
+    // bookmark.subject (HTTP URL) とそのバリアントに紐づく Like
+    for (const variant of withTrailingSlashVariants(bookmark.subject)) {
+      // URL variant に対応する全 URI の Like を収集
+      const uris = urlToUrisMap[variant];
+      if (uris) {
+        for (const uri of uris) {
+          if (uriLikesMap[uri]) {
+            allLikes.push(...uriLikesMap[uri]);
+          }
+        }
+      }
+    }
+
+    // 正規化 URL のバリアントも検索
+    for (const variant of withTrailingSlashVariants(normKey)) {
+      const uris = urlToUrisMap[variant];
+      if (uris) {
+        for (const uri of uris) {
+          if (uriLikesMap[uri]) {
+            allLikes.push(...uriLikesMap[uri]);
+          }
+        }
+      }
+    }
+
     return {
       ...bookmark,
-      likes: [...new Set(uriLikesMap[bookmark.uri] ?? [])],
+      likes: [...new Set(allLikes)],
       commentCount,
     };
   });

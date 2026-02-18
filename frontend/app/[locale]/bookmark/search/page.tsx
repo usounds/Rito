@@ -7,6 +7,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { verifySignedDid } from "@/logic/HandleOauthClientNode";
+import classes from './latestbookmark/LatestBookmark.module.scss';
 
 export const metadata: Metadata = {
   robots: {
@@ -90,7 +91,9 @@ export default async function BookmarksPage(props: PageProps) {
     <Container size="md" mx="auto" my="sx">
       <Breadcrumbs items={[{ label: t("header.bookmarkMenu"), href: `/bookmark/search` }, { label: t("header.browse") }]} />
       <SearchForm locale={locale} defaultTags={tag} defaultHandles={handle} defaultRelationship={relationship} />
-      <LatestBookmark params={{ locale }} searchParams={query} />
+      <div className={classes.resultsWrapper}>
+        <LatestBookmark params={{ locale }} searchParams={query} />
+      </div>
     </Container>
   );
 }

@@ -14,6 +14,7 @@ $mantine-breakpoint-xl: 88em;
   font-weight: 500;
   margin-bottom: var(--mantine-spacing-md);
   text-align: center;
+  animation: fadeInDown 0.6s ease-out both;
 
   @media (max-width: $mantine-breakpoint-sm) {
     font-size: 28px;
@@ -23,8 +24,48 @@ $mantine-breakpoint-xl: 88em;
 
 .description {
   text-align: center;
+  animation: fadeInDown 0.6s ease-out 0.15s both;
 
   @media (max-width: $mantine-breakpoint-sm) {
     text-align: left;
+  }
+}
+
+// ===== Feature card animation =====
+.featureItem {
+  animation: featureAppear 0.5s ease-out both;
+}
+
+@for $i from 1 through 8 {
+  .featureItem:nth-child(#{$i}) {
+    animation-delay: #{0.2 + $i * 0.08}s;
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes featureAppear {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: translateY(16px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }

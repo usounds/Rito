@@ -30,7 +30,7 @@
 			"allbookmark": {
 				"title": "Bookmarks",
 				"description": "Manage Bluesky and websites together with your Bluesky account",
-				"longdescription": "You can manage Bluesky and websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
+				"longdescription": "You can manage websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
 			},
 			"atproto": {
 				"title": "Build with ATProtocol",

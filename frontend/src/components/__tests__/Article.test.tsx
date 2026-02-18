@@ -1,9 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { render } from '../../test-utils';
 import { Article } from '../bookmarkcard/Article';
 import { parseCanonicalResourceUri } from '@atcute/lexicons/syntax';
-import { nsidSchema } from '@/nsid/mapping';
 
 // Mock SCSS module
 vi.mock('../bookmarkcard/Article.module.scss', () => ({

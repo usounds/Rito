@@ -9,6 +9,7 @@ import { Client, simpleFetchHandler } from '@atcute/client';
 import pLimit from "p-limit";
 import PQueue from 'p-queue';
 import { client as oauthClient } from "./lib/HandleOauthClientNode.js";
+import { runDailyBest } from './services/dailyBest.js';
 import { Agent } from "@atproto/api";
 import * as TID from '@atcute/tid';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
@@ -308,6 +309,18 @@ async function init() {
       if (prev_time_us === currentCursor) {
         logger.info(`前回からtime_usが変動していませんので再接続します`);
         jetstream.close();
+      }
+
+      // デイリーランキング投稿バッチ (JST 08:00)
+      if (jetstream.cursor && process.env.BSKY_IDENTIFIER && process.env.BSKY_PASSWORD) {
+        const cursorDate = new Date(Number(jetstream.cursor) / 1000);
+        const jstTime = new Date(cursorDate.getTime() + 9 * 60 * 60 * 1000);
+        const jstHours = jstTime.getUTCHours(); // timestamp moved by 9h, so use UTC hours to get JST hours
+
+        if (jstHours === 8) {
+          // 8時台なら実行試行 (内部でDBチェックして重複排除)
+          runDailyBest(cursorDate).catch(err => logger.error(`DailyBest failed: ${err}`));
+        }
       }
 
       prev_time_us = currentCursor;

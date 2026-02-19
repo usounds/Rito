@@ -32,7 +32,7 @@ export async function generateMetadata({
 
   if (currentCategory === 'discover') {
     return {
-      title: t('discover.title'),
+      title: t('title'),
     };
   }
 

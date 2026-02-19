@@ -809,29 +809,7 @@ async function init() {
     }
   }
 
-  // イベント登録
-  // BOOKMARK
-  jetstream.onCreate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
-  jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
 
-  // POST_COLLECTION
-  const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
-  const isForceEnabled = process.env.ENABLE_POST_COLLECTION === 'true';
-
-  if (!isLocal || isForceEnabled) {
-    jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-    jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-    logger.info(`POST_COLLECTION handlers are ENABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled})`);
-  } else {
-    logger.info(`POST_COLLECTION handlers are DISABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled}). Set ENABLE_POST_COLLECTION=true to force enable.`);
-  }
-
-  // SERVICE
-  jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
-  jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
-
-  jetstream.onCreate(LIKE, event => queue.add(() => upsertLike(event)));
-  jetstream.onUpdate(LIKE, event => queue.add(() => upsertLike(event)));
 
   // TXT レコード取得関数
   const fetchTxtRecords = async (subDomain: string): Promise<string | null> => {
@@ -939,6 +917,32 @@ async function init() {
     }
   }
 
+  async function deleteBookmark(event: CommitDeleteEvent<typeof BOOKMARK>) {
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    try {
+      await dbLimit(() =>
+        prisma.bookmark.deleteMany({
+          where: { uri: aturi },
+        })
+      );
+      logger.info(`Deleted bookmark: ${aturi}`);
+    } catch (err) {
+      logger.error(`Error in deleteBookmark: ${err}`);
+    }
+  }
+
+  async function deleteLike(event: CommitDeleteEvent<typeof LIKE>) {
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    try {
+      await prisma.like.deleteMany({
+        where: { aturi: aturi },
+      });
+      logger.info(`Deleted like: ${aturi}`);
+    } catch (err) {
+      logger.error(`Error in deleteLike: ${err}`);
+    }
+  }
+
   async function upsertLike(event: CommitCreateEvent<typeof LIKE> | CommitUpdateEvent<typeof LIKE>) {
     const record = event.commit.record as BlueRitoFeedLike.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
@@ -965,6 +969,56 @@ async function init() {
       logger.error(`Error in upsertLike: ${err}`);
     }
   }
+
+  // イベント登録
+  // BOOKMARK
+  jetstream.onCreate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
+  jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
+  jetstream.onDelete(BOOKMARK, event => queue.add(() => deleteBookmark(event)));
+
+  // POST_COLLECTION
+  const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
+  const isForceEnabled = process.env.ENABLE_POST_COLLECTION === 'true';
+
+  if (!isLocal || isForceEnabled) {
+    jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+    jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
+    jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
+      cursor = event.time_us.toString();
+      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+
+      try {
+        // 1. Post に紐づく PostUri を先に削除
+        await prisma.postUri.deleteMany({
+          where: { postUri: aturi }, // PostUri.postUri が外部キー
+        });
+
+        // 2. Post を削除
+        const deletedPosts = await prisma.post.deleteMany({
+          where: { uri: aturi },
+        });
+        if (deletedPosts.count > 0) {
+          logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
+        } else {
+          //logger.info(`No post found for deletion: ${aturi}`);
+        }
+      } catch (err) {
+        logger.error(`Error in onDelete post for ${aturi}: ${err}`);
+      }
+    });
+
+    logger.info(`POST_COLLECTION handlers are ENABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled})`);
+  } else {
+    logger.info(`POST_COLLECTION handlers are DISABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled}). Set ENABLE_POST_COLLECTION=true to force enable.`);
+  }
+
+  // SERVICE
+  jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
+  jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
+
+  jetstream.onCreate(LIKE, event => queue.add(() => upsertLike(event)));
+  jetstream.onUpdate(LIKE, event => queue.add(() => upsertLike(event)));
+  jetstream.onDelete(LIKE, event => queue.add(() => deleteLike(event)));
 
   jetstream.start();
 }

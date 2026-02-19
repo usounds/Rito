@@ -970,6 +970,21 @@ async function init() {
     }
   }
 
+
+  async function deleteResolver(event: CommitDeleteEvent<typeof SERVICE>) {
+    const nsid = event.commit.rkey;
+    const did = event.did;
+
+    try {
+      await prisma.resolver.deleteMany({
+        where: { nsid: nsid, did: did },
+      });
+      logger.info(`Deleted resolver: ${nsid} -> ${did}`);
+    } catch (err) {
+      logger.error(`Error in deleteResolver: ${err}`);
+    }
+  }
+
   // イベント登録
   // BOOKMARK
   jetstream.onCreate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
@@ -1015,6 +1030,7 @@ async function init() {
   // SERVICE
   jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
   jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
+  jetstream.onDelete(SERVICE, event => queue.add(() => deleteResolver(event)));
 
   jetstream.onCreate(LIKE, event => queue.add(() => upsertLike(event)));
   jetstream.onUpdate(LIKE, event => queue.add(() => upsertLike(event)));

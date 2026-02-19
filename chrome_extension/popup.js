@@ -25,7 +25,7 @@ function applyLanguage(lang) {
 }
 
 // Cross-browser compatibility
-const api = typeof browser !== "undefined" ? browser : chrome;
+const api = typeof chrome !== "undefined" ? chrome : browser;
 
 // 初期化: ストレージから取得
 let currentLang = "ja";
@@ -59,6 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
       api.tabs.create({
         url: target + params
       });
+      window.close();
     });
   });
 });

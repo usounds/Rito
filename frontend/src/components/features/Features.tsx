@@ -83,7 +83,9 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
     {
       icon: FaFirefoxBrowser,
       title: t('header.feature.firefox.title'),
-      href: 'https://addons.mozilla.org/en-US/firefox/addon/rito-extension/',
+      href: locale === 'ja'
+        ? 'https://addons.mozilla.org/ja/firefox/addon/rito-extension/'
+        : 'https://addons.mozilla.org/en-US/firefox/addon/rito-extension/',
       description: t('header.feature.firefox.longdescription'),
     },
     {

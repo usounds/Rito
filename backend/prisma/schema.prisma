@@ -160,3 +160,21 @@ model SocialGraph {
   @@index([targetDid])
   @@map("SocialGraph")
 }
+
+model BatchJobLog {
+  id           Int      @id @default(autoincrement())
+  job_name     String
+  executed_at  DateTime @default(now()) @db.Timestamptz
+  target_date  String   @unique // "YYYY-MM-DD" (JST)
+
+  @@map("BatchJobLog")
+}
+
+model RecommendedArticle {
+  id           Int      @id @default(autoincrement())
+  uri          String   // URL
+  created_at   DateTime @default(now()) @db.Timestamptz
+
+  @@index([uri, created_at])
+  @@map("RecommendedArticle")
+}

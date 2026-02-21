@@ -82,7 +82,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
 
     const categoryNames: Record<string, Record<string, string>> = {
         general: { ja: "一般", en: "General" },
-        atprotocol: { ja: "AT Protocol", en: "AT Protocol" },
+        atprotocol: { ja: "atproto", en: "atproto" },
         social: { ja: "社会・政治・経済", en: "Social/Politics/Economy" },
         technology: { ja: "テクノロジー", en: "Technology" },
         lifestyle: { ja: "暮らし・学び", en: "Lifestyle/Learning" },

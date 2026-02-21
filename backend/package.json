@@ -15,7 +15,9 @@
     "docker:push": "docker buildx build --platform linux/amd64 -t ghcr.io/usounds/rito-backend:latest . --push",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "check-missing": "tsx src/scripts/verify_posts_and_likes.ts",
+    "backup-missing": "tsx src/scripts/backup_missing_to_csv.ts"
   },
   "keywords": [],
   "author": "",

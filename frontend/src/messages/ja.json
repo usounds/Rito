@@ -1,6 +1,6 @@
 {
 	"title": "リト",
-	"description": "ATProtocolを利用したソーシャルブックマークサービスです。シンプルに、かつ、細やかに、Web上のあらゆるものをブックマークし、共有できる場を提供します。",
+	"description": "atprotoを利用したソーシャルブックマークサービスです。シンプルに、かつ、細やかに、Web上のあらゆるものをブックマークし、共有できる場を提供します。",
 	"loading": "読み込み中",
 	"ogp": {
 		"title": "リト",
@@ -33,13 +33,13 @@
 				"longdescription": "WebサイトをBlueskyのアカウントでまとめて管理できます。ブックマークにはコメントとタグをつけて管理できます。"
 			},
 			"atproto": {
-				"title": "Build with ATProtocol",
-				"description": "ATProtocolに対応し、全てをPDSに保存",
+				"title": "Build with atproto",
+				"description": "atprotoに対応し、全てをPDSに保存",
 				"longdescription": "ATPrototolに対応し、全てをPDSに保存します。"
 			},
 			"ownerbenefit": {
 				"title": "オーナーコメント",
-				"description": "ATProtocol系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
+				"description": "atproto系プロダクトの開発者は、自身のプロダクトに説明を追加可能",
 				"longdescription": "プロダクトのオーナーは、特殊なブックマークを作成できます。これは自身のサービスの説明をブックマークの一番上に表示されます。"
 			},
 			"chrome": {
@@ -170,7 +170,7 @@
 			},
 			"tag": {
 				"title": "タグ",
-				"placeholder": "ATProtocol",
+				"placeholder": "atproto",
 				"description": "URLを分類するタグ(10個まで)"
 			},
 			"comment": {
@@ -395,6 +395,6 @@
 		"travel": "旅行",
 		"entertainment": "エンタメ",
 		"anime_game": "アニメ・ゲーム",
-		"atprotocol": "AT Protocol"
+		"atprotocol": "atproto"
 	}
 }

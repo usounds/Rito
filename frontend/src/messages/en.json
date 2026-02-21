@@ -1,6 +1,6 @@
 {
 	"title": "Rito",
-	"description": "A social bookmarking service built on the AT Protocol. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
+	"description": "A social bookmarking service built on the atproto. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
 	"loading": "Loading",
 	"button": {
 		"search": "Search",
@@ -33,13 +33,13 @@
 				"longdescription": "You can manage websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
 			},
 			"atproto": {
-				"title": "Build with ATProtocol",
-				"description": "Supports ATProtocol and stores everything in your PDS",
-				"longdescription": "Fully compatible with ATProtocol, all data is stored in your PDS."
+				"title": "Build with atproto",
+				"description": "Supports atproto and stores everything in your PDS",
+				"longdescription": "Fully compatible with atproto, all data is stored in your PDS."
 			},
 			"ownerbenefit": {
 				"title": "Owner Comments",
-				"description": "Owner of ATProtocol-based products can add descriptions to their products",
+				"description": "Owner of atproto-based products can add descriptions to their products",
 				"longdescription": "Product owners can create special bookmarks that display their service description at the top of the bookmark list."
 			},
 			"chrome": {
@@ -171,7 +171,7 @@
 			},
 			"tag": {
 				"title": "Tag",
-				"placeholder": "ATProtocol",
+				"placeholder": "atproto",
 				"description": "Tags to categorize the URL (up to 10)"
 			},
 			"comment": {
@@ -396,6 +396,6 @@
 		"travel": "Travel",
 		"entertainment": "Entertainment",
 		"anime_game": "Anime/Game",
-		"atprotocol": "AT Protocol"
+		"atprotocol": "atproto"
 	}
 }

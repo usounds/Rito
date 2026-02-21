@@ -35,7 +35,7 @@
 			"atproto": {
 				"title": "Build with atproto",
 				"description": "atprotoに対応し、全てをPDSに保存",
-				"longdescription": "ATPrototolに対応し、全てをPDSに保存します。"
+				"longdescription": "atprotoに対応し、全てをPDSに保存します。"
 			},
 			"ownerbenefit": {
 				"title": "オーナーコメント",

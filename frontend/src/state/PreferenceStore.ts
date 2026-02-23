@@ -3,20 +3,29 @@ import { persist } from 'zustand/middleware';
 
 type PreferenceState = {
   isDeveloper: boolean;
+  isPostToBluesky: boolean;
+  isUseOriginalLink: boolean;
 };
 
 type PreferenceAction = {
   setIsDeveloper: (value: boolean) => void;
+  setIsPostToBluesky: (value: boolean) => void;
+  setIsUseOriginalLink: (value: boolean) => void;
 };
 
 export const usePreferenceStore = create<PreferenceState & PreferenceAction>()(
   persist(
     (set) => ({
-      isDeveloper: false, // 初期値 false
+      isDeveloper: false,
+      isPostToBluesky: false,
+      isUseOriginalLink: false,
       setIsDeveloper: (value: boolean) => set({ isDeveloper: value }),
+      setIsPostToBluesky: (value: boolean) => set({ isPostToBluesky: value }),
+      setIsUseOriginalLink: (value: boolean) => set({ isUseOriginalLink: value }),
     }),
     {
-      name: 'preference-store', // localStorage に保存されるキー名
+      name: 'preference-store',
     }
   ) as any
 );
+

@@ -3,6 +3,7 @@
 import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { usePreferenceStore } from "@/state/PreferenceStore";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
@@ -39,33 +40,16 @@ export default function RegistBookmarkPage() {
     const [isFetchOGP, setIsFetchOGP] = useState(false);
     const [isSubmit, setIsSubmit] = useState(false);
     const [isCanVerify, setIsVerify] = useState(false);
-    const [isPostToBluesky, setIsPostToBluesky] = useState(false);
-    const [isUseOriginalLink, setIsUseOriginalLink] = useState(false);
+    const isPostToBluesky = usePreferenceStore(state => state.isPostToBluesky);
+    const setIsPostToBluesky = usePreferenceStore(state => state.setIsPostToBluesky);
+    const isUseOriginalLink = usePreferenceStore(state => state.isUseOriginalLink);
+    const setIsUseOriginalLink = usePreferenceStore(state => state.setIsUseOriginalLink);
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
     const [ogpTitle, setOgpTitle] = useState<string | null>(null);
     const [ogpDescription, setOgpDescription] = useState<string | null>(null);
     // ... (skip intermediate lines) ...
-    {
-        !aturi && (
-            <>
-                <Switch
-                    label={messages.create.field.posttobluesky.title}
-                    checked={isPostToBluesky}
-                    onChange={() => setIsPostToBluesky(!isPostToBluesky)}
-                />
-                {isPostToBluesky && (
-                    <Switch
-                        mt="xs"
-                        label={messages.create.field.useOriginalLink.title}
-                        description={messages.create.field.useOriginalLink.description}
-                        checked={isUseOriginalLink}
-                        onChange={() => setIsUseOriginalLink(!isUseOriginalLink)}
-                    />
-                )}
-            </>
-        )
-    }
+
     const [ogpImage, setOgpImage] = useState<string | null>(null);
     const [aturiParsed, setAturiParsed] = useState<ParsedCanonicalResourceUri | null>(null);
     const setIsNeedReload = useMyBookmark(state => state.setIsNeedReload);
@@ -792,14 +776,14 @@ export default function RegistBookmarkPage() {
                                                 label={messages.create.field.posttobluesky.title}
                                                 description={messages.create.field.posttobluesky.description}
                                                 checked={isPostToBluesky}
-                                                onChange={() => setIsPostToBluesky(!isPostToBluesky)}
+                                                onChange={(e) => setIsPostToBluesky(e.currentTarget.checked)}
                                             />
                                             <Switch
                                                 label={messages.create.field.useOriginalLink.title}
                                                 description={messages.create.field.useOriginalLink.description}
                                                 checked={isUseOriginalLink}
                                                 disabled={!isPostToBluesky}
-                                                onChange={() => setIsUseOriginalLink(!isUseOriginalLink)}
+                                                onChange={(e) => setIsUseOriginalLink(e.currentTarget.checked)}
                                             />
                                         </Group>
                                     )}

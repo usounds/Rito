@@ -1,6 +1,7 @@
 "use client";
 import { buildPost } from "@/logic/HandleBluesky";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
+import { usePreferenceStore } from "@/state/PreferenceStore";
 import { AppBskyFeedPost } from '@atcute/bluesky';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
@@ -40,7 +41,8 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
     const thisClient = useXrpcAgentStore(state => state.thisClient);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [loading, setLoading] = useState(false);
-    const [isUseOriginalLink, setIsUseOriginalLink] = useState(false);
+    const isUseOriginalLink = usePreferenceStore(state => state.isUseOriginalLink);
+    const setIsUseOriginalLink = usePreferenceStore(state => state.setIsUseOriginalLink);
     const tagsLength = useMemo(() => {
         return tagsLocal.reduce((sum, tag) => sum + 1 + tag.length + 1, 0); // # + tag + 半角スペース
     }, [tagsLocal]);
@@ -210,7 +212,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                     label={messages.create.field.useOriginalLink.title}
                     description={messages.create.field.useOriginalLink.description}
                     checked={isUseOriginalLink}
-                    onChange={() => setIsUseOriginalLink(!isUseOriginalLink)}
+                    onChange={(e) => setIsUseOriginalLink(e.currentTarget.checked)}
                     mb="sm"
                 />
             )}

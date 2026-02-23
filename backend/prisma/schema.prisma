@@ -126,6 +126,7 @@ model NodeOAuthState {
 model NodeOAuthSession {
   key         String   @id
   session     String
+  updatedAt   DateTime @default(now()) @updatedAt
 
   @@map("NodeOAuthSession") 
 }

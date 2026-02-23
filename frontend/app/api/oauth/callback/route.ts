@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOAuthClient } from '@/logic/HandleOauthClientNode'
+import { prisma } from '@/logic/HandlePrismaClient'
 import { Agent } from "@atproto/api";
 import crypto from "crypto";
 
@@ -34,6 +35,12 @@ export async function GET(req: NextRequest) {
     // 認証成功
     const agent = new Agent(session);
     await agent.getProfile({ actor: agent.did || '' });
+
+    // ログイン成功時にのみ updatedAt を更新する
+    await prisma.nodeOAuthSession.update({
+      where: { key: session.sub },
+      data: { updatedAt: new Date() },
+    }).catch((e: any) => console.error('Failed to update session updatedAt', e));
     // もし redirectTo が必要ならクッキーから取得してリダイレクト
     const redirectTo = req.cookies.get("REDIRECT_TO")?.value || "/";
 

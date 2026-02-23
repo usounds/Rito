@@ -110,7 +110,9 @@
 				"placeholder": "検索するタグ"
 			},
 			"user": {
-				"title": "ユーザー",
+				"title": "Current user",
+				"relogin": "Re-login",
+				"reloginDescription": "Sessions are valid for 180 days. If your session is about to expire or if something isn't working correctly, please re-login here.",
 				"placeholder": "検索するハンドル"
 			},
 			"commentpriority": {
@@ -375,7 +377,10 @@
 				"enable": "自動収集を有効にする"
 			},
 			"user": {
-				"title": "現在ログインしているユーザー"
+				"title": "現在ログインしているユーザー",
+				"relogin": "再ログイン",
+				"reloginDescription": "セッションは180日間有効です。期限が切れそうな場合や、うまく動作しない場合はこちらから再ログインしてください。",
+				"lastLogin": "最終ログイン: {date}"
 			}
 		},
 		"inform": {

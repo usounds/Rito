@@ -24,7 +24,7 @@ export function verifySignedDid(signedDid: string): string | null {
 }
 
 export async function getOAuthClient() {
-const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK||'', 'key1')
+  const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK || '', 'key1')
 
   const stateStore = {
     async set(key: string, internalState: NodeSavedState) {
@@ -44,7 +44,7 @@ const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK||'', 'ke
       }
     },
     async del(key: string) {
-      await prisma.nodeOAuthState.delete({ where: { key } }).catch(() => {})
+      await prisma.nodeOAuthState.delete({ where: { key } }).catch(() => { })
     },
   }
 
@@ -53,7 +53,7 @@ const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK||'', 'ke
       await prisma.nodeOAuthSession.upsert({
         where: { key: sub },
         update: { session: JSON.stringify(session) },
-        create: { key: sub, session: JSON.stringify(session) },
+        create: { key: sub, session: JSON.stringify(session), updatedAt: new Date() },
       })
     },
     async get(sub: string) {
@@ -66,7 +66,7 @@ const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK||'', 'ke
       }
     },
     async del(sub: string) {
-      await prisma.nodeOAuthSession.delete({ where: { key: sub } }).catch(() => {})
+      await prisma.nodeOAuthSession.delete({ where: { key: sub } }).catch(() => { })
     },
   }
 

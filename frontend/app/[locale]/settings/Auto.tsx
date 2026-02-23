@@ -1,7 +1,7 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Avatar, Button, Group, Modal, Stack, Switch, Text, Title } from '@mantine/core';
+import { Alert, Avatar, Button, Group, Modal, Paper, Stack, Switch, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
@@ -62,7 +62,7 @@ export function Auto() {
             if (response.ok) {
                 const data = await response.json();
                 setenableAutoGenerateBookmark(data.enableAutoGenerateBookmark || false);
-            }else{
+            } else {
                 setIsError(true);
 
             }
@@ -125,6 +125,62 @@ export function Auto() {
         notifications.clean();
     }
 
+    const [lastLogin, setLastLogin] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (userProf) {
+            fetch("/api/session-info")
+                .then(res => res.json())
+                .then(data => {
+                    if (data.updatedAt) {
+                        setLastLogin(new Date(data.updatedAt).toLocaleDateString(locale, {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        }));
+                    }
+                })
+                .catch(err => console.error("Failed to fetch session info", err));
+        }
+    }, [userProf, locale]);
+
+    async function handleRelogin() {
+        if (!userProf?.handle) return;
+        setIsLoading(true);
+
+        try {
+            const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
+            const returnTo = window.location.href;
+
+            const res = await fetch("/api/oauth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    handle: userProf.handle,
+                    returnTo,
+                    csrf: csrfToken,
+                }),
+            });
+
+            if (!res.ok) {
+                throw new Error("OAuth login failed");
+            }
+
+            const { url } = await res.json();
+            window.location.href = url;
+        } catch (e) {
+            console.error("Relogin failed", e);
+            notifications.show({
+                title: 'Error',
+                message: messages.settings.inform.error,
+                color: 'red',
+            });
+            setIsLoading(false);
+        }
+    }
+
     return (
         <Stack gap="sm">
             <Title order={4}>{messages.settings.section.user.title}</Title>
@@ -153,20 +209,43 @@ export function Auto() {
                     </Modal>
                 </>
                 :
+                <Paper withBorder p="md" radius="md" shadow="xs">
+                    <Stack gap="md">
+                        <Group justify="space-between" align="center">
+                            <Group gap="sm">
+                                <Avatar src={userProf?.avatar} radius="xl" size="lg" />
+                                <div>
+                                    <Text size="sm" fw={600}>
+                                        {userProf?.displayName || userProf?.handle || "Loading..."}
+                                    </Text>
+                                    <Text c="dimmed" size="xs">
+                                        @{userProf?.handle || 'Loading...'}
+                                    </Text>
+                                    {lastLogin && (
+                                        <Text size="xs" c="dimmed" mt={2}>
+                                            {messages.settings.section.user.lastLogin.replace('{date}', lastLogin)}
+                                        </Text>
+                                    )}
+                                </div>
+                            </Group>
+                            <Button
+                                variant="light"
+                                size="sm"
+                                onClick={handleRelogin}
+                                loading={isLoading}
+                                color="blue"
+                            >
+                                {messages.settings.section.user.relogin}
+                            </Button>
+                        </Group>
 
-                <Group gap="sm" wrap="nowrap" align="center" mb='lg'>
-                    <Avatar src={userProf?.avatar} radius="xl" />
-
-                    <div style={{ flex: 1 }}>
-                        <Text size="sm" fw={500}>
-                            {userProf?.displayName || userProf?.handle || "Loading..."}
-                        </Text>
-
-                        <Text c="dimmed" size="xs">
-                            @{userProf?.handle || 'Loading...'}
-                        </Text>
-                    </div>
-                </Group>
+                        <Alert color="blue" variant="light" radius="md" style={{ border: 'none' }}>
+                            <Text size="xs" style={{ lineHeight: 1.5 }}>
+                                {messages.settings.section.user.reloginDescription}
+                            </Text>
+                        </Alert>
+                    </Stack>
+                </Paper>
             }
             <Title order={4}>{messages.settings.section.enableAutoGenerateBookmark.title}</Title>
             <Switch

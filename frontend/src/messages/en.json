@@ -376,7 +376,10 @@
 				"enable": "Enable automatic collection"
 			},
 			"user": {
-				"title": "Current user"
+				"title": "Current user",
+				"relogin": "Re-login",
+				"reloginDescription": "Sessions are valid for 180 days. If your session is about to expire or if something isn't working correctly, please re-login here.",
+				"lastLogin": "Last Login: {date}"
 			}
 		},
 		"inform": {

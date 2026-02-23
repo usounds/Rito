@@ -131,20 +131,22 @@ const CLASSIFY_SYSTEM_PROMPT = `あなたはウェブコンテンツを自動分
 - atprotocol: atproto, ATProtocol, AT Protocol, Bluesky, Atmosphere, Fediverse, 分散型SNS関連の技術や話題
 - social: 社会問題、時事、事件、政治、経済、ビジネス、金融
 - technology: プログラミング、ガジェット、IT、AI、ハードウェア
-- lifestyle: 暮らし、家事、育児、健康、教育、学び、雑学
+- lifestyle: 日常生活、家事、育児、健康、教育、学び、雑学（※風景や写真作品は含まない）
 - food: 料理、グルメ、レシピ、飲食店
-- travel: 旅行、観光、地域情報、お出かけ
+- travel: 旅行、観光、地域情報、お出かけ（※風景や写真作品は含まない）
 - entertainment: 映画、音楽、芸能、ドラマ、お笑い、ネタ、ユーモア
 - anime_game: アニメ、マンガ、ゲーム、声優、VTuber
+- photo: 写真、風景、絶景、アート、デザイン、建築、イラスト
 
 ## 出力ルール
 - 上記のカテゴリーIDのいずれか1つのみを返すこと
 - 余計な説明、記号、改行は一切含めないこと
 - 複数カテゴリーに該当する場合は、最も主要なものを1つ選ぶこと
+- 【重要】コメントが「～へ行った」「～をした」という旅行記や日記の体裁であっても、投稿のメインコンテンツが明らかな風景・植物・自然などの写真であれば 'travel' や 'lifestyle' ではなく 'photo' を優先してください
 - 判断に迷う場合は "general" を返すこと`;
 
 const VALID_CATEGORIES = [
-  "general", "atprotocol", "social", "technology", "lifestyle", "food", "travel", "entertainment", "anime_game"
+  "general", "atprotocol", "social", "technology", "lifestyle", "food", "travel", "entertainment", "anime_game", "photo"
 ];
 
 async function classifyCategory(title: string, description: string, comment: string, tags: string[]): Promise<string | null> {

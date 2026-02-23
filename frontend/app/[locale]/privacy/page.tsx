@@ -3,14 +3,20 @@ import path from "path";
 import ReactMarkdown from "react-markdown";
 import { Container } from "@mantine/core";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 
 interface PageProps {
   params: Promise<{ locale: string }>;
 }
 
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
+
 export default async function PrivacyPage({ params }: PageProps) {
   const { locale } = await params;
+  setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
   // privacy フォルダ内の md を参照

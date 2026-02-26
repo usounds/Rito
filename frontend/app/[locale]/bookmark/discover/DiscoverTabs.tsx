@@ -16,6 +16,7 @@ import {
     Utensils,
     Plane,
     Layers,
+    Camera,
 } from 'lucide-react';
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -28,6 +29,7 @@ const categoryIcons: Record<string, React.ReactNode> = {
     lifestyle: <Heart size={15} />,
     food: <Utensils size={15} />,
     travel: <Plane size={15} />,
+    photo: <Camera size={15} />,
     general: <Layers size={15} />,
 };
 

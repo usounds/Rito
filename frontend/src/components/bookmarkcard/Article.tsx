@@ -90,6 +90,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
         travel: { ja: "旅行", en: "Travel" },
         entertainment: { ja: "エンタメ・おもしろ", en: "Entertainment/Humor" },
         anime_game: { ja: "アニメ・ゲーム", en: "Anime/Game" },
+        photo: { ja: "写真", en: "Photo" },
     };
 
     const categoryName = category && categoryNames[category]

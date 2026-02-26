@@ -143,6 +143,7 @@ const CLASSIFY_SYSTEM_PROMPT = `あなたはウェブコンテンツを自動分
 - 余計な説明、記号、改行は一切含めないこと
 - 複数カテゴリーに該当する場合は、最も主要なものを1つ選ぶこと
 - 【重要】コメントが「～へ行った」「～をした」という旅行記や日記の体裁であっても、投稿のメインコンテンツが明らかな風景・植物・自然などの写真であれば 'travel' や 'lifestyle' ではなく 'photo' を優先してください
+- 【重要】タグに「atmosphere」「atproto」「atprotocol」のいずれかが含まれる場合は、他の要素に関わらず優先的に 'atprotocol' カテゴリーに分類してください
 - 判断に迷う場合は "general" を返すこと`;
 
 const VALID_CATEGORIES = [
@@ -156,20 +157,33 @@ async function classifyCategory(title: string, description: string, comment: str
 タグ: ${tags.join(', ')}
 コメント: ${comment}`;
 
-    const response = await client.chat.completions.create({
-      model: "gpt-5-nano",
-      messages: [
-        { role: "system", content: CLASSIFY_SYSTEM_PROMPT },
-        { role: "user", content: userPrompt }
-      ],
-    });
+    const promises = Array.from({ length: 3 }).map(() =>
+      client.chat.completions.create({
+        model: "gpt-5-nano",
+        messages: [
+          { role: "system", content: CLASSIFY_SYSTEM_PROMPT },
+          { role: "user", content: userPrompt }
+        ],
+      })
+    );
 
-    const category = response.choices[0]?.message?.content?.trim().toLowerCase();
+    const responses = await Promise.all(promises);
+    const categories = responses
+      .map(r => r.choices[0]?.message?.content?.trim().toLowerCase())
+      .filter((c): c is string => !!c && VALID_CATEGORIES.includes(c));
 
-    if (category && VALID_CATEGORIES.includes(category)) {
-      return category;
+    if (categories.length > 0) {
+      // 多数決ロジック
+      const counts = categories.reduce((acc, cat) => {
+        acc[cat] = (acc[cat] || 0) + 1;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const majorityCategory = Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+      return majorityCategory;
     }
-    return "general"; // 判定不能な場合は一般
+
+    return "general"; // 全ての判定が無効・エラーだった場合は一般
   } catch (error) {
     logger.error(`Classification error: ${error}`);
     return null;

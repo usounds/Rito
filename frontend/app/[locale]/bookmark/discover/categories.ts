@@ -8,5 +8,6 @@ export const categories = [
     'lifestyle',
     'food',
     'travel',
+    'photo',
     'general'
 ];

@@ -10,7 +10,12 @@ export async function fetchCategoryBookmarks(category: string, page: number) {
 
     const bookmarks = await prisma.bookmark.findMany({
         where: {
-            category: category,
+            OR: category === 'general' ? [
+                { category: 'general' },
+                { category: null }
+            ] : [
+                { category: category }
+            ]
         },
         orderBy: { created_at: 'desc' },
         take: TAKE,

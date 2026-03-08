@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { screen, fireEvent, waitFor } from '@testing-library/react';
+import { screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { render } from '../../test-utils';
 import { DeleteBookmark } from '../DeleteBookmark';
 
@@ -55,9 +55,16 @@ describe('DeleteBookmark', () => {
 
     beforeEach(() => {
         vi.clearAllMocks();
+        vi.useFakeTimers({ shouldAdvanceTime: true });
         global.fetch = vi.fn().mockResolvedValue({
             json: () => Promise.resolve({ csrfToken: 'test-csrf-token' }),
         });
+    });
+
+    afterEach(() => {
+        cleanup();
+        vi.runAllTimers();
+        vi.useRealTimers();
     });
 
     it('削除確認UIを表示する', () => {
@@ -147,7 +154,6 @@ describe('DeleteBookmark', () => {
     });
 
     it('aturiがundefinedの場合は削除処理をスキップ', async () => {
-        vi.useFakeTimers();
         render(<DeleteBookmark aturi={undefined} onClose={mockOnClose} />);
 
         const deleteButton = screen.getByText('削除');
@@ -157,6 +163,5 @@ describe('DeleteBookmark', () => {
         vi.runAllTimers();
 
         expect(global.fetch).not.toHaveBeenCalled();
-        vi.useRealTimers();
     });
 });

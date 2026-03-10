@@ -6,6 +6,8 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   output: 'standalone', // ← これを追加
 
+  serverExternalPackages: ['@atcute/time-ms', '@atcute/tid'],
+
   experimental: {
     optimizePackageImports: ["@mantine/core", "@mantine/hooks"],
   },

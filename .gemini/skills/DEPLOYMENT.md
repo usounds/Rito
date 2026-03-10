@@ -8,6 +8,7 @@ Deployment Skill
 まず、プロジェクトルートで変更箇所を確認します。
 git status および git diff --name-only HEAD を実行し、frontend/ と backend/ のどちらに変更があるか特定する。
 未コミットの重要な変更がある場合はユーザーに警告する。
+すべてコミットされていたら、次へ進む。
 schema.prismaが両フォルダで一致しているかを確認する
 
 2. フロントエンドのデプロイフロー
@@ -23,7 +24,17 @@ pnpm run docker:push （Dockerレジストリへのプッシュ）
 3. バックエンドのデプロイフロー
 backend/ ディレクトリに変更が含まれる場合、以下の手順を厳密に実行してください。
 ディレクトリ移動: cd backend
-ビルド確認: pnpm run build を実行。
+ビルド確認: pnpm run test を実行。
 エラーが発生した場合は、デプロイを中断しエラー内容を報告する。
 データ更新とイメージ送信:
 pnpm run docker:push （Dockerレジストリへのプッシュ）
+
+4. chrome_extensionのデプロイフロー
+chrome_extension/ ディレクトリに変更が含まれる場合、以下の手順を厳密に実行してください。
+ブラウザ拡張機能のファイルを、配布・申請用にZip形式で圧縮します。不要なファイル（.DS_Storeなど）は自動的に除外されます。
+`chrome_extension` ディレクトリに移動します。
+以下のコマンドを実行して、ルートディレクトリに `rito-extension.zip` を作成します。
+zip -r ../rito-extension.zip . -x "*.DS_Store" -x ".gitignore" -x "__MACOSX" "*.zip"
+
+5. デプロイ完了
+すべての手順が正常に完了した場合は、ユーザーにデプロイ完了の通知を送信してください。

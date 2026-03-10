@@ -6,8 +6,8 @@ Deployment Skill
 
 1. 変更検知とプリチェック
 まず、プロジェクトルートで変更箇所を確認します。
-git status および git diff --name-only HEAD を実行し、frontend/ と backend/ のどちらに変更があるか特定する。
-未コミットの重要な変更がある場合はユーザーに警告する。
+git status および git diff --name-only HEAD を実行し、frontend/ と backend/ と chrome_extension/のいずれかに変更があるか特定する。
+未コミットの重要な変更がある場合はユーザーに警告し処理を中断する。
 すべてコミットされていたら、次へ進む。
 schema.prismaが両フォルダで一致しているかを確認する
 

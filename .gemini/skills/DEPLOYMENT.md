@@ -26,6 +26,10 @@
    - `pnpm run update:blocklist`
    - `pnpm run update:publicsuffix`
    - `pnpm run docker:push`
+4. **コミットとプッシュ**:
+   - `git add .`
+   - `git commit -m "list : アップデート`
+   - `git push`
 
 ### 3. バックエンドのデプロイフロー（自動実行）
 `backend/` に変更がある場合に実行します。

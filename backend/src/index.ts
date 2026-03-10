@@ -100,7 +100,7 @@ async function checkModeration(texts: string[]): Promise<string[]> {
 
     const flaggedCategories: Set<string> = new Set();
 
-    response.results.forEach(result => {
+    response.results.forEach((result: OpenAI.Moderation) => {
       for (const [category, value] of Object.entries(result.categories)) {
         if (value) flaggedCategories.add(category);
       }
@@ -169,12 +169,12 @@ async function classifyCategory(title: string, description: string, comment: str
 
     const responses = await Promise.all(promises);
     const categories = responses
-      .map(r => r.choices[0]?.message?.content?.trim().toLowerCase())
-      .filter((c): c is string => !!c && VALID_CATEGORIES.includes(c));
+      .map((r: OpenAI.Chat.ChatCompletion) => r.choices[0]?.message?.content?.trim().toLowerCase())
+      .filter((c: string | undefined): c is string => !!c && VALID_CATEGORIES.includes(c));
 
     if (categories.length > 0) {
       // 多数決ロジック
-      const counts = categories.reduce((acc, cat) => {
+      const counts = categories.reduce((acc: Record<string, number>, cat: string) => {
         acc[cat] = (acc[cat] || 0) + 1;
         return acc;
       }, {} as Record<string, number>);

@@ -56,17 +56,15 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
         try {
             const rkeyLocal = TID.now();
 
-            type MyPost = AppBskyFeedPost.Main & {
-                via?: string;
-            };
-
             const tagsObj: string[] = tagsLocal
             tagsObj.push('rito.blue')
 
-            const appBskyFeedPost: MyPost = {
-                ...(buildPost(shareComment, tagsObj, messages, isUseOriginalLink ? subject : undefined) as Omit<MyPost, "via">),
-                via: messages.title
-            };
+            const appBskyFeedPost: AppBskyFeedPost.Main = buildPost(
+                shareComment,
+                tagsObj,
+                messages,
+                isUseOriginalLink ? subject : undefined
+            ) as AppBskyFeedPost.Main;
 
             let ogpMessage = messages.share.ogpdecription
             ogpMessage = ogpMessage.replace("{0}", userProf?.handle ?? "");

@@ -49,7 +49,7 @@ export function buildPost(
     // タグを追加（全てのタグの前に半角スペース）
     validTags.forEach(tag => {
         builder.addText(" "); // 半角スペースを挿入
-        builder.addTag(tag);
+        builder.addTag(`#${tag}`, tag);
     });
 
     return {

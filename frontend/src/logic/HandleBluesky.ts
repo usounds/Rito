@@ -58,7 +58,7 @@ export function buildPost(
         facets: builder.facets,
         createdAt: new Date().toISOString(),
         langs: detectTopLanguages(baseText) || [],
-        via: (messages as any).title as string || 'Rito',
+        via: typeof messages.title === 'string' ? messages.title : 'Rito',
     };
 }
 

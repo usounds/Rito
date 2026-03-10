@@ -19,7 +19,7 @@ vi.mock('@atcute/bluesky-richtext-builder', () => ({
         text = '';
         facets: unknown[] = [];
         addText(t: string) { this.text += t; return this; }
-        addTag(tag: string) { this.text += `#${tag}`; this.facets.push({ tag }); return this; }
+        addTag(text: string, tag: string) { this.text += text; this.facets.push({ tag }); return this; }
         addLink(text: string, href: string) { this.text += text; this.facets.push({ link: href }); return this; }
     },
 }));

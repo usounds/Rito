@@ -451,19 +451,17 @@ export default function RegistBookmarkPage() {
             });
 
             if (isPostToBluesky) {
-                type MyPost = AppBskyFeedPost.Main & {
-                    via?: string;
-                };
-
                 // Rito URL
                 const ritoUrl = `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`;
                 // Determine if we should pass ritoUrl to buildPost (to add reference link)
                 const postRitoUrl = isUseOriginalLink ? ritoUrl : undefined;
 
-                const appBskyFeedPost: MyPost = {
-                    ...(buildPost(activeComment, tags, messages, postRitoUrl) as Omit<MyPost, "via">),
-                    via: messages.title
-                };
+                const appBskyFeedPost: AppBskyFeedPost.Main = buildPost(
+                    activeComment,
+                    tags,
+                    messages,
+                    postRitoUrl
+                ) as AppBskyFeedPost.Main;
 
                 let ogpMessage = messages.create.inform.ogp
                 ogpMessage = ogpMessage.replace("{0}", userProf?.handle ?? "");

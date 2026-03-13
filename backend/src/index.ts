@@ -300,30 +300,35 @@ async function init() {
   jetstream.on('open', () => {
     logger.info(`Jetstream open: ${JETSREAM_URL}`);
 
+    if (cursorUpdateInterval) {
+      clearInterval(cursorUpdateInterval);
+    }
+
     cursorUpdateInterval = setInterval(() => {
       if (!jetstream.cursor) return;
 
       const currentCursor = jetstream.cursor.toString();
 
-      // DB 更新はキュー経由で
-      queue.add(async () => {
-        try {
-          await prisma.jetstreamIndex.upsert({
-            where: { service: 'rito' },
-            update: { index: currentCursor },
-            create: { service: 'rito', index: currentCursor },
-          });
+      // 前回と違うなら DB 更新
+      if (prev_time_us !== currentCursor) {
+        // DB 更新はキュー経由で
+        queue.add(async () => {
+          try {
+            await prisma.jetstreamIndex.upsert({
+              where: { service: 'rito' },
+              update: { index: currentCursor },
+              create: { service: 'rito', index: currentCursor },
+            });
 
-          logger.info(`Cursor updated to: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
-        } catch (err) {
-          logger.error(`Failed to upsert cursor in DB: ${err}`);
-        }
-      });
-
-      // 前回と同じなら再接続
-      if (prev_time_us === currentCursor) {
-        logger.info(`前回からtime_usが変動していませんので再接続します`);
-        jetstream.close();
+            logger.info(`Cursor updated to: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
+          } catch (err) {
+            logger.error(`Failed to upsert cursor in DB: ${err}`);
+          }
+        });
+      } else {
+        // 前回と同じならプロセス終了（再起動を促す）
+        logger.error(`前回からtime_usが変動していませんので、再起動のためにプロセスを終了します: ${currentCursor}`);
+        process.exit(1);
       }
 
       prev_time_us = currentCursor;

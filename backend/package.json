@@ -31,11 +31,11 @@
     "@atproto/api": "^0.19.3",
     "@atproto/jwk-jose": "^0.1.11",
     "@atproto/oauth-client-node": "^0.3.17",
-    "@prisma/adapter-pg": "^7.4.2",
-    "@prisma/client": "^7.4.2",
+    "@prisma/adapter-pg": "^7.5.0",
+    "@prisma/client": "^7.5.0",
     "@skyware/jetstream": "^0.2.5",
     "dotenv": "^17.3.1",
-    "openai": "^6.27.0",
+    "openai": "^6.29.0",
     "p-limit": "^7.3.0",
     "p-queue": "^9.1.0",
     "pg": "^8.20.0",
@@ -45,13 +45,13 @@
     "ws": "^8.19.0"
   },
   "devDependencies": {
-    "@types/node": "^25.4.0",
+    "@types/node": "^25.5.0",
     "@types/pg": "^8.18.0",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^4.0.18",
-    "prisma": "^7.4.2",
+    "@vitest/coverage-v8": "^4.1.0",
+    "prisma": "^7.5.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "pnpm": {
     "overrides": {

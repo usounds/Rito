@@ -28,7 +28,7 @@
    - `pnpm run docker:push`
 4. **コミットとプッシュ**:
    - `git add .`
-   - `git commit -m "list : アップデート`
+   - `git commit -m "list : アップデート"`
    - `git push`
 
 ### 3. バックエンドのデプロイフロー（自動実行）

@@ -52,6 +52,7 @@ model PostUri {
 model UserDidHandle {
   did    String   @id
   handle String   @default("unknown")
+  unblur_moderation_categories String[] @default([])
 
   bookmarks Bookmark[] @relation("BookmarkUser")
   posts     Post[]     @relation("PostUser")

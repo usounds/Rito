@@ -375,6 +375,26 @@
 				"description": "Automatically bookmarks your posts on Bluesky with the #rito.blue tag.",
 				"enable": "Enable automatic collection"
 			},
+			"unblurModeration": {
+				"title": "Moderation Blur Settings",
+				"description": "Select categories to unblur for content.",
+				"options": {
+					"blur": "Blur",
+					"unblur": "Don't Blur"
+				},
+				"bulkAction": {
+					"blurAll": "Blur All",
+					"unblurAll": "Unblur All"
+				},
+				"categories": {
+					"sexual": "Sexual Content",
+					"hate": "Hate Speech",
+					"harassment": "Harassment",
+					"self-harm": "Self-Harm",
+					"violence": "Violence/Graphic",
+					"illicit": "Illicit Content"
+				}
+			},
 			"user": {
 				"title": "Current user",
 				"relogin": "Re-login",

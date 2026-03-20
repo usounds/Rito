@@ -23,6 +23,11 @@
                         "langForAutoGenertateBookmark": {
                             "type": "string",
                             "description": "User's preferred language for Auto Generate Bookmark."
+                        },
+                        "unblurModerationCategories": {
+                            "type": "array",
+                            "items": { "type": "string" },
+                            "description": "Moderation categories that should not be blurred."
                         }
                     }
                 }

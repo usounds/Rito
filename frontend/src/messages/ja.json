@@ -376,6 +376,26 @@
 				"description": "Bluesky上で「#rito.blue」タグを付けたあなたの投稿を、自動でリトにブックマークします",
 				"enable": "自動収集を有効にする"
 			},
+			"unblurModeration": {
+				"title": "モデレーションぼかし設定",
+				"description": "モデレーションされたコンテンツのぼかしを解除するカテゴリを選択できます",
+				"options": {
+					"blur": "ぼかす",
+					"unblur": "ぼかさない"
+				},
+				"bulkAction": {
+					"blurAll": "すべてぼかす",
+					"unblurAll": "すべてぼかさない"
+				},
+				"categories": {
+					"sexual": "性的コンテンツ",
+					"hate": "ヘイトスピーチ",
+					"harassment": "ハラスメント",
+					"self-harm": "自傷・自殺",
+					"violence": "暴力・猟奇表現",
+					"illicit": "違法コンテンツ"
+				}
+			},
 			"user": {
 				"title": "現在ログインしているユーザー",
 				"relogin": "再ログイン",

@@ -33,14 +33,21 @@ export async function GET(req: Request) {
         return NextResponse.json({ message: 'Invalid lxm' }, { status: 403 });
     }
 
-  const record = await prisma.postToBookmark.findUnique({
-    where: { sub: did },
-  })
+  const [record, userHandle] = await Promise.all([
+    prisma.postToBookmark.findUnique({
+      where: { sub: did },
+    }),
+    prisma.userDidHandle.findUnique({
+      where: { did },
+      select: { unblur_moderation_categories: true }
+    })
+  ])
 
   // 存在すれば enableAutoGenerateBookmark: true、なければ false
     return NextResponse.json({
     enableAutoGenerateBookmark: !!record,
-    langForAutoGenertateBookmark: record?.lang || ''
+    langForAutoGenertateBookmark: record?.lang || '',
+    unblurModerationCategories: userHandle?.unblur_moderation_categories || []
   }, { status: 200 });
 
 

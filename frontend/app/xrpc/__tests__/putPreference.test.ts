@@ -23,6 +23,12 @@ vi.mock('@/logic/HandlePrismaClient', () => ({
             upsert: vi.fn().mockResolvedValue({ sub: 'did:plc:testuser' }),
             deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
         },
+        userDidHandle: {
+            upsert: vi.fn().mockResolvedValue({
+                did: 'did:plc:testuser',
+                unblur_moderation_categories: [],
+            }),
+        },
     },
 }));
 

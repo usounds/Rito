@@ -294,3 +294,25 @@ export async function deleteResolver(nsid: string, did: string): Promise<{ count
         prisma.resolver.deleteMany({ where: { nsid, did } })
     );
 }
+/**
+ * Get user preferences
+ */
+export async function getUserPreferences(did: string) {
+    const record = await prisma.userDidHandle.findUnique({
+        where: { did },
+        select: { unblur_moderation_categories: true }
+    });
+    return record;
+}
+
+/**
+ * Update user preferences
+ */
+export async function updateUserPreferences(did: string, unblurModerationCategories: string[]) {
+    await dbLimit(() =>
+        prisma.userDidHandle.update({
+            where: { did },
+            data: { unblur_moderation_categories: unblurModerationCategories }
+        })
+    );
+}

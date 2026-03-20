@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json()
   const enableAutoGenerateBookmark = Boolean(body.enableAutoGenerateBookmark)
   const lang = body.lang || 'ja'
+  const unblurModerationCategories = body.unblurModerationCategories || []
 
   if (enableAutoGenerateBookmark) {
     // true の場合は INSERT（存在しなければ作成）
@@ -54,9 +55,16 @@ export async function POST(req: NextRequest) {
       where: { sub: did }
     })
   }
+  
+  await prisma.userDidHandle.upsert({
+    where: { did },
+    update: { unblur_moderation_categories: unblurModerationCategories },
+    create: { did, unblur_moderation_categories: unblurModerationCategories }
+  })
 
   // 結果として enableAutoGenerateBookmark の状態を返す
   return NextResponse.json({
-    enableAutoGenerateBookmark
+    enableAutoGenerateBookmark,
+    unblurModerationCategories
   }, { status: 200 })
 }

@@ -45,8 +45,8 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
 
 
     useEffect(() => {
-        // パスに /register が含まれていたら非表示
-        if (pathname?.includes('/register')) {
+        // パスに /register または /settings が含まれていたら非表示
+        if (pathname?.includes('/register') || pathname?.includes('/settings')) {
             setIsRegist(false);
             return;
         }

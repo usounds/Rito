@@ -100,7 +100,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
     return (
         <Card withBorder radius="md" padding={0} className={classes.card}>
             <Box style={{ position: 'relative', flex: 1 }} onClick={() => setIsClicked(!isClicked)}>
-                <BlurReveal moderated={moderations.length > 0} blurAmount={6} overlayText={messages.detail.view}>
+                <BlurReveal moderated={moderations.length > 0} moderations={moderations} blurAmount={6} overlayText={messages.detail.view}>
                     <div className={classes.cardContent}>
                         <div className={classes.imageWrapper}>
                             <Link href={localUrl || ''} target="_blank">

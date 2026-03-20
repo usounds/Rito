@@ -24,6 +24,12 @@ vi.mock('@/logic/HandlePrismaClient', () => ({
                 lang: 'ja',
             }),
         },
+        userDidHandle: {
+            findUnique: vi.fn().mockResolvedValue({
+                did: 'did:plc:testuser',
+                unblur_moderation_categories: [],
+            }),
+        },
     },
 }));
 

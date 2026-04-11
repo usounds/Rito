@@ -64,7 +64,7 @@ const elements = {
 };
 
 // --- Utilities ---
-const t = (key: string) => browser.i18n.getMessage(key);
+const t = (key: any) => browser.i18n.getMessage(key);
 
 function renderIcons() {
   document.querySelectorAll('.icon-container').forEach(el => {

@@ -62,7 +62,7 @@
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^14.6.1",
     "@types/node": "^25.6.0",
-    "@types/pg": "8.11.11",
+    "@types/pg": "8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.58.1",
@@ -93,7 +93,7 @@
       "hono": ">=4.11.7",
       "@hono/node-server": ">=1.19.10",
       "minimatch": ">=10.2.1",
-      "@types/pg": "8.11.11"
+      "@types/pg": "8.20.0"
     }
   }
 }

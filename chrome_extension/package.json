@@ -1,0 +1,42 @@
+{
+  "name": "rito-extension",
+  "version": "1.2.2",
+  "type": "module",
+  "description": "Rito's browser extension for bookmarking.",
+  "private": true,
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "update": "pnpm dlx npm-check-updates -u && pnpm install && pnpm update",
+    "build": "wxt build && wxt build -b firefox",
+    "zip": "wxt zip && wxt zip -b firefox",
+    "postinstall": "wxt prepare",
+    "compile": "tsc --noEmit",
+    "submit:chrome": "dotenv -e .env.submit -- npx publish-browser-extension@latest --chrome-zip .output/rito-extension-$npm_package_version-chrome.zip",
+    "submit:firefox": "dotenv -e .env.submit -- npx publish-browser-extension@latest --firefox-zip .output/rito-extension-$npm_package_version-firefox.zip --firefox-sources-zip .output/rito-extension-$npm_package_version-sources.zip",
+    "lex-gen": "lex-cli generate -c ./lex.config.js"
+  },
+  "dependencies": {
+    "@atcute/bluesky-richtext-builder": "^3.0.0",
+    "@atcute/client": "^4.2.1",
+    "@atcute/lexicons": "^1.3.0",
+    "@atcute/tid": "^1.1.2",
+    "@heroicons/react": "^2.2.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "tinyld": "^1.3.4"
+  },
+  "devDependencies": {
+    "@atcute/lex-cli": "^2.7.0",
+    "@types/chrome": "^0.1.40",
+    "@types/node": "^25.6.0",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@vitejs/plugin-react": "^4.7.0",
+    "@wxt-dev/module-react": "^1.2.2",
+    "dotenv-cli": "^8.0.0",
+    "typescript": "^6.0.2",
+    "vite": "^6.4.2",
+    "wxt": "^0.20.20"
+  }
+}

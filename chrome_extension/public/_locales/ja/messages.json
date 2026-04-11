@@ -1,0 +1,74 @@
+{
+  "extensionName": {
+    "message": "リト"
+  },
+  "extensionDescription": {
+    "message": "atprotoを利用したソーシャルブックマークサービス「リト」のブラウザ拡張機能です。Webサイトを簡単にブックマークできます。"
+  },
+  "fieldUrl": {
+    "message": "URL"
+  },
+  "fieldTitle": {
+    "message": "タイトル"
+  },
+  "placeholderTitle": {
+    "message": "タイトルを入力"
+  },
+  "fieldTags": {
+    "message": "タグ "
+  },
+  "placeholderTags": {
+    "message": "タグを追加..."
+  },
+  "buttonSave": {
+    "message": "登録"
+  },
+  "buttonSaving": {
+    "message": "登録中..."
+  },
+  "msgSaved": {
+    "message": "登録しました！"
+  },
+  "msgAdded": {
+    "message": "ブックマークを追加しました。"
+  },
+  "loginPrompt": {
+    "message": "rito.blue にログインしていません。"
+  },
+  "loginLink": {
+    "message": "ログインして始める"
+  },
+  "errorSave": {
+    "message": "登録に失敗しました"
+  },
+  "loading": {
+    "message": "読み込み中"
+  },
+  "fieldPostToBluesky": {
+    "message": "Blueskyに投稿する"
+  },
+  "fieldPostToBlueskyDesc": {
+    "message": "ブックマーク登録時にBlueskyにも投稿します"
+  },
+  "fieldUseOriginalLink": {
+    "message": "オリジナルのリンク先を使用する"
+  },
+  "fieldUseOriginalLinkDesc": {
+    "message": "OGPカードのリンク先を元のWebサイトにします"
+  },
+  "msgReferInRito": {
+    "message": "リトで参照する"
+  },
+  "msgOriginalSource": {
+    "message": "引用元"
+  },
+  "msgBookmark": {
+    "message": "リトにブックマークを登録しました"
+  },
+  "fieldComment": {
+    "message": "コメント"
+  },
+  "placeholderComment": {
+    "message": "コメントを入力..."
+  }
+}

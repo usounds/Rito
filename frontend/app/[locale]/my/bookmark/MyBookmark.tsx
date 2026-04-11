@@ -111,11 +111,9 @@ export function MyBookmark() {
                                 tags={b.tags}
                                 image={b.ogpImage}
                                 date={new Date(b.indexedAt)}
-                                atUri={b.uri}
                                 moderations={[]}
                                 likes={b.likes || []}
                                 likeDisabled={true}
-                                category={b.category}
                                 priority={index < 6}
                             />
                         </div>

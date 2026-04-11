@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
   try {
     // prompt が指定されている場合はそれを優先、なければ none を試行
     url = await client.authorize(handle, { prompt: prompt || "none" });
-  } catch (e) {
+  } catch {
     if (prompt) {
       // prompt が指定されていてエラーになった場合は、そのままの prompt で再試行（内部的な fallback に期待）
       url = await client.authorize(handle, { prompt: prompt });

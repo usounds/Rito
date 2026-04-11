@@ -4,9 +4,14 @@ import { Stats } from '@/components/stats/Stats';
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Alert, Container } from '@mantine/core';
 import { Info } from 'lucide-react';
-import { getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
+import { routing } from "@/i18n/routing";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 60;
+
+export function generateStaticParams() {
+    return routing.locales.map((locale) => ({ locale }));
+}
 
 type StatusProps = {
     params: Promise<{ locale: string }>;
@@ -14,6 +19,8 @@ type StatusProps = {
 
 export default async function StatusPage({ params }: StatusProps) {
     const { locale } = await params;
+    // 静的生成のために locale を設定
+    setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
     if (process.env.SKIP_DB_DURING_BUILD === 'true') {

@@ -34,7 +34,7 @@ export default function User({ did }: UserProps) {
         };
 
         fetchProfile();
-    }, [did]);
+    }, [did, publicAgent]);
 
 
     return (

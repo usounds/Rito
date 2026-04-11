@@ -6,15 +6,23 @@ import Link from 'next/link';
 
 interface TagBadgeProps {
   tags: string[];
-  locale: string; // 追加
+  locale: string;
 }
 
 export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
-  const [mounted, setMounted] = useState(false);
-  const uniqueTags = Array.from(new Set(tags)); // 重複削除
-  useEffect(() => setMounted(true), []);
-  if (!mounted) return null; // SSR では描画しない
+  const [isClient, setIsClient] = useState(false);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setIsClient(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // クライアントサイドでのみ描画する（ハイドレーションエラー防止）
+  if (!isClient) {
+    return null;
+  }
+
+  const uniqueTags = Array.from(new Set(tags));
   if (uniqueTags.length === 0) return null;
 
   const sortedTags = [...uniqueTags].sort((a, b) => {
@@ -24,10 +32,10 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
   });
 
   return (
-    <Group gap={3}>
+    <Group gap={3} data-testid="tag-badge-group">
       {sortedTags.map((tag, idx) => (
         <Badge
-          key={idx}
+          key={`${tag}-${idx}`}
           variant="light"
           color={tag === 'Verified' ? 'orange' : 'blue'}
           styles={{ root: { textTransform: 'none' } }}

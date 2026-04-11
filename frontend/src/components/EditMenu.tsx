@@ -1,6 +1,5 @@
 'use client';
 import { useMyBookmark } from "@/state/MyBookmark";
-import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { ActionIcon, Menu, Modal } from '@mantine/core';
 import { BookmarkPlus, CircleEllipsis, SquarePen, Trash2 } from 'lucide-react';
 import { useMessages } from 'next-intl';
@@ -22,7 +21,6 @@ type Props = {
 export default function EditMenu({ subject, title, tags, image, description }: Props) {
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [shareOnBluesky, setShareOnBluesky] = useState(false);
-    const activeDid = useXrpcAgentStore(state => state.activeDid);
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const locale = useLocale();
     const messages = useMessages();

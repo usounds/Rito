@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function TimeAgo({
   date,
@@ -8,9 +8,16 @@ export default function TimeAgo({
   date: string | Date;
   locale?: string;
 }) {
-  const [text, setText] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    const timer = setTimeout(() => setMounted(true), 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const text = useMemo(() => {
+    if (!mounted) return "";
+
     const d = typeof date === 'string' ? new Date(date) : date;
     const now = new Date().getTime();
     const diffMs = now - d.getTime();
@@ -22,11 +29,11 @@ export default function TimeAgo({
 
     const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
 
-    if (Math.abs(seconds) < 60) setText(rtf.format(-seconds, 'second'));
-    else if (Math.abs(minutes) < 60) setText(rtf.format(-minutes, 'minute'));
-    else if (Math.abs(hours) < 24) setText(rtf.format(-hours, 'hour'));
-    else setText(rtf.format(-days, 'day'));
-  }, [date, locale]);
+    if (Math.abs(seconds) < 60) return rtf.format(-seconds, 'second');
+    if (Math.abs(minutes) < 60) return rtf.format(-minutes, 'minute');
+    if (Math.abs(hours) < 24) return rtf.format(-hours, 'hour');
+    return rtf.format(-days, 'day');
+  }, [date, locale, mounted]);
 
   return <span>{text}</span>;
 }

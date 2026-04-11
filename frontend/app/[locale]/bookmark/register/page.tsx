@@ -15,7 +15,7 @@ import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
 import { useSearchParams, useRouter } from 'next/navigation';
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { AppBskyFeedPost } from '@atcute/bluesky';
+import { AppBskyFeedPost, AppBskyEmbedExternal } from '@atcute/bluesky';
 import { Switch } from '@mantine/core';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import { Authentication } from "@/components/Authentication";
@@ -469,7 +469,7 @@ export default function RegistBookmarkPage() {
                 let embedUri = ritoUrl as unknown as ResourceUri;
                 let embedTitle = ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title;
                 let embedDesc = ogpMessage || '';
-                let embedThumbBlob: unknown = undefined;
+                let embedThumbBlob: AppBskyEmbedExternal.Main['external']['thumb'] = undefined;
 
                 // Handle Image Blob Upload (Common)
                 if (ogpImageLocal) {
@@ -507,9 +507,10 @@ export default function RegistBookmarkPage() {
                                     const uploadData = await uploadRes.json();
                                     console.log('[DEBUG] Upload data:', uploadData);
                                     if (uploadData && uploadData.blob) {
-                                        embedThumbBlob = uploadData.blob;
+                                        embedThumbBlob = uploadData.blob as AppBskyEmbedExternal.Main['external']['thumb'];
                                     }
-                                } else {
+                                }
+ else {
                                     console.error('[DEBUG] Upload failed:', await uploadRes.text());
                                 }
                             }

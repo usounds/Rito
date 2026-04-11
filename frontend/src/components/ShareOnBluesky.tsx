@@ -2,7 +2,7 @@
 import { buildPost } from "@/logic/HandleBluesky";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
-import { AppBskyFeedPost } from '@atcute/bluesky';
+import { AppBskyFeedPost, AppBskyEmbedExternal } from '@atcute/bluesky';
 import { ActorIdentifier, ResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, Textarea, Text, TagsInput, Switch } from '@mantine/core';
@@ -72,7 +72,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
             let embedUri = subject as unknown as ResourceUri;
             let embedTitle = messages.title + ' ' + title || messages.title;
             let embedDesc = ogpMessage || '';
-            let embedThumbBlob: any = undefined;
+            let embedThumbBlob: AppBskyEmbedExternal.Main['external']['thumb'] = undefined;
 
             if (isUseOriginalLink) {
                 if (originalUrl) {
@@ -108,7 +108,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                                     if (uploadRes.ok) {
                                         const uploadData = await uploadRes.json();
                                         if (uploadData && uploadData.blob) {
-                                            embedThumbBlob = uploadData.blob;
+                                            embedThumbBlob = uploadData.blob as AppBskyEmbedExternal.Main['external']['thumb'];
                                         }
                                     }
                                 }

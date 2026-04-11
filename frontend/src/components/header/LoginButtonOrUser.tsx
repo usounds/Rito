@@ -12,7 +12,7 @@ import { BookmarkPlus, LogOut, Settings, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link'
 
 type LoginButtonOrUserProps = {
@@ -99,12 +99,21 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
         return () => window.removeEventListener('resize', updateSize)
     }, [])
 
-    let duplicate = false
+    useEffect(() => {
+        // マウント時に状態をリセット (ブラウザバック対策)
+        notifications.clean();
+        if (loader) {
+            loader.done();
+        }
+        setIsLoginProcess(false);
+    }, [setIsLoginProcess, loader]);
+
+    const duplicate = useRef(false);
 
     useEffect(() => {
 
-        if (duplicate) return
-        duplicate = true;
+        if (duplicate.current) return;
+        duplicate.current = true;
 
         (async () => {
             try {
@@ -134,7 +143,10 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                     }
                 }
 
-                if (activeDid) return
+                if (activeDid) {
+                    setIsLoginProcess(false);
+                    return;
+                }
 
                 // まず /api/me から activeDid を取得
                 const meRes = await fetch("/api/me", { credentials: "include" })
@@ -155,12 +167,13 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                                     await resolveHandleViaDoH(handle);
                                 } catch (e2) {
                                     console.error('DoH resolve failed:', e2);
-                                    // 両方ダメなら通知出して終了
+                                    setIsLoginProcess(false);
                                     return;
                                 }
                             }
 
                         } catch {
+                            setIsLoginProcess(false);
                             return;
                         }
 
@@ -189,11 +202,13 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                         });
 
                         if (!res.ok) {
+                            setIsLoginProcess(false);
                             throw new Error("OAuth login failed");
                         }
 
                         const { url } = await res.json();
                         window.location.href = url;
+                        // ここでリセットすると遷移前に一瞬表示が変わるので、遷移先でリセットされることに期待
                         return
 
                     } else {
@@ -208,8 +223,11 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                 setUserProf(profile)
                 const did = meData.profile.did as ActorIdentifier;
                 console.log(`${did} was successfully resumed session.`);
-                setIsLoginProcess(false);
-                if (!did) return;
+                
+                if (!did) {
+                    setIsLoginProcess(false);
+                    return;
+                }
 
                 // meData.scope を配列化（空白区切り文字列 → 配列）
                 const scopeList = Array.isArray(meData.scope)
@@ -217,26 +235,17 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                     : meData.scope.split(/\s+/).filter(Boolean); // 連続空白を除去
 
                 // Permission Set の展開定義
-                // PDS が include を展開する場合としない場合の両方に対応するため、
-                // 1. 生の include 文字列が含まれているか
-                // 2. 展開後の権限セットがすべて含まれているか
-                // のいずれかを満たせばOKとする
                 const PERMISSION_SET_EXPANSION = [
                     "repo?collection=blue.rito.feed.bookmark&collection=blue.rito.feed.like&collection=blue.rito.service.schema",
                     "rpc?lxm=blue.rito.preference.getPreference&lxm=blue.rito.preference.putPreference&aud=*"
                 ];
 
                 const missing = SCOPE.filter(required => {
-                    // 1. 完全一致チェック (include未展開のPDS対応)
                     if (scopeList.includes(required)) return false;
-
-                    // 2. 展開チェック (include展開済みのPDS対応)
                     if (required === "include:blue.rito.permissionSet") {
                         const allExpandedFound = PERMISSION_SET_EXPANSION.every(s => scopeList.includes(s));
                         if (allExpandedFound) return false;
                     }
-
-                    // どちらも見つからない場合は不足
                     return true;
                 });
 
@@ -258,13 +267,16 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                     const data: Bookmark[] = await res.json();
                     setMyBookmark(data);
                 }
+                
+                setIsLoginProcess(false);
 
             } catch (err) {
                 console.error("Error initializing user session:", err);
                 setActiveDid(null);
+                setIsLoginProcess(false);
             }
         })();
-    }, [handle]);
+    }, [handle, activeDid, setIsLoginProcess, setTagRanking, setUserProf, setActiveDid, setMyBookmark, tagRanking.length, messages, loader, isLoginProcess]);
 
     useEffect(() => {
         if (!activeDid) return;
@@ -311,7 +323,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
         }, 4000);
 
         return () => clearTimeout(timer);
-    }, [isNeedReload, activeDid]);
+    }, [isNeedReload, activeDid, setMyBookmark, setIsNeedReload]);
 
     const handleLogout = async () => {
         try {
@@ -320,7 +332,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
             const data = await res.json();
 
             if (res.ok && data.ok) {
-                // ログアウト成功 → フロント側でリダイレクト
+                // ログアウト成功
             } else {
                 console.error("Logout failed:", data);
             }

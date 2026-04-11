@@ -2,7 +2,6 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { SearchForm } from "./SearchForm";
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Container, Text } from '@mantine/core';
-import { Bookmark } from '@/type/ApiTypes';
 import { InfiniteBookmarkList } from '@/components/InfiniteBookmarkList';
 import { fetchBookmarks } from '../../bookmark/search/latestbookmark/data';
 import { getTranslations, setRequestLocale } from "next-intl/server";

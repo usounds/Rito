@@ -21,25 +21,9 @@ export async function GET(request: NextRequest) {
       // relationship が指定されている場合は SocialGraph から対象ユーザーを取得
       if (relationshipParam && relationshipParam !== 'all' && relationshipParam !== 'specified' && actorParam.startsWith('did:')) {
         const observerDid = actorParam;
-        let typeCondition = {};
-        if (relationshipParam === 'following') {
-          typeCondition = { type: 'follow' };
-        } else if (relationshipParam === 'followers') {
-          typeCondition = { type: 'follower' };
-        } else if (relationshipParam === 'mutual') {
-          // mutual は別途処理が必要だが、一旦 follow と follower の両方を取得して共通部分抽出などが理想。
-          // 簡易的に type: 'follow' かつ 'follower' (※DB構造による。SocialGraphは単方向なら `type` で区別)
-          // ここでは "mutual" という type があるか、もしくはアプリケーション側で解決するか。
-          // 既存実装の SocialGraph の仕様に合わせる。
-          // SocialGraph definition: model SocialGraph { observerDid, targetDid, type }
-          // type: 'follow' | 'follower' ? 
-          // 今回は単純に全件取得してフィルタするか、Prismaで頑張るか。
-          // ひとまず 'follow' しているユーザーを対象とする（簡易実装）
-          // 実際は relationshipParam に応じて targetDid を取得するロジックが必要。
-        }
 
         // ユーザーのソーシャルグラフから targetDid を取得
-        let socialConditions: any = { observerDid };
+        const socialConditions: Record<string, unknown> = { observerDid };
         if (relationshipParam === 'following') {
           socialConditions.type = 'follow';
         } else if (relationshipParam === 'followers') {

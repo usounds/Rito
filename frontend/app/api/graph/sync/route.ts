@@ -34,15 +34,16 @@ export async function POST(req: NextRequest) {
 
     try {
         if (type === 'follows' || type === 'both') {
-            await syncFollows(auth.did, auth.agent);
+            await syncFollows(auth.did);
         }
         if (type === 'followers' || type === 'both') {
-            await syncFollowers(auth.did, auth.agent);
+            await syncFollowers(auth.did);
         }
 
         return NextResponse.json({ success: true });
-    } catch (error: any) {
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Internal Server Error";
         console.error("Sync failed", error);
-        return new NextResponse(error.message || "Internal Server Error", { status: 500 });
+        return new NextResponse(message, { status: 500 });
     }
 }

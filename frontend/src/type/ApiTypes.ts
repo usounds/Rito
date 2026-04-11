@@ -13,6 +13,8 @@ export interface Bookmark {
   tags: string[];
   likes?: string[];
   category: string | null;
+  commentCount?: number;
+  created_at?: string | Date;
 }
 
 export interface Comment {

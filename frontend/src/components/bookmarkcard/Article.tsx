@@ -14,7 +14,7 @@ import {
 } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState, useMemo } from 'react';
 import Like from "@/components/Like";
 import classes from './Article.module.scss';
 import ArticleImage from "@/components/ArticleImage";
@@ -29,30 +29,34 @@ type ArticleCardProps = {
     comment: string;
     tags: string[];
     image?: string | null;
-    date: Date,
-    atUri?: string,
-    moderations: string[]
+    date: Date;
+    moderations: string[];
     likes?: string[];
-    key?: string
-    likeDisabled?: boolean
-    category?: string | null;
+    likeDisabled?: boolean;
     bookmarkCount?: number;
     priority?: boolean;
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes, likeDisabled = false, category, bookmarkCount, priority = false }: ArticleCardProps) {
+export function Article({ 
+    url, 
+    title, 
+    handle, 
+    comment, 
+    tags, 
+    image, 
+    date, 
+    moderations, 
+    likes, 
+    likeDisabled = false, 
+    bookmarkCount, 
+    priority = false 
+}: ArticleCardProps) {
     const messages = useMessages();
+    const locale = useLocale();
 
     const [isClicked, setIsClicked] = useState(false);
-    const locale = useLocale();
-    const [imgSrc, setImgSrc] = useState(image || '');
 
-    useEffect(() => {
-        setIsClicked(false)
-    }, [key]);
-
-
-    const localUrl = (() => {
+    const localUrl = useMemo(() => {
         if (url.startsWith('https://') || url.startsWith('http://')) return url;
         if (url.startsWith('at://')) {
             const result = parseCanonicalResourceUri(url);
@@ -66,37 +70,23 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                 }
             }
         }
-    })();
+        return url;
+    }, [url]);
 
-    const domain = (() => {
+    const domain = useMemo(() => {
         if (!localUrl) return url;
-        try { return new URL(localUrl).hostname; }
+        try { return new URL(localUrl).hostname || url; }
         catch { return url; }
-    })();
+    }, [localUrl, url]);
 
-    // 相対パスの場合のみ imgSrc を更新
-    useEffect(() => {
+    const imgSrc = useMemo(() => {
         if (image && !image.startsWith('https://') && !image.startsWith('http://') && domain) {
-            setImgSrc(`https://${domain}/${image}`);
+            return `https://${domain}/${image}`;
         }
+        return image || '';
     }, [image, domain]);
 
-    const categoryNames: Record<string, Record<string, string>> = {
-        general: { ja: "一般", en: "General" },
-        atprotocol: { ja: "atproto", en: "atproto" },
-        social: { ja: "社会・政治・経済", en: "Social/Politics/Economy" },
-        technology: { ja: "テクノロジー", en: "Technology" },
-        lifestyle: { ja: "暮らし・学び", en: "Lifestyle/Learning" },
-        food: { ja: "食事", en: "Food" },
-        travel: { ja: "旅行", en: "Travel" },
-        entertainment: { ja: "エンタメ・おもしろ", en: "Entertainment/Humor" },
-        anime_game: { ja: "アニメ・ゲーム", en: "Anime/Game" },
-        photo: { ja: "写真", en: "Photo" },
-    };
-
-    const categoryName = category && categoryNames[category]
-        ? categoryNames[category][locale] || categoryNames[category]["en"]
-        : category; // 文字列があればそのまま表示するフォールバックを追加
+    // categoryName は未使用のため削除。もし必要になったら locale を使って categoryNames から取得する。
 
     return (
         <Card withBorder radius="md" padding={0} className={classes.card}>

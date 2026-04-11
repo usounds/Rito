@@ -57,9 +57,8 @@ export const useXrpcAgentStore = create<State & Action>()(
       partialize: (state: State & Action) => ({
         activeDid: state.activeDid,
         handle: state.handle,
-        isLoginProcess: state.isLoginProcess,
         lastSyncedAt: state.lastSyncedAt,
       }),
     }
-  ) as any
+  )
 );

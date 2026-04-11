@@ -27,6 +27,16 @@ export async function getSession() {
     name: 'USER_DID',
   });
   if (!cookie) return null;
+
+  // Verify session on server
+  try {
+    const res = await fetch(`${RITO_URL}/api/me`, { credentials: 'include' });
+    if (!res.ok) return null;
+  } catch (e) {
+    console.error('Session check failed:', e);
+    return null;
+  }
+
   const decoded = decodeURIComponent(cookie.value);
   const index = decoded.lastIndexOf('.');
   if (index === -1) return decoded;
@@ -59,6 +69,36 @@ export async function getUserTags(did: string) {
   const data = await res.json();
   const tags = (data as any[]).flatMap(b => b.tags || []);
   return [...new Set(tags)].filter(t => t !== 'Verified');
+}
+
+/**
+ * Check if the domain is blocked.
+ */
+export async function checkDomain(domain: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${RITO_URL}/api/checkDomain?domain=${encodeURIComponent(domain)}`, { credentials: 'include' });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return !!data.result;
+  } catch (e) {
+    console.error('Domain check failed:', e);
+    return false;
+  }
+}
+
+/**
+ * Check if the bookmark already exists.
+ */
+export async function checkDuplicate(url: string, did: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${RITO_URL}/xrpc/blue.rito.feed.getBookmarkBySubject?subject=${encodeURIComponent(url)}&did=${encodeURIComponent(did)}`, { credentials: 'include' });
+    if (!res.ok) return false;
+    const data = await res.json();
+    return Array.isArray(data) && data.length > 0;
+  } catch (e) {
+    console.error('Duplicate check failed:', e);
+    return false;
+  }
 }
 
 /**

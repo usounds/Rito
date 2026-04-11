@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rito Extension</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="flex items-center p-2 gap-2">
+      <div class="icon-container w-5 h-5" data-icon="ArrowPathIcon"></div>
+      <span class="text-sm text-gray-500" id="loading-text"></span>
+    </div>
+
+    <!-- Login Prompt -->
+    <div id="login-prompt" class="login-prompt hidden">
+      <p id="login-prompt-text"></p>
+      <p>
+        <a href="https://rito.blue/" target="_blank" rel="noreferrer" class="login-link">
+          <span class="icon-container w-4 h-4" data-icon="ArrowRightEndOnRectangleIcon"></span>
+          <span id="login-link-text"></span>
+        </a>
+      </p>
+    </div>
+
+    <!-- Success Message -->
+    <div id="success-overlay" class="login-prompt hidden">
+      <p style="font-size: 14px;" id="success-text"></p>
+    </div>
+
+    <!-- Main Form -->
+    <div id="main-form" class="hidden">
+      <div class="field">
+        <label class="label" id="label-title"></label>
+        <input type="text" id="input-title" />
+      </div>
+
+      <div class="field">
+        <label class="label" id="label-comment"></label>
+        <textarea id="input-comment" rows="3"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="label" id="label-tags"></label>
+        <div style="position: relative;">
+          <span class="icon-container w-4 h-4 absolute left-2 top-2 text-gray-400" data-icon="TagIcon"></span>
+          <input type="text" id="input-tag" style="padding-left: 32px;" />
+        </div>
+
+        <div id="suggestions-box" class="suggestions-box hidden">
+          <button id="refresh-suggestions" class="refresh-btn" title="Refresh">
+            <span class="icon-container w-4 h-4" data-icon="ArrowPathIcon"></span>
+          </button>
+          <div id="suggestions-list" class="suggestions-list"></div>
+        </div>
+
+        <div id="tags-list" class="tags-list"></div>
+      </div>
+
+      <div class="options-section">
+        <label class="checkbox-label">
+          <input type="checkbox" id="check-post-bluesky" />
+          <div class="label-content">
+            <span class="label-title" id="label-post-bluesky"></span>
+            <span class="label-desc" id="label-post-bluesky-desc"></span>
+          </div>
+        </label>
+
+        <label id="label-original-link-container" class="checkbox-label">
+          <input type="checkbox" id="check-use-original-link" />
+          <div class="label-content">
+            <span class="label-title" id="label-use-original-link"></span>
+            <span class="label-desc" id="label-use-original-link-desc"></span>
+          </div>
+        </label>
+      </div>
+
+      <div id="error-display" class="error hidden"></div>
+
+      <div class="buttons">
+        <button id="submit-btn" class="primary">
+          <span id="submit-btn-icon" class="icon-container w-4 h-4 inline mr-2" data-icon="BookmarkIcon"></span>
+          <span id="submit-btn-text"></span>
+        </button>
+      </div>
+    </div>
+
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

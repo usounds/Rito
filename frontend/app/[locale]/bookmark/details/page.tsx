@@ -23,8 +23,6 @@ import type { Metadata } from "next";
 import { FaBluesky } from "react-icons/fa6";
 import { stripTrackingParams } from "@/logic/stripTrackingParams";
 
-const MICROCOSM_USER_AGENT = "Rito @rito.blue";
-
 interface PageProps {
     params: Promise<{ locale: string }>;
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;

@@ -469,7 +469,7 @@ export default function RegistBookmarkPage() {
                 let embedUri = ritoUrl as unknown as ResourceUri;
                 let embedTitle = ogpTitleLocal ? `${messages.title} - ${ogpTitleLocal}` : messages.title;
                 let embedDesc = ogpMessage || '';
-                let embedThumbBlob: any = undefined;
+                let embedThumbBlob: unknown = undefined;
 
                 // Handle Image Blob Upload (Common)
                 if (ogpImageLocal) {
@@ -810,7 +810,7 @@ export default function RegistBookmarkPage() {
                                         closeOnClickOutside={false}
                                         centered
                                     >
-                                        <Authentication />
+                                        <Authentication lang={locale} />
                                     </Modal>
                                 </>
                             )}

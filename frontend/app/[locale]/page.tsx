@@ -2,7 +2,7 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { enrichBookmarks, withTrailingSlashVariants } from '@/logic/HandleBookmark';
 import { stripTrackingParams } from '@/logic/stripTrackingParams';
 import { prisma } from '@/logic/HandlePrismaClient';
-import { Alert, Container, SimpleGrid, Text } from '@mantine/core';
+import { Alert, Container, SimpleGrid } from '@mantine/core';
 import { Heart, Clock, Info } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import DiscoverTabs from './bookmark/discover/DiscoverTabs';
@@ -11,6 +11,7 @@ import { Suspense } from 'react';
 import DiscoverSkeleton from './bookmark/discover/DiscoverSkeleton';
 import DiscoverFeed from './bookmark/discover/DiscoverFeed';
 import classes from './bookmark/discover/Discover.module.scss';
+import { Bookmark, Comment } from '@/type/ApiTypes';
 
 export const dynamic = 'force-dynamic';
 
@@ -147,7 +148,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     // 4. subject(URL/URI) → Bookmark.uri の対応表
     const subjectToUri = new Map<string, string>();
 
-    likedBookmarks.forEach((b: any) => {
+    likedBookmarks.forEach((b) => {
       // AT-URI
       subjectToUri.set(b.uri, b.uri);
 
@@ -205,7 +206,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-            {latestLikedBookmarks.map((b) => renderArticle(b, locale))}
+            {latestLikedBookmarks.map((b, index) => renderArticle(b, locale, index < 3))}
           </SimpleGrid>
         </div>
 
@@ -225,7 +226,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-            {bookmarksWithLikes.map((b) => renderArticle(b, locale))}
+            {bookmarksWithLikes.map((b, index) => renderArticle(b, locale, index < 3))}
           </SimpleGrid>
         </div>
       </>
@@ -304,14 +305,14 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
           root: {
             border: '1px solid var(--mantine-color-blue-2)',
           }
-        }}
+         }}
       />
 
     </Container>
   );
 }
 
-function renderArticle(b: any, locale: string) {
+function renderArticle(b: any, locale: string, priority: boolean = false) {
   // コメント優先フラグが true の場合は locale に対応したコメントを優先表示
   const comment =
     b.comments?.find((c: any) => c.lang === locale) ||
@@ -353,6 +354,7 @@ function renderArticle(b: any, locale: string) {
         likes={b.likes || []}
         category={b.category}
         bookmarkCount={bookmarkCount}
+        priority={priority}
       />
     </div>
   );

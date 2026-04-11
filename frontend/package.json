@@ -14,7 +14,7 @@
     "docker:push": "dotenv -e .env -- sh -c 'docker buildx build --platform linux/amd64 -t ghcr.io/usounds/rito-frontend:latest --build-arg DATABASE_URL=\"$DATABASE_URL\" --build-arg NEXT_PUBLIC_URL=\"https://rito.blue\" . --push' && git push",
     "update:blocklist": "curl -s https://raw.githubusercontent.com/StevenBlack/hosts/master/alternates/fakenews-gambling-porn-only/hosts | grep -v '^#' | awk '{print $2}' | grep -v '^$' | jq -R -s 'split(\"\\n\") | map(select(. != \"\"))' > src/data/blocklist.json",
     "update:publicsuffix": "curl -s https://publicsuffix.org/list/public_suffix_list.dat | grep -vE '(^//|^$)' | grep -v '^$' | jq -R -s 'split(\"\\n\") | map(select(. != \"\"))' > src/data/publicSuffixList.json",
-    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint": "eslint .",
     "test": "vitest",
     "test:coverage": "vitest run --coverage"
   },
@@ -25,6 +25,7 @@
     "@atcute/client": "^4.2.1",
     "@atcute/lexicons": "^1.2.9",
     "@atcute/tid": "^1.1.2",
+    "@atpassport/client": "^0.1.28",
     "@atproto/api": "^0.19.3",
     "@atproto/jwk-jose": "^0.1.11",
     "@atproto/oauth-client-node": "^0.3.17",
@@ -69,8 +70,10 @@
     "@vitejs/plugin-react": "^6.0.1",
     "@vitest/coverage-v8": "4.1.0",
     "dotenv-cli": "^11.0.0",
-    "eslint": "^10.0.3",
+    "eslint": "^9.39.4",
     "eslint-config-next": "16.1.6",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.8",
     "postcss-preset-mantine": "^1.18.0",
@@ -90,7 +93,6 @@
       "hono": ">=4.11.7",
       "@hono/node-server": ">=1.19.10",
       "minimatch": ">=10.2.1",
-      "ajv": ">=8.18.0",
       "@types/pg": "8.11.11"
     }
   }

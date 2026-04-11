@@ -6,9 +6,10 @@ interface ArticleImageProps {
   src?: string | null;
   url: string;
   alt?: string;
+  priority?: boolean;
 }
 
-const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Image" }) => {
+const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Image", priority = false }) => {
   const computedColorScheme = useComputedColorScheme("light");
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
@@ -102,6 +103,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
       fill
       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
       style={{ objectFit: "cover" }}
+      priority={priority}
       onError={() => {
         if (imgSrc === dummyUrl) return;
 

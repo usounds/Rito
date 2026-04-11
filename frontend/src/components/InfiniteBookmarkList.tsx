@@ -60,7 +60,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
     return (
         <Stack>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {items.map((b) => {
+                {items.map((b, index) => {
                     const comment =
                         b.comments?.find((c) => c.lang === locale) ||
                         b.comments?.[0] || { title: '', comment: '', moderations: [] };
@@ -94,6 +94,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
                                 moderations={moderationList}
                                 likes={b.likes || []}
                                 category={b.category}
+                                priority={index < 6}
                             />
                         </div>
                     );

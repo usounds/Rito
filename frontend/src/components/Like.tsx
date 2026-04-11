@@ -8,7 +8,7 @@ import * as TID from '@atcute/tid';
 import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip, Modal } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Heart, X } from 'lucide-react';
-import { useMessages } from 'next-intl';
+import { useMessages, useLocale } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { Authentication } from "@/components/Authentication";
 
@@ -20,6 +20,7 @@ interface LikeButtonProps {
 
 const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) => {
     const messages = useMessages();
+    const locale = useLocale();
     const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [isSubmit, setIsSubmit] = useState(false);
@@ -191,11 +192,10 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
                 opened={loginOpened}
                 onClose={() => setLoginOpened(false)}
                 size="md"
-                title={messages.login.titleDescription}
                 closeOnClickOutside={false}
                 centered
             >
-                <Authentication />
+                <Authentication lang={locale} />
             </Modal>
 
             <HoverCard>

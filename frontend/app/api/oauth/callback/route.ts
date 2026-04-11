@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     // サイレントサインインのリトライ
     const handle = req.cookies.get("HANDLE")?.value;
 
-    if (!handle) return NextResponse.redirect("/");
+    if (!handle) return NextResponse.redirect(new URL("/", req.url));
 
     const url = await client.authorize(handle);
     return NextResponse.redirect(url);
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     // もし redirectTo が必要ならクッキーから取得してリダイレクト
     const redirectTo = req.cookies.get("REDIRECT_TO")?.value || "/";
 
-    const response = NextResponse.redirect(redirectTo);
+    const response = NextResponse.redirect(new URL(redirectTo, req.url));
 
     response.cookies.set("USER_DID", signDid(session.did), {
       httpOnly: true,
@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
 
     const redirectTo = req.cookies.get("REDIRECT_TO")?.value || "/";
 
-    const response = NextResponse.redirect(redirectTo);
+    const response = NextResponse.redirect(new URL(redirectTo, req.url));
     return response
   }
 }

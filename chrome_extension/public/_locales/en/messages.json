@@ -1,0 +1,75 @@
+{
+  "extensionName": {
+    "message": "Rito"
+  },
+  "extensionDescription": {
+    "message": "A browser extension for Rito, a social bookmarking service built on atproto. Easily bookmark any website."
+  },
+  "fieldUrl": {
+    "message": "URL"
+  },
+  "fieldTitle": {
+    "message": "Title"
+  },
+  "placeholderTitle": {
+    "message": "Enter title"
+  },
+  "fieldTags": {
+    "message": "Tags (Enter to add)"
+  },
+  "placeholderTags": {
+    "message": "Add tags..."
+  },
+  "buttonSave": {
+    "message": "Save"
+  },
+  "buttonSaving": {
+    "message": "Saving..."
+  },
+  "msgSaved": {
+    "message": "Saved!"
+  },
+  "msgAdded": {
+    "message": "Bookmark added successfully."
+  },
+  "loginPrompt": {
+    "message": "Not logged in to rito.blue."
+  },
+  "loginLink": {
+    "message": "Login to Start"
+  },
+  "errorSave": {
+    "message": "Failed to save"
+  },
+  "loading": {
+    "message": "Loading"
+  },
+  "fieldPostToBluesky": {
+    "message": "Post to Bluesky"
+  },
+  "fieldPostToBlueskyDesc": {
+    "message": "Post to Bluesky when registering a bookmark"
+  },
+  "fieldUseOriginalLink": {
+    "message": "Use original link"
+  },
+  "fieldUseOriginalLinkDesc": {
+    "message": "Set the link destination of the OGP card to the original website"
+  },
+  "msgReferInRito": {
+    "message": "Refer in Rito"
+  },
+  "msgOriginalSource": {
+    "message": "Source"
+  },
+  "msgBookmark": {
+    "message": "Bookmarked on Rito"
+  },
+  "fieldComment": {
+    "message": "Comment"
+  },
+  "placeholderComment": {
+    "message": "Add a comment..."
+  }
+}
+

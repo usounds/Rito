@@ -1,6 +1,6 @@
 "use client";
 import { Breadcrumbs as MantineBreadcrumbs, Anchor, Stack } from "@mantine/core";
-import { useTranslations, useLocale } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 
 interface Crumb {
@@ -15,7 +15,6 @@ interface BreadcrumbsProps {
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   const t = useTranslations(); // messages.breadcrumbs.home などに対応
 
-  const locale = useLocale();
   const crumbs = [
     { label: t("header.home"), href: "/" }, // 先頭固定
     ...items,

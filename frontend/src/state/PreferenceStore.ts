@@ -26,6 +26,6 @@ export const usePreferenceStore = create<PreferenceState & PreferenceAction>()(
     {
       name: 'preference-store',
     }
-  ) as any
+  )
 );
 

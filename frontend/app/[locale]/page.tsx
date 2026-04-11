@@ -37,12 +37,12 @@ export async function generateMetadata({
     };
   }
 
-  const categoryName = t(`category.${currentCategory}` as any);
+  const categoryName = t(`category.${currentCategory}` as unknown as Parameters<typeof t>[0]);
   const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
 
   return {
     title: `${categoryName} | ${t('title')}`,
-    description: t('discover.ogpDescription', { 0: categoryName }),
+    description: t('discover.ogpDescription', { 0: categoryName as string }),
     openGraph: {
       title: `${categoryName} | ${t('title')}`,
       description: t('discover.ogpDescription', { 0: categoryName }),
@@ -80,7 +80,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
       where: {
         OR: latestPerDid.map((r: { did: string; _max: { created_at: Date | null } }) => ({
           did: r.did,
-          created_at: r._max.created_at!,
+          created_at: r._max.created_at as Date,
         })),
         // generalカテゴリーの場合は、categoryがnullのもの（未分類）も表示する
         // ...(currentCategory === 'general' ? {
@@ -173,7 +173,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         const uri = subjectToUri.get(v);
         if (!uri || seenUris.has(uri)) continue;
 
-        const bookmark = likedBookmarks.find((b: any) => b.uri === uri);
+        const bookmark = likedBookmarks.find((b) => b.uri === uri);
         if (!bookmark) continue;
 
         orderedBookmarks.push(bookmark);
@@ -255,7 +255,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
 
     // Deduplicate by URL (subject)
     // Deduplicate by URL (subject) and merge tags
-    const uniqueBookmarksMap = new Map<string, any>();
+    const uniqueBookmarksMap = new Map<string, (typeof enrichedBookmarks)[0]>();
 
     for (const b of enrichedBookmarks) {
       const normalizedSubject = stripTrackingParams(
@@ -264,10 +264,10 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
 
       if (uniqueBookmarksMap.has(normalizedSubject)) {
         // Merge tags
-        const existing = uniqueBookmarksMap.get(normalizedSubject);
+        const existing = uniqueBookmarksMap.get(normalizedSubject)!;
         const existingTags = new Set(existing.tags);
         b.tags.forEach((t: string) => existingTags.add(t));
-        existing.tags = Array.from(existingTags).sort((a, _b) => (a === 'Verified' ? -1 : 0));
+        existing.tags = Array.from(existingTags).sort((a) => (a === 'Verified' ? -1 : 0));
       } else {
         uniqueBookmarksMap.set(normalizedSubject, b);
       }
@@ -312,10 +312,10 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
   );
 }
 
-function renderArticle(b: any, locale: string, priority: boolean = false) {
+function renderArticle(b: Bookmark, locale: string, priority: boolean = false) {
   // コメント優先フラグが true の場合は locale に対応したコメントを優先表示
   const comment =
-    b.comments?.find((c: any) => c.lang === locale) ||
+    b.comments?.find((c: Comment) => c.lang === locale) ||
     b.comments?.[0] || { title: '', comment: '', moderations: [] };
 
   const displayTitle = comment.title || '';
@@ -350,9 +350,7 @@ function renderArticle(b: any, locale: string, priority: boolean = false) {
         image={b.ogpImage}
         date={displayDate}
         moderations={moderationList}
-        key={new Date().getTime().toString()}
         likes={b.likes || []}
-        category={b.category}
         bookmarkCount={bookmarkCount}
         priority={priority}
       />

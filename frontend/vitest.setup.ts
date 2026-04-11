@@ -57,6 +57,7 @@ global.ResizeObserver = class {
 global.IntersectionObserver = class {
     root = null;
     rootMargin = '';
+    scrollMargin = '';
     thresholds = [];
     observe = vi.fn();
     unobserve = vi.fn();

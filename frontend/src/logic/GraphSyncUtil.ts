@@ -1,14 +1,11 @@
 import { prisma } from '@/logic/HandlePrismaClient';
 import { Agent } from "@atproto/api";
 
-type SocialGraphType = 'follow';
-
 /**
  * Syncs the 'follows' list from Bluesky to the database.
  * @param userDid The DID of the user who is following others.
- * @param agent An authenticated Atproto Agent.
  */
-export async function syncFollows(userDid: string, agent: Agent) {
+export async function syncFollows(userDid: string) {
     let cursor: string | undefined;
     const allFollows: string[] = [];
 
@@ -55,9 +52,8 @@ export async function syncFollows(userDid: string, agent: Agent) {
 /**
  * Syncs the 'followers' list from Bluesky to the database.
  * @param userDid The DID of the user who is being followed.
- * @param agent An authenticated Atproto Agent.
  */
-export async function syncFollowers(userDid: string, agent: Agent) {
+export async function syncFollowers(userDid: string) {
     let cursor: string | undefined;
     const allFollowers: string[] = [];
 

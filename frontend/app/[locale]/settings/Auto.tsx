@@ -4,7 +4,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Alert, Avatar, Button, Group, Modal, Paper, Stack, Switch, Text, Title, SegmentedControl } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { usePreferenceStore } from '@/state/Preference';
 import { Save } from 'lucide-react';
 
@@ -24,24 +24,21 @@ export function Auto() {
     const [localUnblurCategories, setLocalUnblurCategories] = useState<string[]>([]);
     const [isSaving, setIsSaving] = useState(false);
 
-    let duplicateCheck = false;
-    useEffect(() => {
-        if (!userProf) {
+    const duplicateCheck = useRef(false);
 
-            return;
-        }
-        if (duplicateCheck) return;
+    const fetchStatus = useCallback(async () => {
+        if (!userProf || duplicateCheck.current) return;
+        duplicateCheck.current = true;
 
-        const fetchStatus = async () => {
+        notifications.show({
+            id: 'process',
+            title: messages.settings.title,
+            message: messages.settings.inform.loading,
+            loading: true,
+            autoClose: false
+        });
 
-            duplicateCheck = true;
-            notifications.show({
-                id: 'process',
-                title: messages.settings.title,
-                message: messages.settings.inform.loading,
-                loading: true,
-                autoClose: false
-            });
+        try {
             const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
 
             const response2 = await fetch('/api/oauth/getServideAuth?lxm=blue.rito.preference.getPreference', {
@@ -76,21 +73,27 @@ export function Auto() {
                 }
             } else {
                 setIsError(true);
-
             }
-
+        } catch (err) {
+            console.error("Error fetching status:", err);
+            setIsError(true);
+        } finally {
             notifications.clean();
             setIsLoading(false);
-        };
+        }
+    }, [userProf, messages, setUnblurModerationCategories]);
 
-        fetchStatus();
-    }, [userProf]);
+    useEffect(() => {
+        if (userProf) {
+            fetchStatus();
+        }
+    }, [userProf, fetchStatus]);
 
     useEffect(() => {
         if (isHydrated && unblurModerationCategories.length > 0 && localUnblurCategories.length === 0) {
             setLocalUnblurCategories(unblurModerationCategories);
         }
-    }, [isHydrated, unblurModerationCategories]);
+    }, [isHydrated, unblurModerationCategories, localUnblurCategories.length]);
 
 
     async function changeenableAutoGenerateBookmark() {

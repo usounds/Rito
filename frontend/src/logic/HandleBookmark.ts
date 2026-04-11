@@ -41,7 +41,6 @@ export function normalizeBookmarks(raw: RawBookmark[]): Bookmark[] {
     tags: Array.isArray(b.tags)
       ? b.tags
         .map(t => t.tag.name)
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         .sort((a, _b) => (a === 'Verified' ? -1 : 0))
       : [],
     category: b.category ?? null,

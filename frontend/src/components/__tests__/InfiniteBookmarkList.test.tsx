@@ -35,7 +35,7 @@ vi.mock('@app/[locale]/bookmark/search/latestbookmark/actions', () => ({
 }));
 
 vi.mock('next-intl', () => ({
-    useTranslations: () => (key: string) => key === 'nomore' ? 'nomore' : key,
+    useTranslations: () => (key: string) => key === 'noMore' ? 'noMore' : key,
 }));
 
 describe('InfiniteBookmarkList', () => {
@@ -106,9 +106,9 @@ describe('InfiniteBookmarkList', () => {
         expect(screen.getAllByTestId('article-card')).toHaveLength(2);
     });
 
-    it('nomoreメッセージを表示する', () => {
+    it('noMoreメッセージを表示する', () => {
         render(<InfiniteBookmarkList {...defaultProps} initialHasMore={false} />);
-        expect(screen.getByText('nomore')).toBeInTheDocument();
+        expect(screen.getByText('noMore')).toBeInTheDocument();
     });
 
     it('交差時に loadMore を呼び出す', async () => {

@@ -2,12 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { Stack, Text, Spoiler, Timeline, TimelineItem, Loader, Center } from "@mantine/core";
+import { AppBskyFeedDefs } from '@atcute/bluesky';
 import { useXrpcAgentStore } from '@/state/XrpcAgent';
 import { BlurReveal } from "@/components/BlurReveal";
 import { ModerationBadges } from "@/components/ModerationBadges";
 import TimeAgo from "@/components/TimeAgo";
 import { useTranslations } from 'next-intl';
 import { useIntersection } from '@mantine/hooks';
+import { isResourceUri } from '@atcute/lexicons/syntax';
 
 const CONSTELLATION_BASE_URL = "https://constellation.microcosm.blue";
 const MICROCOSM_USER_AGENT = "Rito @rito.blue";
@@ -38,19 +40,6 @@ interface PostData {
     moderations: string[];
     indexedAt: Date;
     handle: string | null;
-}
-
-interface PostView {
-    uri: string;
-    record: {
-        text?: string;
-        facets?: Facet[];
-    };
-    author?: {
-        handle?: string;
-        did?: string;
-    };
-    indexedAt?: string;
 }
 
 /** facetを解析してReact要素の配列に変換 */
@@ -160,25 +149,28 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
         if (records.length === 0 || !publicAgent) return [];
 
         try {
-            const uris = records.map(r => `at://${r.did}/${r.collection}/${r.rkey}`);
+            const uris = records.map(r => `at://${r.did}/${r.collection}/${r.rkey}`).filter(isResourceUri);
             const res = await publicAgent.get('app.bsky.feed.getPosts', {
                 params: {
                     uris,
                 },
-            }) as any;
+            });
 
             if (!res.ok) return [];
 
-            const postViews = (res.data.posts || []) as PostView[];
+            const postViews = (res.data.posts || []) as AppBskyFeedDefs.PostView[];
 
-            return postViews.map((view) => ({
-                uri: view.uri,
-                text: view.record?.text || "",
-                facets: view.record?.facets || [],
-                moderations: [], // 必要に応じて拡張可能
-                indexedAt: new Date(view.indexedAt || Date.now()),
-                handle: view.author?.handle || view.author?.did || "unknown",
-            }));
+            return postViews.map((view) => {
+                const record = view.record as { text?: string; facets?: Facet[] };
+                return {
+                    uri: view.uri,
+                    text: record.text || "",
+                    facets: record.facets || [],
+                    moderations: [], // 必要に応じて拡張可能
+                    indexedAt: new Date(view.indexedAt || Date.now()),
+                    handle: view.author?.handle || view.author?.did || "unknown",
+                };
+            });
         } catch (e) {
             console.error(`Failed to fetch posts batch:`, e);
             return [];

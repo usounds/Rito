@@ -1,10 +1,10 @@
 'use client';
-import { Button, Group, TagsInput, SimpleGrid, Box } from '@mantine/core';
+import { Button, Group, TagsInput, Box, Stack } from '@mantine/core';
 import { Search } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { usePathname } from "next/navigation";
 import { ClipboardPaste } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
@@ -24,7 +24,16 @@ export function SearchForm({
     tagCounts: initialTagCounts,
     did,
 }: SearchFormProps) {
-    const [tags, setTags] = useState<string[]>(defaultTags);
+    // App Router 用: クエリパラメータを取得
+    const searchParams = useSearchParams();
+    
+    // searchParams から初期タグを計算
+    const initialTagsFromParams = useMemo(() => {
+        const tagParam = searchParams?.get('tag');
+        return tagParam ? tagParam.split(',') : defaultTags;
+    }, [searchParams, defaultTags]);
+
+    const [tags, setTags] = useState<string[]>(initialTagsFromParams);
     const [myTag, setMyTag] = useState<string[]>(userTags);
     const [dynamicTagCounts, setDynamicTagCounts] = useState<Record<string, number>>(initialTagCounts ?? {});
     const [isLoading, setIsLoading] = useState(false);
@@ -33,9 +42,6 @@ export function SearchForm({
     const router = useRouter();
     const loader = useTopLoader();
     const pathname = usePathname();
-
-    // App Router 用: クエリパラメータを取得
-    const searchParams = useSearchParams();
 
     // 選択タグに基づいて関連タグを取得（ユーザー固有）
     const fetchRelatedTags = useCallback(async (selectedTags: string[]) => {
@@ -60,18 +66,12 @@ export function SearchForm({
         }
     }, [did]);
 
+    // searchParams が変わった時に tags を同期
     useEffect(() => {
-        if (!searchParams) return;
+        setTags(initialTagsFromParams);
+    }, [initialTagsFromParams]);
 
-        const tagParam = searchParams.get('tag');
-        const initialTags = tagParam ? tagParam.split(',') : [];
-        setTags(initialTags);
-
-        // 初期ロード時に関連タグを取得
-        fetchRelatedTags(initialTags);
-    }, [searchParams, fetchRelatedTags]);
-
-    // タグ変更時に関連タグを再取得
+    // 初期ロードおよびタグ変更時に関連タグを再取得
     useEffect(() => {
         fetchRelatedTags(tags);
     }, [tags, fetchRelatedTags]);
@@ -89,7 +89,7 @@ export function SearchForm({
     };
 
     const handleCopy = async () => {
-        const url = `${window.location.origin}${pathname}?${searchParams.toString()}`;
+        const url = `${window.location.origin}${pathname}?${searchParams?.toString() || ''}`;
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);
@@ -100,54 +100,57 @@ export function SearchForm({
     };
 
     return (
-        <form onSubmit={handleSubmit}>
-            <Group grow mb="xs" align="top" gap={16}>
-                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                    {/* 左側: User */}
-                    <User did={did} />
+        <Box mb="xl">
+            <User did={did} />
+            
+            <form onSubmit={handleSubmit}>
+                <Stack gap="md">
+                    <TagsInput
+                        label={messages.search.tag}
+                        placeholder={messages.search.tagPlaceholder}
+                        data={myTag}
+                        value={tags}
+                        onChange={setTags}
+                        clearable
+                        maxTags={10}
+                        leftSection={<Search size={16} />}
+                        styles={{
+                            input: {
+                                borderRadius: '12px',
+                            }
+                        }}
+                    />
 
-                    {/* 右側: タグ入力とサジェッション */}
-                    <SimpleGrid spacing="md">
-                        <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                            <TagsInput
-                                label={messages.search.field.tag.title}
-                                placeholder={messages.search.field.tag.placeholder}
-                                value={tags}
-                                onChange={(newTags) => {
-                                    const filtered = newTags.map(tag => tag.replace(/#/g, ""));
-                                    setTags(filtered);
-                                }}
-                                styles={{ input: { fontSize: 16 } }}
-                                clearable
-                            />
+                    {tags.length > 0 && (
+                        <TagSuggestion 
+                            tags={myTag}
+                            selectedTags={tags} 
+                            setTags={setTags} 
+                            tagCounts={dynamicTagCounts}
+                        />
+                    )}
 
-                            <TagSuggestion
-                                tags={myTag}
-                                selectedTags={tags}
-                                setTags={setTags}
-                                tagCounts={dynamicTagCounts}
-                            />
-                        </Box>
-                    </SimpleGrid>
-                </SimpleGrid>
-            </Group>
-
-            <Group justify="center" mb="xs">
-                <Button
-                    type="submit"
-                    loading={isLoading}
-                    leftSection={<Search size={14} />}
-                >
-                    {messages.search.button.search}
-                </Button>
-                <Button
-                    color={copied ? "teal" : "gray"}
-                    onClick={handleCopy}
-                    leftSection={<ClipboardPaste size={14} />}
-                >
-                    {copied ? messages.search.button.urlcopyed : messages.search.button.urlcopy}
-                </Button>
-            </Group>
-        </form>
+                    <Group justify="flex-end">
+                        <Button
+                            variant="subtle"
+                            color="gray"
+                            leftSection={<ClipboardPaste size={16} />}
+                            onClick={handleCopy}
+                            disabled={copied}
+                        >
+                            {copied ? messages.search.copied : messages.search.copyUrl}
+                        </Button>
+                        <Button
+                            type="submit"
+                            loading={isLoading}
+                            leftSection={<Search size={16} />}
+                            radius="xl"
+                        >
+                            {messages.search.button}
+                        </Button>
+                    </Group>
+                </Stack>
+            </form>
+        </Box>
     );
 }

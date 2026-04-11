@@ -126,7 +126,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
         // b.commentCount comes from enrichBookmarks
         const bookmarkCount = b.commentCount || 0;
         // Fix date string serialization issue if passed from server
-        const displayDate = new Date(b.createdAt || b.created_at);
+        const displayDate = new Date(b.createdAt || b.created_at || Date.now());
 
         return (
             <div key={b.uri} className={classes.articleItem}>
@@ -140,7 +140,6 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
                     date={displayDate}
                     moderations={moderationList}
                     likes={b.likes || []}
-                    category={b.category}
                     bookmarkCount={bookmarkCount}
                     priority={priority}
                 />

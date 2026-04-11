@@ -40,7 +40,10 @@ export async function GET(req: NextRequest) {
     await prisma.nodeOAuthSession.update({
       where: { key: session.sub },
       data: { updatedAt: new Date() },
-    }).catch((e: any) => console.error('Failed to update session updatedAt', e));
+    }).catch((e: unknown) => {
+      const message = e instanceof Error ? e.message : "unknown error";
+      console.error('Failed to update session updatedAt', message);
+    });
     // もし redirectTo が必要ならクッキーから取得してリダイレクト
     const redirectTo = req.cookies.get("REDIRECT_TO")?.value || "/";
 

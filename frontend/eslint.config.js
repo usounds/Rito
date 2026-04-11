@@ -41,6 +41,15 @@ export default [
       ...tsPlugin.configs.recommended.rules,
       ...reactHooksPlugin.configs.recommended.rules,
       '@typescript-eslint/no-require-imports': 'error',
+      'react-hooks/set-state-in-effect': 'warn',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
     },
   },
 ];

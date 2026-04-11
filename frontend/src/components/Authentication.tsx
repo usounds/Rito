@@ -15,7 +15,7 @@ import {
 import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { X, Bookmark } from 'lucide-react';
-import { useLocale, useMessages } from 'next-intl';
+import { useMessages } from 'next-intl';
 import { useState, useEffect } from "react";
 import Link from 'next/link';
 import { FaBluesky } from "react-icons/fa6";
@@ -45,6 +45,16 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
   const setHandle = useXrpcAgentStore(state => state.setHandle);
   const messages = useMessages();
   const loader = useTopLoader();
+
+  // ブラウザバック対策: マウント時に通知をクリアし、ロード状態をリセット
+  useEffect(() => {
+    notifications.clean();
+    if (loader) {
+      loader.done();
+    }
+    setIsLoading(false);
+    setIsLoginProcess(false);
+  }, [setIsLoginProcess, loader]);
 
   const form = useForm({
     initialValues: {

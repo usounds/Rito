@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { SimpleGrid, Stack, Center, Loader, Text } from '@mantine/core';
 import { useIntersection } from '@mantine/hooks';
 import { Article } from '@/components/bookmarkcard/Article';
@@ -25,26 +25,21 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
     const [page, setPage] = useState(query.page ?? 1);
     const [loading, setLoading] = useState(false);
 
-    const lastItemRef = useRef<HTMLDivElement>(null);
+    // props が変わった時に state をリセット (レンダリング中の調整)
+    const [prevInitialItems, setPrevInitialItems] = useState(initialItems);
+    if (initialItems !== prevInitialItems) {
+        setItems(initialItems);
+        setHasMore(initialHasMore);
+        setPage(query.page ?? 1);
+        setPrevInitialItems(initialItems);
+    }
+
     const { ref, entry } = useIntersection({
         root: null,
         threshold: 0.1,
     });
 
-    // query が変わったらリセット
-    useEffect(() => {
-        setItems(initialItems);
-        setHasMore(initialHasMore);
-        setPage(query.page ?? 1);
-    }, [initialItems, initialHasMore, query]);
-
-    useEffect(() => {
-        if (entry?.isIntersecting && hasMore && !loading) {
-            loadMore();
-        }
-    }, [entry?.isIntersecting]);
-
-    const loadMore = async () => {
+    const loadMore = useCallback(async () => {
         setLoading(true);
         const nextPage = page + 1;
         const result = await fetchBookmarksAction({ ...query, page: nextPage });
@@ -53,7 +48,14 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
         setHasMore(result.hasMore);
         setPage(nextPage);
         setLoading(false);
-    };
+    }, [page, query]);
+
+    useEffect(() => {
+        if (entry?.isIntersecting && hasMore && !loading) {
+            const timer = setTimeout(() => loadMore(), 0);
+            return () => clearTimeout(timer);
+        }
+    }, [entry?.isIntersecting, hasMore, loading, loadMore]);
 
     const useComment = query.comment == null || query.comment === 'comment';
 
@@ -82,7 +84,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
                     const displayDate = new Date(b[dateField]);
 
                     return (
-                        <div key={b.uri} className={classes.articleItem}>
+                        <div key={b.uri} ref={index === items.length - 1 ? ref : null} className={classes.articleItem}>
                             <Article
                                 url={b.subject}
                                 title={displayTitle}
@@ -93,7 +95,7 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
                                 date={displayDate}
                                 moderations={moderationList}
                                 likes={b.likes || []}
-                                category={b.category}
+                                bookmarkCount={b.commentCount}
                                 priority={index < 6}
                             />
                         </div>
@@ -102,14 +104,14 @@ export function InfiniteBookmarkList({ initialItems, initialHasMore, query, loca
             </SimpleGrid>
 
             {hasMore && (
-                <Center ref={ref} py="xl">
-                    {loading ? <Loader /> : <div style={{ height: 20 }} />}
+                <Center py="xl" ref={ref}>
+                    <Loader size="sm" />
                 </Center>
             )}
 
             {!hasMore && items.length > 0 && (
                 <Center py="xl">
-                    <Text c="dimmed">{t('nomore')}</Text>
+                    <Text size="sm" c="dimmed">{t('noMore')}</Text>
                 </Center>
             )}
         </Stack>

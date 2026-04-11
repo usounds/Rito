@@ -50,14 +50,13 @@ export async function GET(req: NextRequest) {
     // エラー時も可能な限り returnTo を特定してリダイレクトを試みる
     let fallbackUrl = "/";
     try {
-      const url = new URL(req.url);
       const atp = getAtPassport();
       // 解析だけ試みる（検証は失敗しているはずなので第二引数は undefined 等でよい）
       const { customParams } = atp.parseCallback(req.url);
       if (customParams.returnTo) {
         fallbackUrl = customParams.returnTo;
       }
-    } catch (e) {
+    } catch {
       // パースすら失敗した場合はデフォルトの / へ
     }
 

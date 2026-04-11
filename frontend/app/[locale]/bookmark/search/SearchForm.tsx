@@ -7,7 +7,6 @@ import { useTopLoader } from 'nextjs-toploader';
 import { useEffect, useState, useCallback } from 'react';
 import { usePathname } from "next/navigation";
 import { ClipboardPaste } from 'lucide-react';
-import { useMyBookmark } from "@/state/MyBookmark";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { TagRanking } from '@/type/ApiTypes';

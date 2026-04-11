@@ -2,7 +2,6 @@
 
 import { prisma } from '@/logic/HandlePrismaClient';
 import { enrichBookmarks } from '@/logic/HandleBookmark';
-import { getLocale } from 'next-intl/server';
 
 export async function fetchCategoryBookmarks(category: string, page: number) {
     const TAKE = 50;

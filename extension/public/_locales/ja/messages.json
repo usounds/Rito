@@ -70,5 +70,14 @@
   },
   "placeholderComment": {
     "message": "コメントを入力..."
+  },
+  "errorBlockUrl": {
+    "message": "このドメインはブックマークできません"
+  },
+  "errorDuplicate": {
+    "message": "同じURLが登録済みです"
+  },
+  "msgCheckingSession": {
+    "message": "セッションを確認中です..."
   }
 }

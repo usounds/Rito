@@ -70,6 +70,15 @@
   },
   "placeholderComment": {
     "message": "Add a comment..."
+  },
+  "errorBlockUrl": {
+    "message": "This domain cannot be bookmarked"
+  },
+  "errorDuplicate": {
+    "message": "The same URL is already registered"
+  },
+  "msgCheckingSession": {
+    "message": "Checking session..."
   }
 }
 

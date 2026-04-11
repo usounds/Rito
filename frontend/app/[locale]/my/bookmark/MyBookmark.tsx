@@ -98,7 +98,7 @@ export function MyBookmark() {
             }
 
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filteredBookmarks.map((b) => {
+                {filteredBookmarks.map((b, index) => {
                     // 現在の locale に一致するコメントを優先
                     const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
 
@@ -116,6 +116,7 @@ export function MyBookmark() {
                                 likes={b.likes || []}
                                 likeDisabled={true}
                                 category={b.category}
+                                priority={index < 6}
                             />
                         </div>
                     );

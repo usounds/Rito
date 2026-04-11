@@ -37,8 +37,9 @@ export async function POST(req: NextRequest) {
   }
 
   // OAuth authorize URL を生成
-  let url: URL;
   const client = await getOAuthClient();
+
+  let url: URL;
   try {
     // prompt が指定されている場合はそれを優先、なければ none を試行
     url = await client.authorize(handle, { prompt: prompt || "none" });

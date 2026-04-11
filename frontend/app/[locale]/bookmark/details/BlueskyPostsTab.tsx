@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Stack, Text, Spoiler, Timeline, TimelineItem, Loader, Center } from "@mantine/core";
 import { useXrpcAgentStore } from '@/state/XrpcAgent';
 import { BlurReveal } from "@/components/BlurReveal";
@@ -38,6 +38,19 @@ interface PostData {
     moderations: string[];
     indexedAt: Date;
     handle: string | null;
+}
+
+interface PostView {
+    uri: string;
+    record: {
+        text?: string;
+        facets?: Facet[];
+    };
+    author?: {
+        handle?: string;
+        did?: string;
+    };
+    indexedAt?: string;
 }
 
 /** facetを解析してReact要素の配列に変換 */
@@ -150,18 +163,18 @@ export function BlueskyPostsTab({ subjectUrl, locale }: BlueskyPostsTabProps) {
             const uris = records.map(r => `at://${r.did}/${r.collection}/${r.rkey}`);
             const res = await publicAgent.get('app.bsky.feed.getPosts', {
                 params: {
-                    uris: uris as any,
+                    uris,
                 },
-            });
+            }) as any;
 
             if (!res.ok) return [];
 
-            const postViews = res.data.posts || [];
+            const postViews = (res.data.posts || []) as PostView[];
 
-            return postViews.map((view: any) => ({
+            return postViews.map((view) => ({
                 uri: view.uri,
-                text: (view.record as any)?.text || "",
-                facets: (view.record as any)?.facets || [],
+                text: view.record?.text || "",
+                facets: view.record?.facets || [],
                 moderations: [], // 必要に応じて拡張可能
                 indexedAt: new Date(view.indexedAt || Date.now()),
                 handle: view.author?.handle || view.author?.did || "unknown",

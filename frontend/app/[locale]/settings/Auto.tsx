@@ -302,11 +302,10 @@ export function Auto() {
                         opened={loginOpened}
                         onClose={() => setLoginOpened(false)}
                         size="md"
-                        title={messages.login.titleDescription}
                         closeOnClickOutside={false}
                         centered
                     >
-                        <Authentication />
+                        <Authentication lang={locale} />
                     </Modal>
                 </>
                 :

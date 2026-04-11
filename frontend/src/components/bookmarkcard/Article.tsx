@@ -37,9 +37,10 @@ type ArticleCardProps = {
     likeDisabled?: boolean
     category?: string | null;
     bookmarkCount?: number;
+    priority?: boolean;
 };
 
-export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes, likeDisabled = false, category, bookmarkCount }: ArticleCardProps) {
+export function Article({ url, title, handle, comment, tags, image, date, atUri, moderations, key, likes, likeDisabled = false, category, bookmarkCount, priority = false }: ArticleCardProps) {
     const messages = useMessages();
 
     const [isClicked, setIsClicked] = useState(false);
@@ -105,7 +106,7 @@ export function Article({ url, title, handle, comment, tags, image, date, atUri,
                         <div className={classes.imageWrapper}>
                             <Link href={localUrl || ''} target="_blank">
                                 <div style={{ position: 'relative', width: '100%', aspectRatio: '16/9' }}>
-                                    <ArticleImage url={url} src={imgSrc} />
+                                    <ArticleImage url={url} src={imgSrc} priority={priority} />
                                 </div>
                             </Link>
                         </div>

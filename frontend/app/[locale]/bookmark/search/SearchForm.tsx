@@ -1,5 +1,5 @@
 'use client';
-import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box, Select, ActionIcon, Tooltip } from '@mantine/core';
+import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box, Select } from '@mantine/core';
 import { Search, RotateCw } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -31,7 +31,6 @@ export function SearchForm({
   const [dynamicTagCounts, setDynamicTagCounts] = useState<Record<string, number>>({});
   const [handles, setHandles] = useState<string[]>(defaultHandles);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const tagRanking = useMyBookmark(state => state.tagRanking);
   const publicAgent = useXrpcAgentStore(state => state.publicAgent);
   const activeDid = useXrpcAgentStore(state => state.activeDid);
   const lastSyncedAt = useXrpcAgentStore(state => state.lastSyncedAt);
@@ -187,7 +186,7 @@ export function SearchForm({
       } else {
         throw new Error('Failed');
       }
-    } catch (e) {
+    } catch {
       notifications.show({
         title: messages.search.field.sync.error,
         message: '',

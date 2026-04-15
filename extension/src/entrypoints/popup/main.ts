@@ -80,15 +80,25 @@ function renderIcons() {
 }
 
 function updateUI() {
+  const isStartupError = !!state.error && !state.url;
+
   // Overlays
   elements.loadingOverlay.classList.toggle('hidden', !state.loading);
-  elements.loginPrompt.classList.toggle('hidden', state.loading || !!state.did || state.success);
+  elements.loginPrompt.classList.toggle('hidden', state.loading || !!state.did || state.success || isStartupError);
   elements.successOverlay.classList.toggle('hidden', !state.success);
-  elements.mainForm.classList.toggle('hidden', state.loading || !state.did || state.success);
+  elements.mainForm.classList.toggle('hidden', state.loading || !state.did || state.success || isStartupError);
 
   if (state.loading) {
     elements.loadingText.textContent = t('msgCheckingSession');
     return;
+  }
+
+  // Error
+  if (state.error) {
+    elements.errorDisplay.textContent = state.error;
+    elements.errorDisplay.classList.remove('hidden');
+  } else {
+    elements.errorDisplay.classList.add('hidden');
   }
 
   if (!state.did) {
@@ -123,13 +133,6 @@ function updateUI() {
   elements.labelOriginalLinkContainer.style.opacity = state.isPostToBluesky ? '1' : '0.5';
   elements.checkUseOriginalLink.disabled = !state.isPostToBluesky;
 
-  // Error
-  if (state.error) {
-    elements.errorDisplay.textContent = state.error;
-    elements.errorDisplay.classList.remove('hidden');
-  } else {
-    elements.errorDisplay.classList.add('hidden');
-  }
 
   // Submit Button
   elements.submitBtn.disabled = state.submitting;
@@ -276,21 +279,28 @@ async function init() {
   updateUI();
 
   try {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    if (tabs[0]) {
+      const rawUrl = tabs[0].url || '';
+      const normalizedUrl = stripTrackingParams(rawUrl);
+
+      if (normalizedUrl && !normalizedUrl.startsWith('https://') && !normalizedUrl.startsWith('http://')) {
+        state.error = t('errorNotHttp');
+        return;
+      }
+
+      state.url = normalizedUrl;
+      state.title = tabs[0].title || '';
+    }
+
     const sessionDid = await getSession();
     state.did = sessionDid;
 
     if (sessionDid) {
-      const [tabs, userTags] = await Promise.all([
-        browser.tabs.query({ active: true, currentWindow: true }),
-        getUserTags(sessionDid)
-      ]);
-
-      if (tabs[0]) {
-        const rawUrl = tabs[0].url || '';
-        const normalizedUrl = stripTrackingParams(rawUrl);
-        state.url = normalizedUrl;
-        state.title = tabs[0].title || '';
-        loadOgp(normalizedUrl);
+      const userTags = await getUserTags(sessionDid);
+      
+      if (state.url) {
+        loadOgp(state.url);
       }
 
       const prefs = await browser.storage.local.get(['isPostToBluesky', 'isUseOriginalLink']);

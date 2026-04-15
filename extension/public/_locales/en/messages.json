@@ -79,6 +79,9 @@
   },
   "msgCheckingSession": {
     "message": "Checking session..."
+  },
+  "errorNotHttp": {
+    "message": "Only websites can be bookmarked"
   }
 }
 

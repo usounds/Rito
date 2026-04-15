@@ -79,5 +79,8 @@
   },
   "msgCheckingSession": {
     "message": "セッションを確認中です..."
+  },
+  "errorNotHttp": {
+    "message": "サイト以外はブックマークできません"
   }
 }

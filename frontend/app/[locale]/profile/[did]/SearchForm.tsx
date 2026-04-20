@@ -1,7 +1,7 @@
 'use client';
 import { Button, Group, TagsInput, Box, Stack } from '@mantine/core';
 import { Search } from 'lucide-react';
-import { useMessages } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
 import { useEffect, useState, useCallback, useMemo } from 'react';
@@ -38,7 +38,7 @@ export function SearchForm({
     const [dynamicTagCounts, setDynamicTagCounts] = useState<Record<string, number>>(initialTagCounts ?? {});
     const [isLoading, setIsLoading] = useState(false);
     const [copied, setCopied] = useState(false);
-    const messages = useMessages();
+    const t = useTranslations('search');
     const router = useRouter();
     const loader = useTopLoader();
     const pathname = usePathname();
@@ -66,10 +66,13 @@ export function SearchForm({
         }
     }, [did]);
 
-    // searchParams が変わった時に tags を同期
+    // initialTagsFromParams の文字列化（無限ループ防止）
+    const initialTagsKey = JSON.stringify(initialTagsFromParams);
+
+    // URLやPropsが変わった時に tags を同期
     useEffect(() => {
-        setTags(initialTagsFromParams);
-    }, [initialTagsFromParams]);
+        setTags(JSON.parse(initialTagsKey));
+    }, [initialTagsKey]);
 
     // 初期ロードおよびタグ変更時に関連タグを再取得
     useEffect(() => {
@@ -106,8 +109,8 @@ export function SearchForm({
             <form onSubmit={handleSubmit}>
                 <Stack gap="md">
                     <TagsInput
-                        label={messages.search.tag}
-                        placeholder={messages.search.tagPlaceholder}
+                        label={t('field.tag.title')}
+                        placeholder={t('field.tag.placeholder')}
                         data={myTag}
                         value={tags}
                         onChange={setTags}
@@ -138,7 +141,7 @@ export function SearchForm({
                             onClick={handleCopy}
                             disabled={copied}
                         >
-                            {copied ? messages.search.copied : messages.search.copyUrl}
+                            {copied ? t('button.urlcopyed') : t('button.urlcopy')}
                         </Button>
                         <Button
                             type="submit"
@@ -146,7 +149,7 @@ export function SearchForm({
                             leftSection={<Search size={16} />}
                             radius="xl"
                         >
-                            {messages.search.button}
+                            {t('button.search')}
                         </Button>
                     </Group>
                 </Stack>

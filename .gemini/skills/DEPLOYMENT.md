@@ -27,7 +27,7 @@
    - `pnpm run update:publicsuffix`
    - `pnpm run docker:push`
 4. **コミットとプッシュ**:
-   - `git add .`
+- `git add .`
    - `git commit -m "list : アップデート"`
    - `git push`
 

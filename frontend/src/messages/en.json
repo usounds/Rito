@@ -24,6 +24,9 @@
 		"browse": "Search",
 		"discover": "Discover",
 		"about": "About",
+		"myapps": "My Apps",
+		"needlogin": "Login is required to use this feature",
+		"notbookmarked": "Unregistered bookmark",
 		"navigation": "Navigation",
 		"feature": {
 			"title": "Features",

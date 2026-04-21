@@ -184,6 +184,7 @@
   font-size: 11.5px;
   color: var(--mantine-color-dimmed);
   line-height: 1.4;
+  min-height: 1.4em; // 日付がない場合でも高さを維持してフッターの位置を固定
 }
 
 

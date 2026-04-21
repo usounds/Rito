@@ -24,6 +24,9 @@
 		"browse": "検索",
 		"discover": "見つける",
 		"about": "リトについて",
+		"myapps": "マイアプリ",
+		"needlogin": "この機能を使うにはログインが必要です",
+		"notbookmarked": "ブックマーク未登録",
 		"navigation": "ナビゲーション",
 		"feature": {
 			"title": "機能",

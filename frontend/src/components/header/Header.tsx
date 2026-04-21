@@ -79,6 +79,9 @@ export default function Header() {
               {messages.header.bookmark}
             </Link>
 
+            <Link href={`/${locale}/my/apps`} className={classes.link}>
+              {messages.header.myapps}
+            </Link>
 
             <Link href={`/${locale}/bookmark/search`} className={classes.link}>
               {messages.header.browse}
@@ -116,6 +119,9 @@ export default function Header() {
           <Stack pl="md" gap={1}>
             <Link href={`/${locale}/my/bookmark`} className={classes.link} onClick={closeDrawer}>
               {messages.header.bookmark}
+            </Link>
+            <Link href={`/${locale}/my/apps`} className={classes.link} onClick={closeDrawer}>
+              {messages.header.myapps}
             </Link>
             <Link href={`/${locale}/bookmark/search`} className={classes.link} onClick={closeDrawer}>
               {messages.header.browse}

@@ -106,7 +106,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
             loader.done();
         }
         setIsLoginProcess(false);
-    }, [setIsLoginProcess, loader]);
+    }, []);
 
     const duplicate = useRef(false);
 
@@ -276,7 +276,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                 setIsLoginProcess(false);
             }
         })();
-    }, [handle, activeDid, setIsLoginProcess, setTagRanking, setUserProf, setActiveDid, setMyBookmark, tagRanking.length, messages, loader, isLoginProcess]);
+    }, [handle, activeDid, setIsLoginProcess, setTagRanking, setUserProf, setActiveDid, setMyBookmark, tagRanking.length, messages, loader]);
 
     useEffect(() => {
         if (!activeDid) return;

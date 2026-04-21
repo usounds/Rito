@@ -38,13 +38,13 @@ export default function EditMenu({ subject, title, tags, image, description }: P
     const handleEdit = () => {
         const targetUrl = `/${locale}/bookmark/register?aturi=${encodeURIComponent(
             matchedBookmark?.uri ?? ""
-        )}`;
+        )}&returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
         router.push(targetUrl);
     };
 
 
     const handleRegister = () => {
-        const targetUrl = `/${locale}/bookmark/register?subject=${encodeURIComponent(subject)}`
+        const targetUrl = `/${locale}/bookmark/register?subject=${encodeURIComponent(subject)}&returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
         router.push(targetUrl);
     };
 

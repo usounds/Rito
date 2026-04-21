@@ -592,9 +592,13 @@ export default function RegistBookmarkPage() {
 
                 console.log('debug', { referrer, origin })
 
+                const returnTo = searchParams.get("returnTo");
                 const registerPath = `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/register`;
 
-                if (referrer.startsWith(origin) && !referrer.startsWith(registerPath)) {
+                if (returnTo) {
+                    // returnTo が指定されている場合は優先的に戻る
+                    router.push(returnTo);
+                } else if (referrer.startsWith(origin) && !referrer.startsWith(registerPath)) {
                     // 同じサイトかつ直前ページが /bookmark/register でなければ履歴戻り
                     router.back();
                 } else {

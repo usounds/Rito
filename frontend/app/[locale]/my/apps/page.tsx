@@ -8,6 +8,7 @@ import Breadcrumbs from "@/components/Breadcrumbs";
 import { SimpleGrid, Container, Title, Text, Center, Loader, Stack, Box } from '@mantine/core';
 import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
+import animationClasses from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
 type SchemaResult = {
     nsid: string;
@@ -115,22 +116,23 @@ export default function MyAppsPage() {
                 <Text>{messages.detail.inform.nobookmark}</Text>
             ) : (
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-                    {apps.map((app) => {
+                    {apps.map((app, index) => {
                         const domain = app.domain || nsidToDomain(app.nsid);
                         const url = app.schema || `https://${domain}`;
                         
                         return (
-                            <Article
-                                key={app.nsid}
-                                url={url}
-                                title={app.ogpTitle || app.nsid}
-                                comment={app.ogpDescription || ""}
-                                tags={app.tags || []}
-                                image={app.ogpImage || null}
-                                date={app.indexedAt ? new Date(app.indexedAt) : undefined}
-                                moderations={app.moderations || []}
-                                priority={false}
-                            />
+                            <div key={app.nsid} className={animationClasses.articleItem}>
+                                <Article
+                                    url={url}
+                                    title={app.ogpTitle || app.nsid}
+                                    comment={app.ogpDescription || ""}
+                                    tags={app.tags || []}
+                                    image={app.ogpImage || null}
+                                    date={app.indexedAt ? new Date(app.indexedAt) : undefined}
+                                    moderations={app.moderations || []}
+                                    priority={index < 6}
+                                />
+                            </div>
                         );
                     })}
                 </SimpleGrid>

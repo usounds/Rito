@@ -11,6 +11,7 @@ import {
     Card,
     Group,
     Stack,
+    Text,
 } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 import Link from 'next/link';
@@ -29,7 +30,7 @@ type ArticleCardProps = {
     comment: string;
     tags: string[];
     image?: string | null;
-    date: Date;
+    date?: Date;
     moderations: string[];
     likes?: string[];
     likeDisabled?: boolean;
@@ -155,18 +156,22 @@ export function Article({
                 {/* メタ情報行 */}
                 <div className={classes.metaRow}>
                     {handle && (
-                        <>
-                            <Link
-                                href={`/${locale}/profile/${encodeURIComponent(handle)}`}
-                                prefetch={false}
-                                className={classes.metaHandle}
-                            >
-                                @{handle}
-                            </Link>
-                            <span className={classes.metaSeparator} />
-                        </>
+                        <Link
+                            href={`/${locale}/profile/${encodeURIComponent(handle)}`}
+                            prefetch={false}
+                            className={classes.metaHandle}
+                        >
+                            @{handle}
+                        </Link>
                     )}
-                    <TimeAgo date={date} locale={locale} />
+                    {handle && date && <span className={classes.metaSeparator} />}
+                    {date ? (
+                        <TimeAgo date={date} locale={locale} />
+                    ) : (
+                        <Text size="xs" c="dimmed">
+                            {messages.header.notbookmarked}
+                        </Text>
+                    )}
                 </div>
             </Stack>
 

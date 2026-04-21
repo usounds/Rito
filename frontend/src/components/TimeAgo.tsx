@@ -19,6 +19,7 @@ export default function TimeAgo({
     if (!mounted) return "";
 
     const d = typeof date === 'string' ? new Date(date) : date;
+    if (!d || (d instanceof Date && isNaN(d.getTime()))) return "";
     const now = new Date().getTime();
     const diffMs = now - d.getTime();
 

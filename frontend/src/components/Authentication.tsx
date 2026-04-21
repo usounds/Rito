@@ -54,7 +54,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
     }
     setIsLoading(false);
     setIsLoginProcess(false);
-  }, [setIsLoginProcess, loader]);
+  }, []); // 初回表示時のみ実行
 
   const form = useForm({
     initialValues: {

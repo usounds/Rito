@@ -64,7 +64,7 @@ export async function GET(req: NextRequest) {
         });
 
         if (!response.success) {
-            console.error("[repo-collections] PDS xrpc failure:", response.status, response.data);
+            console.error("[repo-collections] PDS xrpc failure:", response.data);
             return new NextResponse("Failed to fetch repo collections", { status: 502 });
         }
 

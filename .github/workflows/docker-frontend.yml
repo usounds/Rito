@@ -62,3 +62,4 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             NEXT_PUBLIC_URL=https://rito.blue
+            DATABASE_URL=postgresql://localhost:5432/dummy

@@ -18,6 +18,8 @@ RUN pnpm install
 COPY . .
 
 # Prisma クライアントを生成
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
 RUN pnpm exec prisma generate
 
 # ---------- Production Stage ----------

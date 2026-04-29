@@ -9,6 +9,7 @@ import { SimpleGrid, Container, Title, Text, Center, Loader, Stack, Box } from '
 import { useLocale, useMessages, useTranslations } from 'next-intl';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import animationClasses from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
+import { stripTrackingParams } from "@/logic/stripTrackingParams";
 
 type SchemaResult = {
     nsid: string;
@@ -118,7 +119,7 @@ export default function MyAppsPage() {
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
                     {apps.map((app, index) => {
                         const domain = app.domain || nsidToDomain(app.nsid);
-                        const url = app.schema || `https://${domain}`;
+                        const url = stripTrackingParams(app.schema || `https://${domain}`);
                         
                         return (
                             <div key={app.nsid} className={animationClasses.articleItem}>

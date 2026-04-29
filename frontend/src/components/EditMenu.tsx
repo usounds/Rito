@@ -9,6 +9,7 @@ import { ShareOnBluesky } from '@/components/ShareOnBluesky';
 import { Share } from 'lucide-react';
 import { useLocale } from 'next-intl';
 import { useRouter } from "next/navigation";
+import { stripTrackingParams } from "@/logic/stripTrackingParams";
 
 type Props = {
     subject: string;
@@ -26,8 +27,28 @@ export default function EditMenu({ subject, title, tags, image, description }: P
     const messages = useMessages();
     const router = useRouter();
 
-    // subject に対応するブックマークがあるか判定
-    const matchedBookmark = myBookmark.find(b => b.subject === subject);
+    // subject に対応するブックマークがあるか判定 (正規化して比較)
+    const matchedBookmark = myBookmark.find(b => {
+        const s1 = stripTrackingParams(subject);
+        const s2 = stripTrackingParams(b.subject);
+
+        if (s1 === s2) return true;
+
+        // http/https の場合は末尾スラッシュの有無を無視して比較
+        const normalize = (u: string) => {
+            try {
+                const urlObj = new URL(u);
+                if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
+                    return u.endsWith('/') ? u.slice(0, -1) : u;
+                }
+            } catch {
+                // ignore
+            }
+            return u;
+        };
+
+        return normalize(s1) === normalize(s2);
+    });
 
     useEffect(() => {
         // setData(prev => prev + " (processed on client)");

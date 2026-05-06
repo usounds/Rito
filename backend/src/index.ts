@@ -607,12 +607,7 @@ async function init() {
 
             await dbLimit(() =>
               prisma.comment.updateMany({
-                where: {
-                  bookmark_uri_lang: {
-                    bookmark_uri: aturi,
-                    lang: c.lang
-                  }
-                },
+                where: { bookmark_uri: aturi, lang: c.lang },
                 data: { moderation_result: commentModerationResult }
               })
             );

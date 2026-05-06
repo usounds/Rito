@@ -259,7 +259,7 @@ async function init() {
 
         // Bookmark Update
         await dbLimit(() =>
-          prisma.bookmark.update({
+          prisma.bookmark.updateMany({
             where: { uri: b.uri },
             data: {
               category: category,
@@ -275,12 +275,12 @@ async function init() {
           const commentFlaggedCategories = await checkModeration(commentTexts);
           const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
 
-          await dbLimit(() =>
-            prisma.comment.update({
-              where: { id: c.id },
-              data: { moderation_result: commentModerationResult }
-            })
-          );
+            await dbLimit(() =>
+              prisma.comment.updateMany({
+                where: { id: c.id },
+                data: { moderation_result: commentModerationResult }
+              })
+            );
         }
 
         logger.info(`Recovery analysis complete for ${b.uri}: ${category}`);
@@ -587,7 +587,7 @@ async function init() {
 
           // Update Bookmark with analysis results
           await dbLimit(() =>
-            prisma.bookmark.update({
+            prisma.bookmark.updateMany({
               where: { uri: aturi },
               data: {
                 category: category,
@@ -606,7 +606,7 @@ async function init() {
             const commentModerationResult = commentFlaggedCategories.length > 0 ? commentFlaggedCategories.join(',') : null;
 
             await dbLimit(() =>
-              prisma.comment.update({
+              prisma.comment.updateMany({
                 where: {
                   bookmark_uri_lang: {
                     bookmark_uri: aturi,

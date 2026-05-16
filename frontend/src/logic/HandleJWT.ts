@@ -1,5 +1,6 @@
 
 import * as didJWT from 'did-jwt';
+import type { JWTVerifyOptions } from 'did-jwt';
 import { DIDDocument, DIDResolver, Resolver, ResolverRegistry } from 'did-resolver';
 import { getResolver as getWebResolver } from 'web-did-resolver';
 
@@ -38,7 +39,7 @@ export const verifyJWT = async (auth: string, audience: string) => {
     const decodedJWT = authorization.replace('Bearer ', '').trim()
 
     const result = await didJWT.verifyJWT(decodedJWT, {
-        resolver: resolverInstance,
+        resolver: resolverInstance as JWTVerifyOptions['resolver'],
         audience: audience
     })
 

@@ -60,15 +60,17 @@ export function Article({
     const localUrl = useMemo(() => {
         if (url.startsWith('https://') || url.startsWith('http://')) return url;
         if (url.startsWith('at://')) {
-            const result = parseCanonicalResourceUri(url);
-            if (result.ok) {
-                const schemaEntry = nsidSchema.find(e => e.nsid === result.value.collection);
+            try {
+                const result = parseCanonicalResourceUri(url);
+                const schemaEntry = nsidSchema.find(e => e.nsid === result.collection);
                 if (schemaEntry) {
                     const schema = schemaEntry?.schema ?? null;
-                    return schema?.replace('{did}', result.value.repo).replace('{rkey}', result.value.rkey) || `https://pdsls.dev/${url}`;
+                    return schema?.replace('{did}', result.repo).replace('{rkey}', result.rkey) || `https://pdsls.dev/${url}`;
                 } else {
                     return `https://pdsls.dev/${url}`;
                 }
+            } catch {
+                return url;
             }
         }
         return url;

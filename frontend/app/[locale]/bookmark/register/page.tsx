@@ -166,10 +166,7 @@ export default function RegistBookmarkPage() {
                     });
 
                     setComments(loadedComments);
-                    const parse = parseCanonicalResourceUri(aturi)
-                    if (parse.ok) {
-                        setRkey(parse.value.rkey)
-                    }
+                    setRkey(parseCanonicalResourceUri(aturi).rkey)
 
                 } else {
                     //setBookmark(null);
@@ -236,14 +233,13 @@ export default function RegistBookmarkPage() {
 
         } catch {
             if (isResourceUri(value)) {
-                const result = parseCanonicalResourceUri(value);
-
-                if (result.ok) {
-                    setAturiParsed(result.value);
-                    const schemaEntry = nsidSchema.find(entry => entry.nsid === result.value.collection);
+                try {
+                    const result = parseCanonicalResourceUri(value);
+                    setAturiParsed(result);
+                    const schemaEntry = nsidSchema.find(entry => entry.nsid === result.collection);
                     const schema = schemaEntry?.schema ?? null;
                     setSchema(schema);
-                } else {
+                } catch {
                     setAturiParsed(null);
                     setSchema(null)
                 }

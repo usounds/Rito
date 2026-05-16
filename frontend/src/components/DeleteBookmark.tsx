@@ -23,22 +23,24 @@ export const DeleteBookmark: React.FC<DeleteBookmarkProps> = ({ aturi, onClose }
     const handleDelete = async () => {
         if (!thisClient) return
         if (!aturi) return;
-        const parse = parseCanonicalResourceUri(aturi);
-        if (!parse.ok) return;
-
-        const { repo, rkey } = parse.value;
+        let parsed: ReturnType<typeof parseCanonicalResourceUri>;
+        try {
+            parsed = parseCanonicalResourceUri(aturi);
+        } catch {
+            return;
+        }
 
         setLoading(true);
         try {
             const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
             await thisClient.post('com.atproto.repo.applyWrites', {
                 input: {
-                    repo: repo,
+                    repo: parsed.repo,
                     writes: [
                         {
                             $type: 'com.atproto.repo.applyWrites#delete',
                             collection: 'blue.rito.feed.bookmark',
-                            rkey: rkey,
+                            rkey: parsed.rkey,
                         },
                     ],
                 },

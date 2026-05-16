@@ -75,7 +75,9 @@ vi.mock('lucide-react', () => ({
 }));
 
 vi.mock('@atcute/lexicons/syntax', () => ({
-    parseCanonicalResourceUri: vi.fn().mockImplementation(() => ({ ok: false })),
+    parseCanonicalResourceUri: vi.fn().mockImplementation(() => {
+        throw new SyntaxError('invalid canonical-at-uri');
+    }),
 }));
 
 vi.mock('@/nsid/mapping', () => ({
@@ -114,8 +116,10 @@ describe('Article', () => {
 
     it('at:// URIを正しく解析して表示', () => {
         vi.mocked(parseCanonicalResourceUri).mockReturnValueOnce({
-            ok: true,
-            value: { repo: 'did:plc:user', collection: 'app.bsky.feed.post', rkey: 'post123' }
+            repo: 'did:plc:user',
+            collection: 'app.bsky.feed.post',
+            rkey: 'post123',
+            fragment: undefined,
         } as any);
 
         render(<Article {...defaultProps} url="at://did:plc:user/app.bsky.feed.post/post123" />);
@@ -126,15 +130,19 @@ describe('Article', () => {
     });
 
     it('解析できないat:// URIの場合はデフォルトドメインを表示', () => {
-        vi.mocked(parseCanonicalResourceUri).mockReturnValueOnce({ ok: false } as any);
+        vi.mocked(parseCanonicalResourceUri).mockImplementationOnce(() => {
+            throw new SyntaxError('invalid canonical-at-uri');
+        });
         render(<Article {...defaultProps} url="at://invalid" />);
         expect(screen.getByText(/invalid/)).toBeInTheDocument();
     });
 
     it('スキーマが見つからないat:// URIの場合はpdsls.devを表示', () => {
         vi.mocked(parseCanonicalResourceUri).mockReturnValueOnce({
-            ok: true,
-            value: { repo: 'did:plc:user', collection: 'unknown.nsid', rkey: 'rkey' }
+            repo: 'did:plc:user',
+            collection: 'unknown.nsid',
+            rkey: 'rkey',
+            fragment: undefined,
         } as any);
         render(<Article {...defaultProps} url="at://did:plc:user/unknown.nsid/rkey" />);
         expect(screen.getByText(/pdsls.dev/)).toBeInTheDocument();

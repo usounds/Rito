@@ -2,6 +2,7 @@
   "name": "rito",
   "version": "0.1.0",
   "type": "module",
+  "packageManager": "pnpm@10.30.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
@@ -26,11 +27,11 @@
     "test:e2e": "DATABASE_URL=\"postgresql://postgres:test@localhost:5433/rito_test\" sh -c 'pnpm run test:e2e:prepare && playwright test'"
   },
   "dependencies": {
-    "@atcute/atproto": "^3.1.12",
-    "@atcute/bluesky": "^3.3.5",
-    "@atcute/bluesky-richtext-builder": "^3.0.1",
-    "@atcute/client": "^4.2.2",
-    "@atcute/lexicons": "^1.3.1",
+    "@atcute/atproto": "^4.0.0",
+    "@atcute/bluesky": "^4.0.1",
+    "@atcute/bluesky-richtext-builder": "^4.0.0",
+    "@atcute/client": "^5.0.0",
+    "@atcute/lexicons": "^2.0.0",
     "@atcute/tid": "^1.1.2",
     "@atpassport/client": "^0.1.33",
     "@atproto/api": "^0.19.18",
@@ -45,7 +46,7 @@
     "@tabler/icons-react": "^3.44.0",
     "base64url": "^3.0.1",
     "did-jwt": "^8.0.18",
-    "did-resolver": "^4.1.0",
+    "did-resolver": "^5.0.1",
     "lucide-react": "^1.16.0",
     "next": "^16.2.6",
     "next-intl": "^4.12.0",
@@ -62,7 +63,7 @@
     "zustand": "^5.0.13"
   },
   "devDependencies": {
-    "@atcute/lex-cli": "^2.8.2",
+    "@atcute/lex-cli": "^3.0.1",
     "@next/eslint-plugin-next": "^16.2.6",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/postcss": "^4.3.0",

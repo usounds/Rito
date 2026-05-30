@@ -1,5 +1,5 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { FeaturesGrid } from "@/components/features/Features";
+import { FeaturesGrid, getFeatureItems } from "@/components/features/Features";
 import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -52,6 +52,7 @@ export default async function AboutPage({
     const t = await getTranslations({ locale });
 
     const baseUrl = getBaseUrl();
+    const featureItems = getFeatureItems(t, locale);
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "AboutPage",
@@ -65,6 +66,21 @@ export default async function AboutPage({
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "All",
             "description": t("description"),
+            "featureList": featureItems.map(feature => feature.title),
+            "hasPart": {
+                "@type": "ItemList",
+                "name": t("header.feature.title"),
+                "itemListElement": featureItems.map((feature, index) => ({
+                    "@type": "ListItem",
+                    "position": index + 1,
+                    "item": {
+                        "@type": "Thing",
+                        "name": feature.title,
+                        "description": feature.description,
+                        ...(feature.href ? { "url": feature.href } : {}),
+                    },
+                })),
+            },
         }
     };
 

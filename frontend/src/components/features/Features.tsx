@@ -19,6 +19,47 @@ interface FeatureProps {
   href?: string
 }
 
+export function getFeatureItems(t: Awaited<ReturnType<typeof getTranslations>>, locale: string) {
+  return [
+    {
+      icon: Bookmark,
+      title: t('header.feature.allbookmark.title'),
+      description: t('header.feature.allbookmark.longdescription'),
+    },
+    {
+      icon: AtSign,
+      title: t('header.feature.atproto.title'),
+      description: t('header.feature.atproto.longdescription'),
+    },
+    {
+      icon: FileText,
+      title: t('header.feature.ownerbenefit.title'),
+      href: 'https://blog.usounds.work/posts/rito-for-developer',
+      description: t('header.feature.ownerbenefit.longdescription'),
+    },
+    {
+      icon: FaChrome,
+      title: t('header.feature.chrome.title'),
+      href: 'https://chromewebstore.google.com/detail/blfdajpbkfgdoecglhkbdbaafbgikmph',
+      description: t('header.feature.chrome.longdescription'),
+    },
+    {
+      icon: FaFirefoxBrowser,
+      title: t('header.feature.firefox.title'),
+      href: locale === 'ja'
+        ? 'https://addons.mozilla.org/ja/firefox/addon/rito-extension/'
+        : 'https://addons.mozilla.org/en-US/firefox/addon/rito-extension/',
+      description: t('header.feature.firefox.longdescription'),
+    },
+    {
+      icon: Star,
+      title: t('header.feature.bookmarklet.title'),
+      href: t('header.feature.bookmarklet.href'),
+      description: t('header.feature.bookmarklet.longdescription'),
+    },
+  ];
+}
+
 export function Features({ icon: Icon, title, description, href }: FeatureProps) {
 
   return (
@@ -57,46 +98,7 @@ export function Features({ icon: Icon, title, description, href }: FeatureProps)
 
 export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
 
-  const MOCKDATA = [
-    {
-      icon: Bookmark,
-      title: t('header.feature.allbookmark.title'),
-      description: t('header.feature.allbookmark.longdescription'),
-    },
-    {
-      icon: AtSign,
-      title: t('header.feature.atproto.title'),
-      description: t('header.feature.atproto.longdescription'),
-    },
-    {
-      icon: FileText,
-      title: t('header.feature.ownerbenefit.title'),
-      href: 'https://blog.usounds.work/posts/rito-for-developer',
-      description: t('header.feature.ownerbenefit.longdescription'),
-    },
-    {
-      icon: FaChrome,
-      title: t('header.feature.chrome.title'),
-      href: 'https://chromewebstore.google.com/detail/blfdajpbkfgdoecglhkbdbaafbgikmph',
-      description: t('header.feature.chrome.longdescription'),
-    },
-    {
-      icon: FaFirefoxBrowser,
-      title: t('header.feature.firefox.title'),
-      href: locale === 'ja'
-        ? 'https://addons.mozilla.org/ja/firefox/addon/rito-extension/'
-        : 'https://addons.mozilla.org/en-US/firefox/addon/rito-extension/',
-      description: t('header.feature.firefox.longdescription'),
-    },
-    {
-      icon: Star,
-      title: t('header.feature.bookmarklet.title'),
-      href: t('header.feature.bookmarklet.href'),
-      description: t('header.feature.bookmarklet.longdescription'),
-    },
-  ];
-
-  const features = MOCKDATA.map((feature, index) => (
+  const features = getFeatureItems(t, locale).map((feature, index) => (
     <div className={classes.featureItem} key={index}>
       <Features {...feature} />
     </div>

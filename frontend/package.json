@@ -24,7 +24,7 @@
     "test:e2e:db:reset": "sh scripts/e2e-db.sh reset",
     "test:e2e:setup": "DATABASE_URL=\"postgresql://postgres:test@localhost:5433/rito_test\" sh -c 'pnpm exec prisma db push && pnpm exec tsx tests/e2e/setup/seed.ts'",
     "test:e2e:prepare": "pnpm run test:e2e:db:start && pnpm run test:e2e:setup",
-    "test:e2e": "DATABASE_URL=\"postgresql://postgres:test@localhost:5433/rito_test\" sh -c 'pnpm run test:e2e:prepare && playwright test'"
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@atcute/atproto": "^4.0.0",

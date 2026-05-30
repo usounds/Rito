@@ -23,9 +23,23 @@ export default async function StatusPage({ params }: StatusProps) {
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": t('status.title'),
+        "description": t("description"),
+        "url": `${baseUrl}/${locale}/status`,
+        "inLanguage": locale,
+    };
+
     if (process.env.SKIP_DB_DURING_BUILD === 'true') {
         return (
             <Container size="md" mx="auto">
+                <script
+                    type="application/ld+json"
+                    dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+                />
                 <Breadcrumbs items={[{ label: t('status.title') }]} />
                 <Stats
                     data={[
@@ -76,6 +90,10 @@ export default async function StatusPage({ params }: StatusProps) {
 
     return (
         <Container size="md" mx="auto" >
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <Breadcrumbs items={[{ label: t('status.title') }]} />
             <Stats
                 data={[

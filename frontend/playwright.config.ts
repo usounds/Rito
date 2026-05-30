@@ -5,6 +5,8 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
+  globalSetup: './tests/e2e/global-setup.ts',
+  globalTeardown: './tests/e2e/global-teardown.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -58,7 +60,7 @@ export default defineConfig({
     url: 'http://localhost:4600',
     reuseExistingServer: !process.env.CI,
     env: {
-      DATABASE_URL: process.env.DATABASE_URL || 'file:./test.db',
+      DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:test@localhost:5433/rito_test',
       NODE_ENV: 'test',
     },
   },

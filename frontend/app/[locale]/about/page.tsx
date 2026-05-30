@@ -17,8 +17,29 @@ export default async function AboutPage({
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
+    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+    const jsonLd = {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "name": t("header.about"),
+        "description": t("description"),
+        "url": `${baseUrl}/${locale}/about`,
+        "inLanguage": locale,
+        "mainEntity": {
+            "@type": "SoftwareApplication",
+            "name": t("title"),
+            "applicationCategory": "SocialNetworkingApplication",
+            "operatingSystem": "All",
+            "description": t("description"),
+        }
+    };
+
     return (
         <div>
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
             <Container>
                 <Breadcrumbs items={[{ label: t("header.about") }]} />
             </Container>

@@ -19,6 +19,16 @@ export default async function PrivacyPage({ params }: PageProps) {
   setRequestLocale(locale);
   const t = await getTranslations({ locale });
 
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": t("header.privacypolicy"),
+    "description": t("description"),
+    "url": `${baseUrl}/${locale}/privacy`,
+    "inLanguage": locale,
+  };
+
   // privacy フォルダ内の md を参照
   const filePath = path.join(process.cwd(), "app", "[locale]", "privacy", `${locale}.md`);
   const fallbackPath = path.join(process.cwd(), "app", "[locale]", "privacy", "en.md");
@@ -32,6 +42,10 @@ export default async function PrivacyPage({ params }: PageProps) {
 
   return (
     <Container size="md" mx="auto">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Breadcrumbs items={[{ label: t("header.privacypolicy") }]} />
       <ReactMarkdown>{content}</ReactMarkdown>
     </Container>

@@ -2,12 +2,12 @@
   "name": "rito",
   "version": "0.1.0",
   "type": "module",
-  "packageManager": "pnpm@10.30.0",
+  "packageManager": "pnpm@11.5.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
     "update": "pnpm dlx npm-check-updates -u && pnpm install && pnpm update",
-    "build": "pnpm run prisma:generate && next build",
+    "build": "pnpm run prisma:generate && next build --webpack",
     "prisma:copy": " cp ../backend/prisma/schema.prisma ./prisma/schema.prisma",
     "prisma:generate": "pnpm exec prisma generate --schema=./prisma/schema.prisma",
     "start": "next start",
@@ -97,15 +97,5 @@
   },
   "engines": {
     "pnpm": ">=10.0.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "postcss": ">=8.5.10",
-      "lodash": "4.17.23",
-      "hono": ">=4.12.14",
-      "@hono/node-server": ">=1.19.10",
-      "minimatch": ">=10.2.1",
-      "@types/pg": "8.20.0"
-    }
   }
 }

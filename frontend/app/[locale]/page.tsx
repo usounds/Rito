@@ -284,8 +284,28 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     );
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const websiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Rito",
+    "url": `${baseUrl}/${locale}`,
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${baseUrl}/${locale}/bookmark/search?tag={search_term_string}`
+      },
+      "query-input": "required name=search_term_string"
+    }
+  };
+
   return (
     <Container size="md" mx="auto" >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
       <DiscoverTabs activeTab={currentCategory} />
 
       <DiscoverContentWrapper currentCategory={currentCategory}>

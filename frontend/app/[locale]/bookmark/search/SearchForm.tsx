@@ -236,7 +236,13 @@ export function SearchForm({
               label={messages.search.field.mode.title}
               data={relationshipOptions}
               value={relationship}
-              onChange={(val) => setRelationship(val || 'all')}
+              onChange={(val) => {
+                const mode = val || 'all';
+                setRelationship(mode);
+                if (mode !== 'all' && mode !== 'specified' && activeDid) {
+                  handleSync();
+                }
+              }}
               mb="xs"
               allowDeselect={false}
             />

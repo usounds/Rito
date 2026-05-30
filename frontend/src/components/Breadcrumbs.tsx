@@ -30,5 +30,24 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
     )
   );
 
-  return <Stack mb="sm"><MantineBreadcrumbs>{elements}</MantineBreadcrumbs></Stack>;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": crumbs.map((item, idx) => ({
+      "@type": "ListItem",
+      "position": idx + 1,
+      "name": item.label,
+      ...(item.href ? { "item": item.href } : {})
+    }))
+  };
+
+  return (
+    <Stack mb="sm">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <MantineBreadcrumbs>{elements}</MantineBreadcrumbs>
+    </Stack>
+  );
 }

@@ -12,20 +12,22 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/status',
   ];
 
-  return paths.map((path) => {
-    const alternates: Record<string, string> = {};
-    routing.locales.forEach((locale) => {
-      alternates[locale] = `${baseUrl}/${locale}${path}`;
-    });
+  return paths.flatMap((path) => {
+    return routing.locales.map((locale) => {
+      const alternates: Record<string, string> = {};
+      routing.locales.forEach((loc) => {
+        alternates[loc] = `${baseUrl}/${loc}${path}`;
+      });
 
-    return {
-      url: `${baseUrl}/${routing.defaultLocale}${path}`,
-      lastModified: new Date(),
-      changeFrequency: 'daily' as const,
-      priority: path === '' ? 1.0 : 0.8,
-      alternates: {
-        languages: alternates,
-      },
-    };
+      return {
+        url: `${baseUrl}/${locale}${path}`,
+        lastModified: new Date(),
+        changeFrequency: 'daily' as const,
+        priority: path === '' ? 1.0 : 0.8,
+        alternates: {
+          languages: alternates,
+        },
+      };
+    });
   });
 }

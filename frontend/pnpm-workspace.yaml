@@ -1,11 +1,20 @@
-onlyBuiltDependencies:
-  - '@atcute/time-ms'
-  - '@parcel/watcher'
-  - '@prisma/client'
-  - '@prisma/engines'
-  - '@swc/core'
-  - core-js
-  - esbuild
-  - prisma
-  - sharp
-  - unrs-resolver
+allowBuilds:
+  '@atcute/time-ms': true
+  '@parcel/watcher': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+
+overrides:
+  postcss: ">=8.5.10"
+  lodash: "4.17.23"
+  hono: ">=4.12.14"
+  "@hono/node-server": ">=1.19.10"
+  minimatch: ">=10.2.1"
+  "@types/pg": "8.20.0"
+

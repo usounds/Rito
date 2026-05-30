@@ -300,26 +300,55 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
   }
 
   const baseUrl = getBaseUrl();
-  const websiteJsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Rito",
-    "url": `${baseUrl}/${locale}`,
-    "potentialAction": {
-      "@type": "SearchAction",
-      "target": {
-        "@type": "EntryPoint",
-        "urlTemplate": `${baseUrl}/${locale}/bookmark/search?tag={search_term_string}`
+  const siteUrl = `${baseUrl}/${locale}`;
+  const logoUrl = getDefaultOgImage(baseUrl).url;
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Rito",
+      "url": siteUrl,
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": `${baseUrl}/${locale}/bookmark/search?tag={search_term_string}`
+        },
+        "query-input": "required name=search_term_string"
       },
-      "query-input": "required name=search_term_string"
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Rito",
+      "url": baseUrl,
+      "logo": logoUrl,
+      "sameAs": [
+        "https://github.com/usounds/Rito"
+      ]
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Rito",
+      "url": siteUrl,
+      "applicationCategory": "SocialNetworkingApplication",
+      "operatingSystem": "Web",
+      "description": t("description"),
+      "image": logoUrl,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
     }
-  };
+  ];
 
   return (
     <Container size="md" mx="auto" >
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <DiscoverTabs activeTab={currentCategory} />
 

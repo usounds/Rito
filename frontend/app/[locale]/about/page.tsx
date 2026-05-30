@@ -66,21 +66,7 @@ export default async function AboutPage({
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "All",
             "description": t("description"),
-            "featureList": featureItems.map(feature => feature.title),
-            "hasPart": {
-                "@type": "ItemList",
-                "name": t("header.feature.title"),
-                "itemListElement": featureItems.map((feature, index) => ({
-                    "@type": "ListItem",
-                    "position": index + 1,
-                    "item": {
-                        "@type": "Thing",
-                        "name": feature.title,
-                        "description": feature.description,
-                        ...(feature.href ? { "url": feature.href } : {}),
-                    },
-                })),
-            },
+            "featureList": featureItems.map(feature => `${feature.title}: ${feature.description}`),
         }
     };
 

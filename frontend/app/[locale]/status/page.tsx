@@ -6,6 +6,8 @@ import { Alert, Container } from '@mantine/core';
 import { Info } from 'lucide-react';
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
+import type { Metadata } from "next";
+import { getBaseUrl, getDefaultOgImage, getPublicPageAlternates } from "@/seo/publicPages";
 
 export const dynamic = 'force-dynamic';
 
@@ -13,13 +15,41 @@ type StatusProps = {
     params: Promise<{ locale: string }>;
 };
 
+export async function generateMetadata({ params }: StatusProps): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale });
+    const baseUrl = getBaseUrl();
+    const ogImage = getDefaultOgImage(baseUrl);
+    const title = `${t('status.title')} | ${t('title')}`;
+    const description = t("description");
+
+    return {
+        title,
+        description,
+        alternates: getPublicPageAlternates(locale, '/status'),
+        openGraph: {
+            title,
+            description,
+            url: `${baseUrl}/${locale}/status`,
+            images: [{ ...ogImage, alt: title }],
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [ogImage.url],
+        },
+    };
+}
+
 export default async function StatusPage({ params }: StatusProps) {
     const { locale } = await params;
     // 静的生成のために locale を設定
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+    const baseUrl = getBaseUrl();
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "WebPage",

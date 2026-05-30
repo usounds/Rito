@@ -1,18 +1,15 @@
 import { MetadataRoute } from 'next';
 import { routing } from '@/i18n/routing';
-
-const sitemapPaths = [
-  '',
-  '/about',
-  '/privacy',
-  '/tos',
-  '/status',
-];
+import {
+  getBaseUrl,
+  publicAssetAllowPaths,
+  publicPagePaths,
+} from '@/seo/publicPages';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const baseUrl = getBaseUrl();
   const allowedPages = routing.locales.flatMap((locale) =>
-    sitemapPaths.map((path) => `/${locale}${path}$`)
+    publicPagePaths.map((path) => `/${locale}${path}$`)
   );
 
   return {
@@ -21,6 +18,7 @@ export default function robots(): MetadataRoute.Robots {
       allow: [
         '/robots.txt',
         '/sitemap.xml',
+        ...publicAssetAllowPaths,
         ...allowedPages,
       ],
       disallow: '/',

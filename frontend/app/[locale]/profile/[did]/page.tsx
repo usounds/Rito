@@ -71,8 +71,29 @@ const ProfileBookmarks = async ({ params, searchParams }: ProfileBookmarkProps) 
 
   const allTags: string[] = Object.keys(tagCounts);
 
+  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const profilePageJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    "mainEntity": {
+      "@type": "Person",
+      "name": decodedDid,
+      "identifier": decodedDid,
+      "url": `${baseUrl}/${locale}/profile/${did}`,
+      "agentInteractionStatistic": {
+        "@type": "InteractionCounter",
+        "interactionType": "https://schema.org/WriteAction",
+        "userInteractionCount": allBookmarks.length
+      }
+    }
+  };
+
   return (
     <Container size="md" mx="auto">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(profilePageJsonLd) }}
+      />
       <Breadcrumbs items={[{ label: t("header.profile") }, { label: decodedDid }]} />
 
       <SearchForm defaultTags={tags} userTags={allTags} tagCounts={tagCounts} did={decodedDid} />

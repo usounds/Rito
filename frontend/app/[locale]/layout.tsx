@@ -14,6 +14,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { getBaseUrl, getDefaultOgImage } from "@/seo/publicPages";
 
 export async function generateMetadata({
   params,
@@ -23,9 +24,11 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale });
 
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const baseUrl = getBaseUrl();
+  const ogImage = getDefaultOgImage(baseUrl);
 
   return {
+    metadataBase: new URL(baseUrl),
     title: t("title"),
     description: t("ogp.description"), // OGP用説明文
     openGraph: {
@@ -34,12 +37,16 @@ export async function generateMetadata({
       url: `${baseUrl}/${locale}`,
       images: [
         {
-          url: `${baseUrl}/rito_ogp.png`,
-          width: 1200,
-          height: 630,
+          ...ogImage,
           alt: t("ogp.title"),
         },
       ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: t("ogp.title"),
+      description: t("ogp.description"),
+      images: [ogImage.url],
     },
   };
 }

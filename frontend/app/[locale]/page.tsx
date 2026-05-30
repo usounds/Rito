@@ -12,6 +12,7 @@ import DiscoverSkeleton from './bookmark/discover/DiscoverSkeleton';
 import DiscoverFeed from './bookmark/discover/DiscoverFeed';
 import classes from './bookmark/discover/Discover.module.scss';
 import { Bookmark, Comment } from '@/type/ApiTypes';
+import { getBaseUrl, getDefaultOgImage, getPublicPageAlternates } from '@/seo/publicPages';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,26 +35,40 @@ export async function generateMetadata({
   if (currentCategory === 'discover') {
     return {
       title: t('title'),
+      description: t('ogp.description'),
+      alternates: getPublicPageAlternates(locale, ''),
     };
   }
 
   const categoryName = t(`category.${currentCategory}` as unknown as Parameters<typeof t>[0]);
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const baseUrl = getBaseUrl();
+  const ogImage = getDefaultOgImage(baseUrl);
 
   return {
     title: `${categoryName} | ${t('title')}`,
     description: t('discover.ogpDescription', { 0: categoryName as string }),
+    alternates: {
+      canonical: `${baseUrl}/${locale}`,
+    },
+    robots: {
+      index: false,
+      follow: true,
+    },
     openGraph: {
       title: `${categoryName} | ${t('title')}`,
       description: t('discover.ogpDescription', { 0: categoryName }),
       images: [
         {
-          url: `${baseUrl}/rito_ogp.png`,
-          width: 1200,
-          height: 630,
+          ...ogImage,
           alt: t("ogp.title"),
         },
       ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${categoryName} | ${t('title')}`,
+      description: t('discover.ogpDescription', { 0: categoryName as string }),
+      images: [ogImage.url],
     },
   };
 }
@@ -284,7 +299,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const baseUrl = getBaseUrl();
   const websiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",

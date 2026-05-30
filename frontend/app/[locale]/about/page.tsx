@@ -3,9 +3,43 @@ import { FeaturesGrid } from "@/components/features/Features";
 import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { getBaseUrl, getDefaultOgImage, getPublicPageAlternates } from "@/seo/publicPages";
 
 export function generateStaticParams() {
     return routing.locales.map(locale => ({ locale }));
+}
+
+export async function generateMetadata({
+    params,
+}: {
+    params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+    const { locale } = await params;
+    const t = await getTranslations({ locale });
+    const baseUrl = getBaseUrl();
+    const ogImage = getDefaultOgImage(baseUrl);
+    const title = `${t("header.about")} | ${t("title")}`;
+    const description = t("description");
+
+    return {
+        title,
+        description,
+        alternates: getPublicPageAlternates(locale, '/about'),
+        openGraph: {
+            title,
+            description,
+            url: `${baseUrl}/${locale}/about`,
+            images: [{ ...ogImage, alt: title }],
+            type: 'website',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [ogImage.url],
+        },
+    };
 }
 
 export default async function AboutPage({
@@ -17,7 +51,7 @@ export default async function AboutPage({
     setRequestLocale(locale);
     const t = await getTranslations({ locale });
 
-    const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+    const baseUrl = getBaseUrl();
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "AboutPage",

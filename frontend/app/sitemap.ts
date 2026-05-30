@@ -1,31 +1,23 @@
 import { MetadataRoute } from 'next';
 import { routing } from '@/i18n/routing';
+import {
+  getBaseUrl,
+  getPublicPageLanguages,
+  getPublicPageUrl,
+  publicPagePaths,
+} from '@/seo/publicPages';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_URL || 'https://rito.blue';
+  const baseUrl = getBaseUrl();
 
-  const paths = [
-    '',
-    '/about',
-    '/privacy',
-    '/tos',
-    '/status',
-  ];
-
-  return paths.flatMap((path) => {
+  return publicPagePaths.flatMap((path) => {
     return routing.locales.map((locale) => {
-      const alternates: Record<string, string> = {};
-      routing.locales.forEach((loc) => {
-        alternates[loc] = `${baseUrl}/${loc}${path}`;
-      });
-
       return {
-        url: `${baseUrl}/${locale}${path}`,
-        lastModified: new Date(),
+        url: getPublicPageUrl(locale, path, baseUrl),
         changeFrequency: 'daily' as const,
         priority: path === '' ? 1.0 : 0.8,
         alternates: {
-          languages: alternates,
+          languages: getPublicPageLanguages(path, baseUrl),
         },
       };
     });

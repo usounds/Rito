@@ -9,7 +9,7 @@ WORKDIR /app
 RUN npm install -g pnpm
 
 # 依存関係だけ先にコピーしてインストール
-COPY package.json pnpm-lock.yaml* ./
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 
 # 本番用依存だけインストール
 RUN pnpm install 

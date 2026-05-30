@@ -5,7 +5,6 @@ import { defineConfig, devices } from '@playwright/test';
  */
 export default defineConfig({
   testDir: './tests/e2e',
-  globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
   /* Run tests in files in parallel */
   fullyParallel: true,
@@ -56,9 +55,9 @@ export default defineConfig({
 
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: 'pnpm run dev',
+    command: 'pnpm run test:e2e:prepare && pnpm run dev',
     url: 'http://localhost:4600',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     env: {
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:test@localhost:5433/rito_test',
       NODE_ENV: 'test',

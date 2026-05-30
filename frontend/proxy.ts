@@ -24,6 +24,6 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // 言語プレフィックスを自動付与する対象のパス
-    '/((?!api|xrpc|.well-known|trpc|_next/static|_next/image|favicon.ico|.*\\.png|.*\\.jpg|.*\\.svg|callback).*)',
+    '/((?!api|xrpc|.well-known|trpc|_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|.*\\.png|.*\\.jpg|.*\\.svg|callback).*)',
   ],
 };

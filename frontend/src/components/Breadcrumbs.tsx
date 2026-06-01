@@ -1,5 +1,6 @@
 "use client";
 import { Breadcrumbs as MantineBreadcrumbs, Anchor, Stack } from "@mantine/core";
+import { useLocale } from "next-intl";
 import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/routing";
 
@@ -12,8 +13,23 @@ interface BreadcrumbsProps {
   items: Crumb[]; // Home以降のパンくず
 }
 
+const baseUrl = (process.env.NEXT_PUBLIC_URL || "https://rito.blue").replace(/\/$/, "");
+
+function getStructuredDataUrl(href: string, locale: string) {
+  if (/^https?:\/\//.test(href)) {
+    return href;
+  }
+
+  if (href === "/") {
+    return `${baseUrl}/${locale}`;
+  }
+
+  return `${baseUrl}/${locale}${href.startsWith("/") ? href : `/${href}`}`;
+}
+
 export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   const t = useTranslations(); // messages.breadcrumbs.home などに対応
+  const locale = useLocale();
 
   const crumbs = [
     { label: t("header.home"), href: "/" }, // 先頭固定
@@ -37,7 +53,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
       "@type": "ListItem",
       "position": idx + 1,
       "name": item.label,
-      ...(item.href ? { "item": item.href } : {})
+      ...(item.href ? { "item": getStructuredDataUrl(item.href, locale) } : {})
     }))
   };
 

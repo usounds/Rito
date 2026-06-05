@@ -1,3 +1,8 @@
+---
+name: gemini
+description: Project Ritoの開発ガイドラインと規約です。
+---
+
 # Project Rito - 開発ガイドライン
 
 ## プロジェクト概要

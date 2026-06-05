@@ -1,3 +1,8 @@
+---
+name: deployment
+description: Ritoのフロントエンド、バックエンド、およびChrome拡張機能のデプロイプロセスを完全に自動化して管理します。
+---
+
 # Deployment Skill (Full Automation)
 
 このスキルは、Ritoのフロントエンド、バックエンド、およびChrome拡張機能のデプロイプロセスを完全に自動化して管理します。
@@ -27,7 +32,7 @@
    - `pnpm run update:publicsuffix`
    - `pnpm run docker:push`
 4. **コミットとプッシュ**:
-- `git add .`
+   - `git add .`
    - `git commit -m "list : アップデート"`
    - `git push`
 

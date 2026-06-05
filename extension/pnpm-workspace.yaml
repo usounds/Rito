@@ -9,4 +9,6 @@ minimumReleaseAgeExclude:
 overrides:
   postcss: ">=8.5.10"
   uuid: ">=11.0.3"
+  tmp: ">=0.2.6"
+
 

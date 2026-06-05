@@ -1,6 +1,6 @@
 {
   "name": "rito-extension",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "type": "module",
   "description": "Rito's browser extension for bookmarking.",
   "private": true,

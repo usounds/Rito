@@ -98,7 +98,7 @@ export default function Header() {
             <SwitchColorMode />
           </Group>
 
-          <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" />
+          <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom="sm" aria-label={messages.header.navigation} />
         </Group>
       </header>
 

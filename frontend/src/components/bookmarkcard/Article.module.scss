@@ -90,7 +90,7 @@
   gap: 3px;
   font-size: 11px;
   font-weight: 500;
-  color: var(--mantine-color-dimmed);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
   text-decoration: none;
   margin-bottom: 4px;
   transition: color 0.2s ease;
@@ -98,6 +98,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 100%;
+  min-height: 24px;
 
   svg {
     width: 11px;
@@ -140,7 +141,7 @@
 
 .comment {
   font-size: 13px;
-  color: var(--mantine-color-dimmed);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
   margin-bottom: 8px;
   overflow: hidden;
   display: -webkit-box;
@@ -182,7 +183,7 @@
   gap: 6px;
   flex-wrap: wrap;
   font-size: 11.5px;
-  color: var(--mantine-color-dimmed);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
   line-height: 1.4;
   min-height: 1.4em; // 日付がない場合でも高さを維持してフッターの位置を固定
 }
@@ -191,8 +192,11 @@
 
 .metaHandle {
   text-decoration: none;
-  color: var(--mantine-color-dimmed);
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
   transition: color 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
 
   &:hover {
     color: var(--mantine-color-blue-6);

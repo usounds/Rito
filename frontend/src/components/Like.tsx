@@ -5,7 +5,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { AppBskyActorDefs } from '@atcute/bluesky';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip, Modal } from '@mantine/core';
+import { ActionIcon, Avatar, Box, HoverCard, Text, Tooltip, Modal, UnstyledButton } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { Check, Heart, X } from 'lucide-react';
 import { useMessages, useLocale } from 'next-intl';
@@ -235,7 +235,9 @@ const Like: React.FC<LikeButtonProps> = ({ subject, likedBy, actionDisabled }) =
 
             <HoverCard onOpen={fetchProfiles}>
                 <HoverCard.Target>
-                    <Text size="sm" c="dimmed">{localLikedBy.length}</Text>
+                    <UnstyledButton style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', minWidth: '24px', minHeight: '24px' }}>
+                        <Text size="sm" c="dimmed">{localLikedBy.length}</Text>
+                    </UnstyledButton>
                 </HoverCard.Target>
                 {localLikedBy.length > 0 &&
                     <HoverCard.Dropdown>

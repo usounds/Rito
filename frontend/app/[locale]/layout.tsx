@@ -99,7 +99,7 @@ export default async function RootLayout({
               template='<div class="bar" role="bar"></div>' // スピナーを削除したテンプレート
             />
             <Header />
-            {children}
+            <main>{children}</main>
             <Footer locale={locale} />
             <ScrollToTop />
           </MantineProvider>

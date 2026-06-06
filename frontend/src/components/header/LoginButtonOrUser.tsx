@@ -6,7 +6,7 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { Bookmark, TagRanking } from '@/type/ApiTypes';
 import { SCOPE } from "@/type/OauthConstants";
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
-import { Affix, Avatar, Button, Menu, Modal, Transition } from "@mantine/core";
+import { Affix, Avatar, Button, Menu, Modal, Transition, UnstyledButton } from "@mantine/core";
 import { notifications } from '@mantine/notifications';
 import { BookmarkPlus, LogOut, Settings, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
@@ -367,7 +367,9 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                 <>
                     <Menu shadow="md" width={200}>
                         <Menu.Target>
-                            <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} size={28} />
+                            <UnstyledButton aria-label={userProf.displayName || userProf.handle} style={{ display: 'flex', alignItems: 'center' }}>
+                                <Avatar src={userProf.avatar} alt={userProf.displayName || userProf.handle} size={28} />
+                            </UnstyledButton>
                         </Menu.Target>
 
                         <Menu.Dropdown>

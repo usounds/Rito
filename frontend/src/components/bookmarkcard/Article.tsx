@@ -116,7 +116,7 @@ export function Article({
 
                             <div className={classes.title}>
                                 <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
-                                    style={{ textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere' }}>
+                                    style={{ display: 'block', textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere', minHeight: '24px' }}>
                                     {title}
                                 </Link>
                             </div>
@@ -170,7 +170,7 @@ export function Article({
                     {date ? (
                         <TimeAgo date={date} locale={locale} />
                     ) : (
-                        <Text size="xs" c="dimmed">
+                        <Text size="xs" style={{ color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2))' }}>
                             {messages.header.notbookmarked}
                         </Text>
                     )}

@@ -8,6 +8,7 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig: NextConfig = {
   allowedDevOrigins: ['dev.rito.blue'],
   output: 'standalone', // ← これを追加
+  productionBrowserSourceMaps: true, // ソースマップを有効化
 
   serverExternalPackages: ['@atcute/time-ms', '@atcute/tid', '@atcute/util-text', '@atcute/client', '@atcute/lexicons'],
 

@@ -68,15 +68,15 @@ $mantine-breakpoint-md: 62em;
 }
 
 .tabItemActive {
-    background: var(--mantine-color-blue-6) !important;
+    background: var(--mantine-color-blue-8) !important;
     color: #fff !important;
-    border-color: var(--mantine-color-blue-6) !important;
+    border-color: var(--mantine-color-blue-8) !important;
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 2px 8px rgba(25, 113, 194, 0.3);
 
     &:hover {
-        background: var(--mantine-color-blue-7) !important;
-        border-color: var(--mantine-color-blue-7) !important;
+        background: var(--mantine-color-blue-9) !important;
+        border-color: var(--mantine-color-blue-9) !important;
         color: #fff !important;
     }
 

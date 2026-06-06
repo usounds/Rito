@@ -38,11 +38,11 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
           key={`${tag}-${idx}`}
           variant="light"
           color={tag === 'Verified' ? 'orange' : 'blue'}
-          styles={{ root: { textTransform: 'none' } }}
+          styles={{ root: { textTransform: 'none', height: '24px', padding: 0 } }}
         >
           <Link
             href={`/${locale}/bookmark/search?tag=${encodeURIComponent(tag || '')}`}
-            style={{ textDecoration: 'none', color: 'inherit' }}
+            style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', height: '100%', padding: '0 8px' }}
           >
             <span
               style={{

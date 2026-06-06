@@ -93,11 +93,12 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
         <iframe
           width="100%"
           height="100%"
-          src={`https://www.youtube.com/embed/${youtubeId}`}
+          src={`https://www.youtube-nocookie.com/embed/${youtubeId}`}
           title="YouTube video player"
           frameBorder="0"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
+          loading="lazy"
           style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
         />
       </div>
@@ -116,6 +117,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
           frameBorder="0"
           allow="autoplay; fullscreen"
           allowFullScreen
+          loading="lazy"
           style={{ objectFit: "cover", position: "absolute", top: 0, left: 0 }}
         />
       </div>

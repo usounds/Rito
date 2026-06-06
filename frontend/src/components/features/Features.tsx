@@ -75,7 +75,7 @@ export function Features({ icon: Icon, title, description, href }: FeatureProps)
             </Text>
           </Link>
           <Link href={`${href}`} style={{ textDecoration: 'none' }}>
-            <Text size="sm" c="dimmed" lh={1.6}>
+            <Text size="sm" style={{ color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2))' }} lh={1.6}>
               {description}
             </Text>
 
@@ -87,7 +87,7 @@ export function Features({ icon: Icon, title, description, href }: FeatureProps)
             {title}
           </Text>
 
-          <Text size="sm" c="dimmed" lh={1.6}>
+          <Text size="sm" style={{ color: 'light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2))' }} lh={1.6}>
             {description}
           </Text>
         </>

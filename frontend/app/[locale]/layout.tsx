@@ -19,7 +19,7 @@ import { Outfit } from "next/font/google";
 
 const outfit = Outfit({
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   variable: "--font-outfit",
 });
 

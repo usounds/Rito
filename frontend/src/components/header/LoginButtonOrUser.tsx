@@ -151,6 +151,13 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                 // まず /api/me から activeDid を取得
                 const meRes = await fetch("/api/me", { credentials: "include" })
                 if (!meRes.ok) {
+                    setActiveDid(null);
+                    setIsLoginProcess(false);
+                    return;
+                }
+                const meData = await meRes.json();
+                const profile = meData.profile;
+                if (!profile) {
                     console.warn("Not authenticated yet");
 
                     if (handle && !isLoginProcess) {
@@ -218,10 +225,8 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
 
                     }
                 }
-                const meData = await meRes.json();
-                const profile = meData.profile
                 setUserProf(profile)
-                const did = meData.profile.did as ActorIdentifier;
+                const did = profile.did as ActorIdentifier;
                 console.log(`${did} was successfully resumed session.`);
                 
                 if (!did) {

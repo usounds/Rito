@@ -151,7 +151,7 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
         <>
             <div className={classes.articleGrid}>
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-                    {bookmarks.map((b, index) => renderArticle(b, index < 6))}
+                    {bookmarks.map((b, index) => renderArticle(b, index < 2))}
                 </SimpleGrid>
             </div>
             {hasMore && (

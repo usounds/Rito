@@ -221,7 +221,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-            {latestLikedBookmarks.map((b, index) => renderArticle(b, locale, index < 3))}
+            {latestLikedBookmarks.map((b, index) => renderArticle(b, locale, index < 2))}
           </SimpleGrid>
         </div>
 
@@ -241,7 +241,7 @@ export default async function HomePage({ params, searchParams }: DiscoverProps) 
         </div>
         <div className={classes.articleGrid}>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
-            {bookmarksWithLikes.map((b, index) => renderArticle(b, locale, index < 3))}
+            {bookmarksWithLikes.map((b, index) => renderArticle(b, locale, index < 2))}
           </SimpleGrid>
         </div>
       </>

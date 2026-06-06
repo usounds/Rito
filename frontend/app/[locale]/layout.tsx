@@ -15,6 +15,12 @@ import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { getBaseUrl, getDefaultOgImage } from "@/seo/publicPages";
+import { Outfit } from "next/font/google";
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  display: "swap",
+});
 
 export async function generateMetadata({
   params,
@@ -90,7 +96,7 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body>
+      <body className={outfit.className}>
         <NextIntlClientProvider messages={messages}>
           <MantineProvider>
             <Notifications position="top-right" zIndex={1000} />

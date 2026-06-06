@@ -1,7 +1,7 @@
 import '@mantine/core/styles.css';
 
 
-import { MantineProvider, ColorSchemeScript, mantineHtmlProps } from '@mantine/core';
+import { MantineProvider, ColorSchemeScript, mantineHtmlProps, createTheme } from '@mantine/core';
 import { Notifications } from "@mantine/notifications";
 import '@mantine/notifications/styles.css';
 import { NextIntlClientProvider, hasLocale } from "next-intl";
@@ -20,6 +20,11 @@ import { Outfit } from "next/font/google";
 const outfit = Outfit({
   subsets: ["latin"],
   display: "swap",
+  variable: "--font-outfit",
+});
+
+const theme = createTheme({
+  fontFamily: `var(--font-outfit), var(--mantine-font-family)`,
 });
 
 export async function generateMetadata({
@@ -96,9 +101,9 @@ export default async function RootLayout({
           `}
         </Script>
       </head>
-      <body className={outfit.className}>
+      <body className={`${outfit.variable} ${outfit.className}`}>
         <NextIntlClientProvider messages={messages}>
-          <MantineProvider>
+          <MantineProvider theme={theme}>
             <Notifications position="top-right" zIndex={1000} />
             <NextTopLoader
               showSpinner={false}

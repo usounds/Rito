@@ -129,7 +129,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
       src={currentSrc}
       alt={alt}
       fill
-      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+      sizes="(max-width: 48em) 90vw, (max-width: 62em) 45vw, 320px"
       style={{ objectFit: "cover" }}
       priority={priority}
       onError={handleError}

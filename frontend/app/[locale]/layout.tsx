@@ -85,6 +85,7 @@ export default async function RootLayout({
     <html lang={locale} {...mantineHtmlProps}>
       <head>
         <ColorSchemeScript />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         {/* GA4 gtag.js を非同期で読み込む */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-TD8B3FMRTJ"

@@ -95,7 +95,7 @@ describe('Like', () => {
     it('クリックでいいねを追加（未いいね状態）', async () => {
         render(<Like subject="https://example.com" likedBy={[]} />);
 
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: 'Like' });
         fireEvent.click(button);
 
         await waitFor(() => {
@@ -111,7 +111,7 @@ describe('Like', () => {
             />
         );
 
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: 'Like' });
         fireEvent.click(button);
 
         await waitFor(() => {
@@ -130,7 +130,7 @@ describe('Like', () => {
 
         render(<Like subject="https://example.com" likedBy={[]} />);
 
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: 'Like' });
         fireEvent.click(button);
 
         await waitFor(() => {
@@ -148,7 +148,7 @@ describe('Like', () => {
             />
         );
 
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: 'Like' });
         fireEvent.click(button);
 
         await waitFor(() => {
@@ -192,7 +192,7 @@ describe('Like', () => {
 
         render(<Like subject="https://example.com" likedBy={[]} />);
 
-        const button = screen.getByRole('button');
+        const button = screen.getByRole('button', { name: 'Like' });
         fireEvent.click(button);
 
         await waitFor(() => {

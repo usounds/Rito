@@ -38,14 +38,14 @@ export async function GET(req: NextRequest) {
   }
   const signedDid = req.cookies.get("USER_DID")?.value;
   if (!signedDid) {
-    const response = new NextResponse("Unauthorized", { status: 401 });
+    const response = NextResponse.json({ profile: null }, { status: 200 });
     response.cookies.delete({ name: "USER_DID", path: "/" });
     return response;
   }
 
   const did = verifySignedDid(signedDid);
   if (!did) {
-    const response = new NextResponse("Invalid signature", { status: 401 });
+    const response = NextResponse.json({ profile: null }, { status: 200 });
     response.cookies.delete({ name: "USER_DID", path: "/" });
     return response;
   }

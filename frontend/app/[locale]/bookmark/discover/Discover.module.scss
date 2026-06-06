@@ -231,19 +231,8 @@ $mantine-breakpoint-md: 62em;
 
 // ===== Article Grid =====
 .articleGrid {
-    animation: fadeInUp 0.4s ease-out;
-}
-
-@keyframes fadeInUp {
-    from {
-        opacity: 0;
-        transform: translateY(12px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    // アニメーションによるLCP遅延を防ぐため初期フェードインを無効化
+    // animation: fadeInUp 0.4s ease-out;
 }
 
 // ===== Article Card wrapper (for grid item animation) =====
@@ -251,23 +240,12 @@ $mantine-breakpoint-md: 62em;
     display: flex;
     flex-direction: column;
     height: 100%;
-    animation: cardAppear 0.4s ease-out backwards;
+    // アニメーションによるLCP遅延を防ぐため初期フェードインを無効化
+    // animation: cardAppear 0.4s ease-out backwards;
 }
 
-@for $i from 1 through 12 {
-    .articleItem:nth-child(#{$i}) {
-        animation-delay: #{$i * 0.05}s;
-    }
-}
-
-@keyframes cardAppear {
-    from {
-        opacity: 0;
-        transform: translateY(16px) scale(0.98);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
-}
+// @for $i from 1 through 12 {
+//     .articleItem:nth-child(#{$i}) {
+//         animation-delay: #{$i * 0.05}s;
+//     }
+// }

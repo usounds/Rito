@@ -133,7 +133,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
       style={{ objectFit: "cover" }}
       priority={priority}
       onError={handleError}
-      unoptimized={true}
+      unoptimized={unoptimized || currentSrc.startsWith('data:') || currentSrc.startsWith('blob:')}
     />
   );
 };

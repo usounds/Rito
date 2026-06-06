@@ -132,6 +132,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
       sizes="(max-width: 48em) 90vw, (max-width: 62em) 45vw, 320px"
       style={{ objectFit: "cover" }}
       priority={priority}
+      fetchPriority={priority ? "high" : undefined}
       onError={handleError}
       unoptimized={unoptimized || currentSrc.startsWith('data:') || currentSrc.startsWith('blob:')}
     />

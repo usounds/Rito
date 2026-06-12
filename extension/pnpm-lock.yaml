@@ -5,8 +5,9 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  shell-quote: ^1.8.4
   postcss: '>=8.5.10'
-  uuid: '>=11.0.3'
+  uuid: '>=11.1.1'
   tmp: '>=0.2.6'
 
 importers:
@@ -143,6 +144,9 @@ packages:
 
   '@atcute/multibase@1.2.0':
     resolution: {integrity: sha512-ZK2GRra+qIYq9nNuQB52m2ul0hOmCQEtPobGfTSUxm7pF0OGEkWGkWHugFhNEDVzHzTwPxHp6VGotdZFue4lYQ==}
+
+  '@atcute/multibase@1.2.1':
+    resolution: {integrity: sha512-zJhtqrG0BG84xPm18mOM4Lo1TPT5qiIVp+cSFLmyKP1Yy6YlNUNMs165VlkSrhb9EFyZWoQY2Q1oau5pmS057g==}
 
   '@atcute/repo@1.0.0':
     resolution: {integrity: sha512-3s6VDKMimmYxVXn9OTlYQ7bJGPRcZRyFZ+oF/IFdfm3PsEUxwwSXajw1bG0HVXns1rNgNnDUT0PqMlUd2GnjqA==}
@@ -1699,8 +1703,9 @@ packages:
     resolution: {integrity: sha512-7++dFhtcx3353uBaq8DDR4NuxBetBzC7ZQOhmTQInHEd6bSrXdiEyzCvG07Z44UYdLShWUyXt5M/yhz8ekcb1A==}
     engines: {node: '>=8'}
 
-  shell-quote@1.7.3:
-    resolution: {integrity: sha512-Vpfqwm4EnqGdlsBFNmHhxhElJYrdfcxPThu+ryKS5J8L/fhAwLazFZtq+S+TWZ9ANj2piSQLGj6NQg+lKPmxrw==}
+  shell-quote@1.8.4:
+    resolution: {integrity: sha512-VsC6n6vz1ihYYyZZwX7YZSF5l5x36ca17OC+a69h94YqB7X6XLwf+5MOgynYir2SLFUbl8gIYvBo8K8RoNQ6bQ==}
+    engines: {node: '>= 0.4'}
 
   shellwords@0.1.1:
     resolution: {integrity: sha512-vFwSUfQvqybiICwZY5+DAWIPLKsWO31Q91JSKl3UYv+K5c2QRPzn0qzec6QPu1Qc9eHYItiP3NdJqNVqetYAww==}
@@ -2067,12 +2072,12 @@ snapshots:
   '@atcute/cbor@2.3.2':
     dependencies:
       '@atcute/cid': 2.4.1
-      '@atcute/multibase': 1.2.0
+      '@atcute/multibase': 1.2.1
       '@atcute/uint8array': 1.1.2
 
   '@atcute/cid@2.4.1':
     dependencies:
-      '@atcute/multibase': 1.2.0
+      '@atcute/multibase': 1.2.1
       '@atcute/uint8array': 1.1.2
 
   '@atcute/client@5.0.0(@atcute/lexicons@2.0.0)(typescript@6.0.3)':
@@ -2160,6 +2165,10 @@ snapshots:
       '@atcute/uint8array': 1.1.2
 
   '@atcute/multibase@1.2.0':
+    dependencies:
+      '@atcute/uint8array': 1.1.2
+
+  '@atcute/multibase@1.2.1':
     dependencies:
       '@atcute/uint8array': 1.1.2
 
@@ -2909,7 +2918,7 @@ snapshots:
   fx-runner@1.4.0:
     dependencies:
       commander: 2.9.0
-      shell-quote: 1.7.3
+      shell-quote: 1.8.4
       spawn-sync: 1.0.15
       when: 3.7.7
       which: 1.2.4
@@ -3519,7 +3528,7 @@ snapshots:
 
   shebang-regex@3.0.0: {}
 
-  shell-quote@1.7.3: {}
+  shell-quote@1.8.4: {}
 
   shellwords@0.1.1: {}
 

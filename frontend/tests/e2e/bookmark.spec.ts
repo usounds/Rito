@@ -108,7 +108,7 @@ test.describe('Bookmark Operations', () => {
     await expect(page.getByRole('dialog').getByText('Blueskyで共有')).toBeVisible();
   });
 
-  test('should navigate to registration page from other user bookmark menu', async ({ page }) => {
+  test('should navigate to registration page from other user bookmark menu', async ({ page, isMobile }) => {
     // ログイン済みの状態でホーム（発見）ページへ
     await page.goto('/ja');
 
@@ -116,8 +116,16 @@ test.describe('Bookmark Operations', () => {
     const otherBookmark = page.locator('.mantine-Card-root').filter({ hasText: 'テストタイトル2' }).first();
     await expect(otherBookmark).toBeVisible();
 
-    // そのブックマークの三点リーダーボタンをクリック
-    await otherBookmark.getByRole('button', { name: 'Settings' }).click();
+    // そのブックマークの三点リーダーボタンを取得してスクロールイン
+    const settingsButton = otherBookmark.getByRole('button', { name: 'Settings' }).first();
+    await settingsButton.scrollIntoViewIfNeeded();
+
+    // モバイルの場合はtap()を使用し、それ以外はclick()を使用する
+    if (isMobile) {
+      await settingsButton.tap();
+    } else {
+      await settingsButton.click();
+    }
 
     // 「登録」をクリック
     await page.getByRole('menuitem', { name: '登録', exact: true }).click();

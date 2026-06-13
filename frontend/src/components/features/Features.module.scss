@@ -35,9 +35,25 @@ $mantine-breakpoint-xl: 88em;
 
 // ===== Feature card animation =====
 .featureItem {
-  // アニメーションによるLCP遅延を防ぐため初期アニメーションを無効化
-  // animation: featureAppear 0.5s ease-out both;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  border-radius: var(--mantine-radius-md);
+  padding: var(--mantine-spacing-lg);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2.5px);
+    border-color: light-dark(rgba(15, 23, 42, 0.15), rgba(255, 255, 255, 0.18));
+    box-shadow: light-dark(
+      0 10px 25px 0 rgba(31, 38, 135, 0.06),
+      0 10px 25px 0 rgba(0, 0, 0, 0.25)
+    );
+  }
 }
+
 
 // @for $i from 1 through 8 {
 //   .featureItem:nth-child(#{$i}) {

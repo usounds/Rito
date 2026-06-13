@@ -58,7 +58,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
   };
 
   return (
-    <Stack mb="sm">
+    <Stack mt="xl" mb="sm">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

@@ -14,12 +14,20 @@ export function ScrollToTop() {
                     <ActionIcon
                         size="lg"
                         radius="xl"
-                        style={transitionStyles}
+                        style={{
+                            ...transitionStyles,
+                            background: 'var(--glass-bg)',
+                            backdropFilter: 'var(--glass-blur)',
+                            WebkitBackdropFilter: 'var(--glass-blur)',
+                            border: '1px solid var(--glass-border)',
+                            boxShadow: 'var(--glass-shadow)',
+                            color: 'var(--mantine-color-blue-6)',
+                            transition: 'background-color 0.3s, border-color 0.3s, transform 0.2s',
+                        }}
                         onClick={() => scrollTo({ y: 0 })}
-                        variant="filled"
-                        color="blue"
                         aria-label="Scroll to top"
                     >
+
                         <ArrowUp style={{ width: rem(24), height: rem(24) }} />
                     </ActionIcon>
                 )}

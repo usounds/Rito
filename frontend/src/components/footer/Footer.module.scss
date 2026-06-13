@@ -7,8 +7,16 @@ $mantine-breakpoint-xl: 88em;
 .footer {
   margin-top: 60px;
   margin-bottom: 30px;
-  border-top: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-5));
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-left: none;
+  border-right: none;
+  box-shadow: var(--glass-shadow);
+  transition: background-color 0.3s, border-color 0.3s;
 }
+
 
 .inner {
   display: flex;

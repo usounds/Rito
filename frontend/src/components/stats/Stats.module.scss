@@ -29,3 +29,20 @@ $mantine-breakpoint-xl: 88em;
   font-weight: 700;
   text-transform: uppercase;
 }
+
+.statCard {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: light-dark(
+      0 10px 25px rgba(31, 38, 135, 0.06),
+      0 10px 25px rgba(0, 0, 0, 0.25)
+    );
+  }
+}

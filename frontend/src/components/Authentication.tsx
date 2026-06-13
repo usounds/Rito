@@ -24,7 +24,8 @@ import { AtPassportIcon, AtPassportUI } from '@atpassport/client/ui';
 import { getAtPassport } from '@/logic/HandleAtPassport';
 
 export function Authentication({ lang = 'ja' }: { lang?: string }) {
-  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [isBlueskyLoading, setIsBlueskyLoading] = useState<boolean>(false);
+  const [isAtPassportLoading, setIsAtPassportLoading] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const publicAgent = useXrpcAgentStore(state => state.publicAgent);
   const setIsLoginProcess = useXrpcAgentStore(state => state.setIsLoginProcess);
@@ -52,7 +53,8 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
     if (loader) {
       loader.done();
     }
-    setIsLoading(false);
+    setIsBlueskyLoading(false);
+    setIsAtPassportLoading(false);
     setIsLoginProcess(false);
   }, []); // 初回表示時のみ実行
 
@@ -78,7 +80,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
   });
 
   async function performLogin(values: { handle: string }, prompt?: "none" | "login" | "consent" | "select_account" | "create") {
-    setIsLoading(true);
+    setIsBlueskyLoading(true);
 
     notifications.show({
       id: 'login-process',
@@ -111,7 +113,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
               autoClose: true,
               icon: <X />
             });
-            setIsLoading(false);
+            setIsBlueskyLoading(false);
             return;
           }
         }
@@ -130,7 +132,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
         autoClose: true,
         icon: <X />
       });
-      setIsLoading(false);
+      setIsBlueskyLoading(false);
       return;
     }
 
@@ -188,7 +190,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
         icon: <X />
       });
       loader.done()
-      setIsLoading(false);
+      setIsBlueskyLoading(false);
     } finally {
       //なにもしない
     }
@@ -196,7 +198,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
   }
 
   async function performAtPassportLogin() {
-    setIsLoading(true);
+    setIsAtPassportLoading(true);
 
     notifications.show({
       id: 'atpassport-login-process',
@@ -235,7 +237,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
         icon: <X />
       });
       loader.done();
-      setIsLoading(false);
+      setIsAtPassportLoading(false);
     }
   }
 
@@ -298,7 +300,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
             <Bookmark size={28} color="var(--mantine-color-blue-filled)" />
             <Title order={2} style={{ letterSpacing: '-0.5px', fontWeight: 700 }}>{messages.title}</Title>
           </Group>
-          <Text size="xs" c="dimmed" fw={500} style={{ textTransform: 'uppercase', letterSpacing: '1px' }}>
+          <Text size="xs" style={{ color: 'light-dark(rgba(0, 0, 0, 0.7), rgba(255, 255, 255, 0.7))', textTransform: 'uppercase', letterSpacing: '1px' }} fw={500}>
             {messages.login.titleDescription}
           </Text>
         </Stack>
@@ -309,7 +311,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
             onChange={(event) => handleCheckedChange(event.currentTarget.checked)}
             size="xs"
             label={
-              <Text size="xs" c="dimmed">
+              <Text size="xs" style={{ color: 'light-dark(#000000, #ffffff)' }}>
                 {messages.login.field.agree.title} {tosLink} {privacyLink}
               </Text>
             }
@@ -320,7 +322,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
               label={messages.login.field.handle.title}
               placeholder={messages.login.field.handle.placeholder}
               value={form.values.handle}
-              disabled={isLoading}
+              disabled={isBlueskyLoading || isAtPassportLoading}
               leftSection="@"
               autoCapitalize="none"
               autoCorrect="off"
@@ -339,8 +341,8 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
               type="submit"
               radius="md"
               color="blue.7"
-              loading={isLoading}
-              disabled={!checked}
+              loading={isBlueskyLoading}
+              disabled={!checked || isAtPassportLoading}
               leftSection={<FaBluesky size={22} />}
               fullWidth
             >
@@ -355,15 +357,15 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
               variant="outline"
               color="blue.7"
               radius="md"
-              loading={isLoading}
-              disabled={!checked}
+              loading={isAtPassportLoading}
+              disabled={!checked || isBlueskyLoading}
               leftSection={<AtPassportIcon size={24} />}
               onClick={() => performAtPassportLogin()}
               fullWidth
             >
               {AtPassportUI[lang === 'ja' ? 'ja' : 'en'].title}
             </Button>
-            <Text size="xs" c="dimmed" style={{ textAlign: 'left' }}>
+            <Text size="xs" style={{ color: 'light-dark(rgba(0, 0, 0, 0.7), rgba(255, 255, 255, 0.7))', textAlign: 'left' }}>
               {AtPassportUI[lang === 'ja' ? 'ja' : 'en'].description}
             </Text>
           </Stack>
@@ -374,10 +376,10 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
             component="button"
             type="button"
             onClick={() => performLogin({ handle: 'https://bsky.social' }, 'create')}
-            c="dimmed"
             size="xs"
             disabled={!checked}
             style={{
+              color: 'light-dark(rgba(0, 0, 0, 0.7), rgba(255, 255, 255, 0.7))',
               opacity: checked ? 1 : 0.5,
               cursor: checked ? 'pointer' : 'not-allowed',
               textDecoration: 'none'

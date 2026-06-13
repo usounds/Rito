@@ -17,6 +17,8 @@ import {
     Plane,
     Layers,
     Camera,
+    ChevronLeft,
+    ChevronRight,
 } from 'lucide-react';
 
 const categoryIcons: Record<string, React.ReactNode> = {
@@ -50,6 +52,16 @@ export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
         router.push(`${pathname}?${params.toString()}`);
     };
 
+    const scroll = (direction: 'left' | 'right') => {
+        if (scrollRef.current) {
+            const scrollAmount = 240;
+            scrollRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
+            });
+        }
+    };
+
     useEffect(() => {
         if (scrollRef.current) {
             const activeElement = scrollRef.current.querySelector(`[data-value="${activeTab}"]`) as HTMLElement;
@@ -65,6 +77,14 @@ export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
 
     return (
         <div className={classes.tabsContainer}>
+            <button
+                className={`${classes.scrollButton} ${classes.scrollLeft}`}
+                onClick={() => scroll('left')}
+                aria-label="Scroll left"
+                type="button"
+            >
+                <ChevronLeft size={16} />
+            </button>
             <div className={classes.tabsScroll} ref={scrollRef}>
                 <div className={classes.tabsList}>
                     {categories.map((category) => (
@@ -81,6 +101,14 @@ export default function DiscoverTabs({ activeTab }: { activeTab: string }) {
                     ))}
                 </div>
             </div>
+            <button
+                className={`${classes.scrollButton} ${classes.scrollRight}`}
+                onClick={() => scroll('right')}
+                aria-label="Scroll right"
+                type="button"
+            >
+                <ChevronRight size={16} />
+            </button>
         </div>
     );
 }

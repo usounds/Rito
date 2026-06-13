@@ -1,22 +1,27 @@
 .card {
   position: relative;
-  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
-  border: 1px solid light-dark(var(--mantine-color-gray-2), var(--mantine-color-dark-4));
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   display: flex;
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--glass-shadow);
+  border-radius: 20px;
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
     box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-    border-color 0.25s ease;
+    border-color 0.25s ease,
+    background-color 0.25s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    border-color: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.2));
-    box-shadow: light-dark(0 8px 25px -5px rgba(0, 0, 0, 0.1),
-        0 8px 25px -5px rgba(0, 0, 0, 0.5));
+    transform: translateY(-4px);
+    border-color: light-dark(rgba(15, 23, 42, 0.15), rgba(255, 255, 255, 0.18));
+    box-shadow: light-dark(
+      0 24px 48px -12px rgba(0, 0, 0, 0.08),
+      0 32px 64px -16px rgba(0, 0, 0, 0.35)
+    );
 
     .title a {
       color: var(--mantine-color-blue-6);
@@ -28,6 +33,7 @@
     }
   }
 }
+
 
 .cardContent {
   display: flex;
@@ -46,6 +52,16 @@
   width: 100%;
   margin-bottom: 0;
   overflow: hidden;
+  border-radius: 20px 20px 0 0;
+  transform: translateZ(0);
+
+  a,
+  div,
+  img,
+  iframe {
+    border-radius: inherit;
+    overflow: hidden;
+  }
 
   img,
   iframe {
@@ -217,9 +233,11 @@
   padding: 6px 14px 10px;
   border-top: 1px solid light-dark(rgba(0, 0, 0, 0.04),
       rgba(255, 255, 255, 0.06));
+  border-radius: 0 0 20px 20px;
 
   @media (max-width: 48em) {
     padding: 6px 10px 8px;
+    border-radius: 0 0 20px 20px;
   }
 }
 

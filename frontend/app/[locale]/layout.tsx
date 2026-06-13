@@ -1,4 +1,5 @@
 import '@mantine/core/styles.css';
+import '../globals.css';
 
 
 import { MantineProvider, ColorSchemeScript, mantineHtmlProps, createTheme } from '@mantine/core';
@@ -23,9 +24,66 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
+// Suppress false-positive React 19 warning for ColorSchemeScript in development
+if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  const origError = console.error;
+  console.error = (...args: any[]) => {
+    if (typeof args[0] === 'string' && args[0].includes('Encountered a script tag')) {
+      return;
+    }
+    origError.apply(console, args);
+  };
+}
+
+
 const theme = createTheme({
   fontFamily: `var(--font-outfit), var(--mantine-font-family)`,
+  components: {
+    Modal: {
+      styles: {
+        content: {
+          background: 'light-dark(rgba(255, 255, 255, 0.88), rgba(15, 15, 20, 0.88))',
+          color: 'light-dark(var(--mantine-color-black), var(--mantine-color-white))',
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
+          border: '1px solid var(--glass-border)',
+          boxShadow: 'var(--glass-shadow)',
+        },
+        header: {
+          background: 'transparent',
+        },
+        overlay: {
+          backdropFilter: 'blur(8px)',
+          WebkitBackdropFilter: 'blur(8px)',
+          backgroundColor: 'light-dark(rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.65))',
+        },
+      },
+    },
+    Drawer: {
+      styles: {
+        content: {
+          background: 'light-dark(rgba(255, 255, 255, 0.88), rgba(15, 15, 20, 0.88))',
+          color: 'light-dark(var(--mantine-color-black), var(--mantine-color-white))',
+          backdropFilter: 'blur(32px)',
+          WebkitBackdropFilter: 'blur(32px)',
+          borderLeft: '1px solid var(--glass-border)',
+          boxShadow: 'var(--glass-shadow)',
+        },
+        header: {
+          background: 'transparent',
+        },
+        overlay: {
+          backdropFilter: 'blur(6px)',
+          WebkitBackdropFilter: 'blur(6px)',
+          backgroundColor: 'light-dark(rgba(0, 0, 0, 0.3), rgba(0, 0, 0, 0.6))',
+        },
+      },
+    },
+
+  },
 });
+
+
 
 export async function generateMetadata({
   params,
@@ -86,21 +144,6 @@ export default async function RootLayout({
       <head>
         <ColorSchemeScript />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        {/* GA4 gtag.js を非同期で読み込む */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-TD8B3FMRTJ"
-          strategy="afterInteractive"
-        />
-
-        {/* GA4 初期化 */}
-        <Script id="ga4-init" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-TD8B3FMRTJ');
-          `}
-        </Script>
       </head>
       <body className={`${outfit.variable} ${outfit.className}`}>
         <NextIntlClientProvider messages={messages}>
@@ -116,7 +159,23 @@ export default async function RootLayout({
             <ScrollToTop />
           </MantineProvider>
         </NextIntlClientProvider>
+        {/* GA4 gtag.js を非同期で読み込む */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-TD8B3FMRTJ"
+          strategy="afterInteractive"
+        />
+
+        {/* GA4 初期化 */}
+        <Script id="ga4-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-TD8B3FMRTJ');
+          `}
+        </Script>
       </body>
     </html >
   );
 }
+

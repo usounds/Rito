@@ -2,25 +2,68 @@ $mantine-breakpoint-xs: 36em;
 $mantine-breakpoint-sm: 48em;
 $mantine-breakpoint-md: 62em;
 
-// ===== Category Tabs =====
 .tabsContainer {
     position: sticky;
-    top: 0;
-    z-index: 100;
-    // backdrop-filter: blur(12px);
-    // -webkit-backdrop-filter: blur(12px);
-    padding: 12px 0;
-    margin: 0 -16px;
-    padding-left: 16px;
-    padding-right: 16px;
-    transition: box-shadow 0.3s ease;
+    top: 12px;
+    left: 0;
+    right: 0;
+    z-index: 90;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    border-radius: 999px;
+    width: 100%;
+    max-width: 100%;
+    margin: 8px 0 0;
+    padding: 6px 12px;
+    transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+}
+
+.scrollButton {
+    display: none;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    color: light-dark(var(--mantine-color-black), var(--mantine-color-white));
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--glass-shadow);
+    z-index: 5;
+    flex-shrink: 0;
+    transition: background-color 0.2s, transform 0.2s;
+
+    &:hover {
+        background: light-dark(rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.2));
+        transform: scale(1.05);
+    }
+
+    @media (min-width: 48em) {
+        display: flex;
+    }
+}
+
+.scrollLeft {
+    margin-right: 4px;
+}
+
+.scrollRight {
+    margin-left: 4px;
 }
 
 .tabsScroll {
+    flex: 1;
     overflow-x: auto;
     overflow-y: hidden;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    padding: 4px 8px;
 
     &::-webkit-scrollbar {
         display: none;
@@ -42,8 +85,8 @@ $mantine-breakpoint-md: 62em;
     border: 1.5px solid light-dark(rgba(0, 0, 0, 0.08),
             rgba(255, 255, 255, 0.3));
     background: light-dark(var(--mantine-color-white), var(--mantine-color-dark-6));
-    color: light-dark(var(--mantine-color-gray-7),
-            var(--mantine-color-gray-4));
+    color: light-dark(var(--mantine-color-black),
+            var(--mantine-color-gray-3));
     font-size: 13px;
     font-weight: 500;
     cursor: pointer;
@@ -53,10 +96,8 @@ $mantine-breakpoint-md: 62em;
     line-height: 1;
 
     &:hover {
-        background: light-dark(rgba(0, 0, 0, 0.04),
-                rgba(255, 255, 255, 0.08));
-        border-color: light-dark(rgba(0, 0, 0, 0.15),
-                rgba(255, 255, 255, 0.15));
+        background: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-5));
+        border-color: light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
     }
 
     svg {
@@ -189,7 +230,7 @@ $mantine-breakpoint-md: 62em;
 
 // ===== Skeleton =====
 .skeletonCard {
-    border-radius: var(--mantine-radius-md);
+    border-radius: 20px;
     overflow: hidden;
 
     @media (max-width: $mantine-breakpoint-sm) {

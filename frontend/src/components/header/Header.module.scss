@@ -8,8 +8,27 @@ $mantine-breakpoint-xl: 88em;
   height: 60px;
   padding-left: var(--mantine-spacing-md);
   padding-right: var(--mantine-spacing-md);
-
+  position: relative;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+  border-radius: 999px;
+  width: calc(100% - 24px);
+  max-width: 960px;
+  margin: 12px auto 0;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
 }
+
+
+
+
+
+
 
 
 .title {

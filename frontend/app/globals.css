@@ -1,26 +1,55 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light dark;
+  --background: #f8fafc;
+  --foreground: #000000;
+
+
+  /* Glassmorphism Design Tokens (Stronger Frosted Effect) */
+  --glass-bg: rgba(255, 255, 255, 0.65);
+  --glass-border: rgba(15, 23, 42, 0.08);
+  --glass-blur: blur(28px) saturate(140%);
+  --glass-shadow: 0 16px 48px -12px rgba(0, 0, 0, 0.08);
+
+  /* Background Aurora Gradients */
+  --aurora-gradient: radial-gradient(circle at 10% 20%, rgba(219, 234, 254, 0.45) 0%, transparent 50%),
+                     radial-gradient(circle at 90% 10%, rgba(253, 244, 245, 0.55) 0%, transparent 50%),
+                     radial-gradient(circle at 50% 80%, rgba(243, 232, 255, 0.45) 0%, transparent 50%);
 }
+
+html[data-mantine-color-scheme="light"] {
+  color-scheme: light;
+}
+
+html[data-mantine-color-scheme="dark"] {
+  color-scheme: dark;
+  --background: #0b0f19;
+  --foreground: #f8fafc;
+  --glass-bg: rgba(15, 22, 36, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.6);
+  --aurora-gradient: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.25) 0%, transparent 60%),
+                     radial-gradient(circle at 85% 20%, rgba(139, 92, 246, 0.22) 0%, transparent 60%),
+                     radial-gradient(circle at 50% 80%, rgba(236, 72, 153, 0.15) 0%, transparent 50%);
+}
+
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-outfit), var(--font-geist-sans);
 }
 
 body {
-  background: var(--background);
+  background: var(--aurora-gradient);
+  background-color: var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-outfit), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease;
 }

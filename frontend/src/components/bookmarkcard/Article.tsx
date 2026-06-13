@@ -92,7 +92,7 @@ export function Article({
     // categoryName は未使用のため削除。もし必要になったら locale を使って categoryNames から取得する。
 
     return (
-        <Card withBorder radius="md" padding={0} className={classes.card}>
+        <Card withBorder radius={20} padding={0} className={classes.card}>
             <Box style={{ position: 'relative', flex: 1 }} onClick={() => setIsClicked(!isClicked)}>
                 <BlurReveal moderated={moderations.length > 0} moderations={moderations} blurAmount={6} overlayText={messages.detail.view}>
                     <div className={classes.cardContent}>

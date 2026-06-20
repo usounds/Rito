@@ -20,7 +20,7 @@ export async function generateMetadata({
     const baseUrl = getBaseUrl();
     const ogImage = getDefaultOgImage(baseUrl);
     const title = `${t("header.about")} | ${t("title")}`;
-    const description = t("description");
+    const description = t("aboutDetails.intro");
 
     return {
         title,
@@ -57,7 +57,7 @@ export default async function AboutPage({
         "@context": "https://schema.org",
         "@type": "AboutPage",
         "name": t("header.about"),
-        "description": t("description"),
+        "description": t("aboutDetails.intro"),
         "url": `${baseUrl}/${locale}/about`,
         "inLanguage": locale,
         "mainEntity": {
@@ -65,7 +65,7 @@ export default async function AboutPage({
             "name": t("title"),
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "All",
-            "description": t("description"),
+            "description": t("aboutDetails.intro"),
             "featureList": featureItems.map(feature => `${feature.title}: ${feature.description}`),
         }
     };

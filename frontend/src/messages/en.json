@@ -1,6 +1,48 @@
 {
 	"title": "Rito",
 	"description": "A social bookmarking service built on the atproto. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
+	"aboutDetails": {
+		"intro": "Rito is an atproto-based social bookmarking service for saving useful links, adding your own context, and discovering what other people found worth keeping. Use your existing atproto account, including Bluesky accounts, without creating a separate Rito identity.",
+		"workflow": {
+			"title": "What you can do with Rito",
+			"description": "A bookmark becomes more than a URL. Rito combines the page information with community context so that links remain useful after they leave your timeline.",
+			"save": {
+				"title": "Save links from across the web",
+				"description": "Register articles, tools, videos, app pages, and other public URLs. Rito collects available page metadata such as the title, description, and preview image."
+			},
+			"organize": {
+				"title": "Add comments and tags",
+				"description": "Record why a link matters, group related bookmarks with tags, and search them later instead of relying on a social timeline or browser history."
+			},
+			"discover": {
+				"title": "Discover links through people",
+				"description": "The home page brings together recently saved and discussed links. Search and category views help you move from a broad feed to a specific subject."
+			},
+			"access": {
+				"title": "Save from your normal browser",
+				"description": "Use the website, Chrome extension, Firefox add-on, or bookmarklet. They all lead to the same Rito bookmarks associated with your atproto account."
+			}
+		},
+		"categories": {
+			"title": "Why the home page uses automatic categories",
+			"description": "Shared links arrive with different tags, languages, and levels of detail. Rito classifies them into a small, consistent set of topics so the Discover page stays navigable as the collection grows.",
+			"input": "Classification considers the page title and description first, then tags and the bookmarker's comment.",
+			"result": "Each bookmark is assigned one primary topic, such as Technology, Social, Food, Travel, Entertainment, Photo, or atproto. Unclear items fall back to General.",
+			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized."
+		},
+		"myApps": {
+			"title": "My Apps: see the atproto services in your repo",
+			"description": "An atproto repository contains collections identified by NSIDs. My Apps turns those technical collection names into a visual catalog of services your account has records for.",
+			"collections": "After you log in, Rito reads the collection list exposed by your PDS and groups related NSIDs by service.",
+			"catalog": "When a matching service bookmark exists, Rito shows its website title, description, image, and tags, making unfamiliar collection names easier to understand.",
+			"boundary": "My Apps is an informational catalog. Opening it does not install an app, grant new permissions, or prove that you currently use or endorse every listed service.",
+			"action": "Open My Apps"
+		},
+		"data": {
+			"title": "What happens to your data",
+			"description": "Rito writes your bookmark records to your atproto Personal Data Server (PDS). Rito also indexes the information needed to provide public discovery, search, previews, categories, and safety filtering. Bookmarks intended for this social service may therefore be visible to other people; do not use Rito as a private vault for sensitive URLs or notes."
+		}
+	},
 	"loading": "Loading",
 	"button": {
 		"search": "Search",

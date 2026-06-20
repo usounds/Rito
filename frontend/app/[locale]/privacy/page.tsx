@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import ReactMarkdown from "react-markdown";
-import { Container } from "@mantine/core";
+import { Container, Paper, Typography } from "@mantine/core";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
@@ -71,13 +71,27 @@ export default async function PrivacyPage({ params }: PageProps) {
   }
 
   return (
-    <Container size="md" mx="auto">
+    <Container size="md" mx="auto" my="xl">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <Breadcrumbs items={[{ label: t("header.privacypolicy") }]} />
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <Paper
+        p={{ base: "md", sm: "xl" }}
+        style={{
+          background: "var(--glass-bg)",
+          border: "1px solid var(--glass-border)",
+          borderRadius: "24px",
+          boxShadow: "var(--glass-shadow)",
+          backdropFilter: "var(--glass-blur)",
+          WebkitBackdropFilter: "var(--glass-blur)",
+        }}
+      >
+        <Typography>
+          <ReactMarkdown>{content}</ReactMarkdown>
+        </Typography>
+      </Paper>
     </Container>
   );
 }

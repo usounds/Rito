@@ -467,5 +467,11 @@
 		"anime_game": "アニメ・ゲーム",
 		"atprotocol": "atproto",
 		"photo": "写真"
+	},
+	"cookieConsent": {
+		"message": "このサイトでは、利便性の向上やアクセス解析のためにクッキー（Cookie）を使用しています。Googleアナリティクス（GA4）によるアクセス情報の収集を許可しますか？",
+		"accept": "許可する",
+		"decline": "拒否する",
+		"readMore": "プライバシーポリシー"
 	}
 }

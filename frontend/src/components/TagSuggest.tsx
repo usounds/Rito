@@ -69,7 +69,15 @@ export function TagSuggestion({
                         key={`${tag}-${idx}`}
                         variant="light"
                         color={tag === "Verified" ? "orange" : "blue"}
-                        styles={{ root: { textTransform: "none", cursor: "pointer" } }}
+                        styles={{
+                            root: {
+                                textTransform: "none",
+                                cursor: "pointer",
+                                backgroundColor: "light-dark(var(--badge-bg), color-mix(in srgb, var(--badge-bg) 50%, transparent))",
+                                color: "light-dark(var(--badge-color), color-mix(in srgb, var(--badge-color) 70%, transparent))",
+                                border: "1px solid light-dark(transparent, color-mix(in srgb, var(--badge-color) 20%, transparent))",
+                            }
+                        }}
                         onClick={() => selectTag(tag)}
                         data-testid="badge"
                     >

@@ -38,7 +38,16 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
           key={`${tag}-${idx}`}
           variant="light"
           color={tag === 'Verified' ? 'orange' : 'blue'}
-          styles={{ root: { textTransform: 'none', height: '24px', padding: 0 } }}
+          styles={{
+            root: {
+              textTransform: 'none',
+              height: '24px',
+              padding: 0,
+              backgroundColor: "light-dark(var(--badge-bg), color-mix(in srgb, var(--badge-bg) 50%, transparent))",
+              color: "light-dark(var(--badge-color), color-mix(in srgb, var(--badge-color) 70%, transparent))",
+              border: "1px solid light-dark(transparent, color-mix(in srgb, var(--badge-color) 20%, transparent))",
+            }
+          }}
         >
           <Link
             href={`/${locale}/bookmark/search?tag=${encodeURIComponent(tag || '')}`}

@@ -15,6 +15,11 @@ function getRedirectUrl(returnTo = "/") {
   return redirectUrl.origin === baseUrl.origin ? redirectUrl : baseUrl;
 }
 
+function getPublicCallbackUrl(req: NextRequest) {
+  const publicUrl = new URL(process.env.NEXT_PUBLIC_URL!);
+  return new URL(`${req.nextUrl.pathname}${req.nextUrl.search}`, publicUrl).toString();
+}
+
 export async function GET(req: NextRequest) {
   const atpstateCookie = req.cookies.get("atpstate");
   const expectedAtpState = atpstateCookie?.value;
@@ -22,12 +27,13 @@ export async function GET(req: NextRequest) {
   console.log('AtPassport Callback - Cookie atpstate:', expectedAtpState ? `Found (len: ${expectedAtpState.length})` : 'Not Found');
 
   const atp = getAtPassport();
+  const callbackUrl = getPublicCallbackUrl(req);
 
   try {
     // parseCallback により、パラメータの抽出と atpstate の照合を同時に行う
     // expectedAtpState が undefined の場合、ライブラリの仕様によっては検証をスキップして続行してしまう可能性があるため、
     // 明示的にチェックを行う
-    const { handle, customParams } = atp.parseCallback(req.url, expectedAtpState);
+    const { handle, customParams } = atp.parseCallback(callbackUrl, expectedAtpState);
     const returnTo = customParams.returnTo || "/";
 
     if (!handle) {
@@ -65,7 +71,7 @@ export async function GET(req: NextRequest) {
     try {
       const atp = getAtPassport();
       // 解析だけ試みる（検証は失敗しているはずなので第二引数は undefined 等でよい）
-      const { customParams } = atp.parseCallback(req.url);
+      const { customParams } = atp.parseCallback(callbackUrl);
       if (customParams.returnTo) {
         fallbackUrl = customParams.returnTo;
       }

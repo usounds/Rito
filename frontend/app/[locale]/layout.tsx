@@ -16,6 +16,7 @@ import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
+import { React19Suppressor } from "@/components/React19Suppressor";
 import { getBaseUrl, getDefaultOgImage } from "@/seo/publicPages";
 import { Outfit } from "next/font/google";
 
@@ -25,16 +26,7 @@ const outfit = Outfit({
   variable: "--font-outfit",
 });
 
-// Suppress false-positive React 19 warning for ColorSchemeScript in development
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  const origError = console.error;
-  console.error = (...args: any[]) => {
-    if (typeof args[0] === 'string' && args[0].includes('Encountered a script tag')) {
-      return;
-    }
-    origError.apply(console, args);
-  };
-}
+
 
 
 const theme = createTheme({
@@ -159,6 +151,7 @@ export default async function RootLayout({
             <Footer locale={locale} />
             <ScrollToTop />
             <CookieConsent locale={locale} />
+            <React19Suppressor />
           </MantineProvider>
         </NextIntlClientProvider>
         {/* GA4 gtag.js を非同期で読み込む */}

@@ -466,5 +466,11 @@
 		"anime_game": "Anime/Game",
 		"atprotocol": "atproto",
 		"photo": "Photo"
+	},
+	"cookieConsent": {
+		"message": "We use cookies to improve convenience and analyze traffic. Do you consent to the collection of access information by Google Analytics (GA4)?",
+		"accept": "Accept",
+		"decline": "Decline",
+		"readMore": "Privacy Policy"
 	}
 }

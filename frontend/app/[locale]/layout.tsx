@@ -15,6 +15,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import NextTopLoader from 'nextjs-toploader';
 import Script from "next/script";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { CookieConsent } from "@/components/CookieConsent";
 import { getBaseUrl, getDefaultOgImage } from "@/seo/publicPages";
 import { Outfit } from "next/font/google";
 
@@ -157,6 +158,7 @@ export default async function RootLayout({
             <main>{children}</main>
             <Footer locale={locale} />
             <ScrollToTop />
+            <CookieConsent locale={locale} />
           </MantineProvider>
         </NextIntlClientProvider>
         {/* GA4 gtag.js を非同期で読み込む */}
@@ -165,11 +167,33 @@ export default async function RootLayout({
           strategy="afterInteractive"
         />
 
-        {/* GA4 初期化 */}
+        {/* GA4 初期化 & Consent Mode */}
         <Script id="ga4-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
+
+            // クッキーから同意状況を確認する
+            var consentState = 'denied';
+            try {
+              var cookies = document.cookie.split('; ');
+              var consentCookie = cookies.find(function(row) {
+                return row.trim().startsWith('cookie-consent=');
+              });
+              if (consentCookie && consentCookie.split('=')[1] === 'granted') {
+                consentState = 'granted';
+              }
+            } catch (e) {
+              console.error(e);
+            }
+
+            gtag('consent', 'default', {
+              'analytics_storage': consentState,
+              'ad_storage': consentState,
+              'ad_user_data': consentState,
+              'ad_personalization': consentState
+            });
+
             gtag('js', new Date());
             gtag('config', 'G-TD8B3FMRTJ');
           `}

@@ -2,6 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { getOAuthClient } from '@/logic/HandleOauthClientNode'
 import { getAtPassport } from "@/logic/HandleAtPassport";
 
+function getRedirectUrl(returnTo = "/") {
+  const publicUrl = process.env.NEXT_PUBLIC_URL;
+
+  if (!publicUrl) {
+    throw new Error("NEXT_PUBLIC_URL is required for AtPassport callbacks");
+  }
+
+  const baseUrl = new URL(publicUrl);
+  const redirectUrl = new URL(returnTo, baseUrl);
+
+  return redirectUrl.origin === baseUrl.origin ? redirectUrl : baseUrl;
+}
+
 export async function GET(req: NextRequest) {
   const atpstateCookie = req.cookies.get("atpstate");
   const expectedAtpState = atpstateCookie?.value;
@@ -18,7 +31,7 @@ export async function GET(req: NextRequest) {
     const returnTo = customParams.returnTo || "/";
 
     if (!handle) {
-      return NextResponse.redirect(new URL(returnTo, req.url));
+      return NextResponse.redirect(getRedirectUrl(returnTo));
     }
 
     const client = await getOAuthClient();
@@ -60,6 +73,6 @@ export async function GET(req: NextRequest) {
       // パースすら失敗した場合はデフォルトの / へ
     }
 
-    return NextResponse.redirect(new URL(fallbackUrl, req.url));
+    return NextResponse.redirect(getRedirectUrl(fallbackUrl));
   }
 }

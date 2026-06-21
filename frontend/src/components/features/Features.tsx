@@ -118,7 +118,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
       <section className={classes.hero}>
         <div className={classes.heroGlow} />
         <div className={classes.heroContent}>
-          <div className={classes.eyebrow}><Sparkles size={14} /> Rito / atproto</div>
+          <div className={classes.eyebrow}><Sparkles size={14} /> Rito / <span style={{ textTransform: 'lowercase' }}>atproto</span></div>
           <Title className={classes.title}>{t('title')}</Title>
           <Text className={classes.description}>{t('aboutDetails.intro')}</Text>
           <Group gap="sm" mt="xl">

@@ -4,6 +4,7 @@ import { routing } from '@/i18n/routing';
 export const publicPagePaths = [
   '',
   '/about',
+  '/how-to-use',
   '/privacy',
   '/tos',
   '/status',

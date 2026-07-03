@@ -18,18 +18,21 @@
 - This model is not used for training purposes. [Reference](https://openai.com/index/upgrading-the-moderation-api-with-our-new-multimodal-moderation-model/)
 
 ## Responsibility of Contributors
-- Contributors are fully responsible for the content they post.  
-- The developer assumes no responsibility or liability for such content.  
+- Contributors are generally responsible for the content they post.  
+- If a dispute with a third party arises from posted content, the contributor shall resolve it at their own responsibility and expense.  
+- This does not exclude liability for damages caused by the operator's intentional misconduct or gross negligence, or any other liability that cannot be excluded under applicable law.  
 
 ## Service Provision
 - This service is operated privately by an individual.  
-- The service may be discontinued without prior notice. Support will be provided on a best-effort basis.  
-- Bug fixes will be considered where possible but are not guaranteed.  
+- The service may be suspended, changed, delayed, or affected by bugs without prior notice.  
+- Bug fixes and recovery will be considered where possible but are not guaranteed.  
+- The operator shall not be liable for damages arising from use of, or inability to use, the service, except where such damages are caused by the operator's intentional misconduct or gross negligence, or where liability cannot be excluded under applicable law.  
 
 ## Use of External Services
 The Service uses the following external services as part of its operation.  
 The handling of data resulting from the use of these services is subject to the terms and policies of the respective service providers.  
-The Service shall not be liable for any damages arising from the use of these external services.
+Changes, suspension, or failures of external services may make part or all of this service unavailable.  
+The operator shall not be liable for damages arising from such external services, except where such damages are caused by the operator's intentional misconduct or gross negligence, or where liability cannot be excluded under applicable law.
 
 - **PDS**: For authentication and data storage  
 - **Google Analytics 4**: For access and usage analysis  
@@ -44,6 +47,7 @@ The terms of service may be revised as necessary.
 Revisions will be announced on this website.  
 
 ## Revision History
+- 2026/07/03 Revised liability and disclaimer wording with consideration for consumer contract law
 - 2026/02/15 Added mention of AI usage for categorization
 - 2025/09/22 Prohibited conduct expanded to include all third parties
 - 2025/09/20 First edition

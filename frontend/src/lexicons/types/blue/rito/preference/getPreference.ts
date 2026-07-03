@@ -18,6 +18,18 @@ const _mainSchema = /*#__PURE__*/ v.query(
          */
         langForAutoGenertateBookmark: /*#__PURE__*/ v.string(),
         /**
+         * Latest privacy policy revision date agreed by the user.
+         */
+        privacyNoticeAcknowledgedRevisionDate: /*#__PURE__*/ v.optional(
+          /*#__PURE__*/ v.string(),
+        ),
+        /**
+         * Latest terms of service revision date agreed by the user.
+         */
+        termsNoticeAcknowledgedRevisionDate: /*#__PURE__*/ v.optional(
+          /*#__PURE__*/ v.string(),
+        ),
+        /**
          * Moderation categories that should not be blurred.
          */
         unblurModerationCategories: /*#__PURE__*/ v.optional(

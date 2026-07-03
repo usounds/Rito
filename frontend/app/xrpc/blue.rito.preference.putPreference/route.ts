@@ -38,18 +38,41 @@ export async function POST(req: NextRequest) {
 
   // POST body の取得
   const body = await req.json()
-  const enableAutoGenerateBookmark = Boolean(body.enableAutoGenerateBookmark)
-  const lang = body.lang || 'ja'
-  const unblurModerationCategories = body.unblurModerationCategories || []
+  const existingPostToBookmark = await prisma.postToBookmark.findUnique({
+    where: { sub: did },
+  });
+  const existingUserHandle = await prisma.userDidHandle.findUnique({
+    where: { did },
+    select: {
+      unblur_moderation_categories: true,
+      terms_notice_acknowledged_revision_date: true,
+      privacy_notice_acknowledged_revision_date: true,
+    },
+  });
 
-  if (enableAutoGenerateBookmark) {
+  const hasEnableAutoGenerateBookmark = Object.hasOwn(body, 'enableAutoGenerateBookmark');
+  const enableAutoGenerateBookmark = hasEnableAutoGenerateBookmark
+    ? Boolean(body.enableAutoGenerateBookmark)
+    : Boolean(existingPostToBookmark);
+  const lang = body.lang || existingPostToBookmark?.lang || 'ja'
+  const unblurModerationCategories = Array.isArray(body.unblurModerationCategories)
+    ? body.unblurModerationCategories
+    : existingUserHandle?.unblur_moderation_categories || [];
+  const termsNoticeAcknowledgedRevisionDate = typeof body.termsNoticeAcknowledgedRevisionDate === 'string'
+    ? body.termsNoticeAcknowledgedRevisionDate
+    : existingUserHandle?.terms_notice_acknowledged_revision_date || null;
+  const privacyNoticeAcknowledgedRevisionDate = typeof body.privacyNoticeAcknowledgedRevisionDate === 'string'
+    ? body.privacyNoticeAcknowledgedRevisionDate
+    : existingUserHandle?.privacy_notice_acknowledged_revision_date || null;
+
+  if (hasEnableAutoGenerateBookmark && enableAutoGenerateBookmark) {
     // true の場合は INSERT（存在しなければ作成）
     await prisma.postToBookmark.upsert({
       where: { sub: did },
-      update: {lang},       // 既に存在していれば何もしない
-      create: { sub: did }
+      update: { lang },
+      create: { sub: did, lang }
     })
-  } else {
+  } else if (hasEnableAutoGenerateBookmark) {
     // false の場合は DELETE（存在すれば削除）
     await prisma.postToBookmark.deleteMany({
       where: { sub: did }
@@ -58,13 +81,24 @@ export async function POST(req: NextRequest) {
   
   await prisma.userDidHandle.upsert({
     where: { did },
-    update: { unblur_moderation_categories: unblurModerationCategories },
-    create: { did, unblur_moderation_categories: unblurModerationCategories }
+    update: {
+      unblur_moderation_categories: unblurModerationCategories,
+      terms_notice_acknowledged_revision_date: termsNoticeAcknowledgedRevisionDate,
+      privacy_notice_acknowledged_revision_date: privacyNoticeAcknowledgedRevisionDate,
+    },
+    create: {
+      did,
+      unblur_moderation_categories: unblurModerationCategories,
+      terms_notice_acknowledged_revision_date: termsNoticeAcknowledgedRevisionDate,
+      privacy_notice_acknowledged_revision_date: privacyNoticeAcknowledgedRevisionDate,
+    }
   })
 
   // 結果として enableAutoGenerateBookmark の状態を返す
   return NextResponse.json({
     enableAutoGenerateBookmark,
-    unblurModerationCategories
+    unblurModerationCategories,
+    termsNoticeAcknowledgedRevisionDate: termsNoticeAcknowledgedRevisionDate || '',
+    privacyNoticeAcknowledgedRevisionDate: privacyNoticeAcknowledgedRevisionDate || '',
   }, { status: 200 })
 }

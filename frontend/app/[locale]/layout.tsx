@@ -17,6 +17,7 @@ import Script from "next/script";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { CookieConsent } from "@/components/CookieConsent";
 import { React19Suppressor } from "@/components/React19Suppressor";
+import { LegalUpdateNotice } from "@/components/LegalUpdateNotice";
 import { getBaseUrl, getDefaultOgImage } from "@/seo/publicPages";
 import { Outfit } from "next/font/google";
 
@@ -147,6 +148,7 @@ export default async function RootLayout({
               template='<div class="bar" role="bar"></div>' // スピナーを削除したテンプレート
             />
             <Header />
+            <LegalUpdateNotice locale={locale} />
             <main>{children}</main>
             <Footer locale={locale} />
             <ScrollToTop />
@@ -195,4 +197,3 @@ export default async function RootLayout({
     </html >
   );
 }
-

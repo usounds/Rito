@@ -4,13 +4,14 @@ import { BlueRitoFeedBookmark } from '@/lexicons';
 import { nsidSchema } from "@/nsid/mapping";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
+import { usePreferenceStore as useLegalPreferenceStore } from "@/state/Preference";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
 import { useSearchParams, useRouter } from 'next/navigation';
@@ -22,6 +23,7 @@ import { Authentication } from "@/components/Authentication";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { buildPost } from "@/logic/HandleBluesky";
 import { stripTrackingParams } from "@/logic/stripTrackingParams";
+import { getChangedLegalDocuments, latestLegalUpdates } from '@/legal/legalUpdates';
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -44,6 +46,13 @@ export default function RegistBookmarkPage() {
     const setIsPostToBluesky = usePreferenceStore(state => state.setIsPostToBluesky);
     const isUseOriginalLink = usePreferenceStore(state => state.isUseOriginalLink);
     const setIsUseOriginalLink = usePreferenceStore(state => state.setIsUseOriginalLink);
+    const termsNoticeAcknowledgedRevisionDate = useLegalPreferenceStore(state => state.termsNoticeAcknowledgedRevisionDate);
+    const privacyNoticeAcknowledgedRevisionDate = useLegalPreferenceStore(state => state.privacyNoticeAcknowledgedRevisionDate);
+    const legalPreferenceHydrated = useLegalPreferenceStore(state => state.isHydrated);
+    const legalAcknowledgementsLoaded = useLegalPreferenceStore(state => state.legalAcknowledgementsLoaded);
+    const legalAcknowledgementsFetchedFromPreference = useLegalPreferenceStore(
+        state => state.legalAcknowledgementsFetchedFromPreference
+    );
     const [urlError, setUrlError] = useState<string | null>(null);
     const [titleError, setTitleError] = useState<string | null>(null);
     const [ogpTitle, setOgpTitle] = useState<string | null>(null);
@@ -64,6 +73,51 @@ export default function RegistBookmarkPage() {
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const [myTag, setMyTag] = useState<string[]>([]);
     const tagRanking = useMyBookmark(state => state.tagRanking);
+    const pendingLegalUpdates = getChangedLegalDocuments({
+        now: new Date(),
+        updates: latestLegalUpdates,
+        acknowledgedRevisionDates: {
+            terms: termsNoticeAcknowledgedRevisionDate,
+            privacy: privacyNoticeAcknowledgedRevisionDate,
+        },
+    });
+    const [legalStatusResolved, setLegalStatusResolved] = useState(false);
+    const previousLegalLoadedRef = useRef<boolean | null>(null);
+
+    useEffect(() => {
+        previousLegalLoadedRef.current = null;
+        setLegalStatusResolved(!activeDid);
+    }, [activeDid]);
+
+    useEffect(() => {
+        if (!activeDid) {
+            return;
+        }
+
+        const previous = previousLegalLoadedRef.current;
+        previousLegalLoadedRef.current = legalAcknowledgementsLoaded;
+
+        if (previous === false && legalAcknowledgementsLoaded && legalAcknowledgementsFetchedFromPreference) {
+            setLegalStatusResolved(true);
+        } else if (previous !== null && previous !== legalAcknowledgementsLoaded) {
+            setLegalStatusResolved(false);
+        }
+    }, [
+        activeDid,
+        legalAcknowledgementsFetchedFromPreference,
+        legalAcknowledgementsLoaded,
+    ]);
+
+    const hasPendingLegalUpdates = activeDid && legalStatusResolved && legalAcknowledgementsFetchedFromPreference && pendingLegalUpdates.length > 0;
+    const submitStatusMessage = !legalPreferenceHydrated || !legalAcknowledgementsLoaded || (activeDid && !legalStatusResolved)
+        ? messages.create.inform.checkingStatus
+        : !activeDid
+            ? messages.create.inform.needlogin
+            : hasPendingLegalUpdates
+                ? messages.create.inform.legalUpdateRequired
+                : '';
+    const shouldShowLegalUpdateMessage = hasPendingLegalUpdates;
+    const canSubmitBookmark = activeDid && legalStatusResolved && legalAcknowledgementsFetchedFromPreference && !shouldShowLegalUpdateMessage;
 
     useEffect(() => {
         const allMyTags = myBookmark
@@ -324,6 +378,16 @@ export default function RegistBookmarkPage() {
         }
         if (!activeDid) {
             setTitleError("activeDid is null");
+            setIsSubmit(false)
+            return;
+        }
+        if (!legalPreferenceHydrated || !legalAcknowledgementsLoaded || !canSubmitBookmark) {
+            notifications.show({
+                title: 'Error',
+                message: messages.create.inform.legalUpdateRequired,
+                color: 'red',
+                icon: <X />
+            });
             setIsSubmit(false)
             return;
         }
@@ -601,6 +665,13 @@ export default function RegistBookmarkPage() {
                     // 違うサイト、または直前ページが /bookmark/register ならマイブックマークへ
                     router.push(`/${locale}/my/bookmark`);
                 }
+            } else if (ret.status === 403) {
+                notifications.show({
+                    title: 'Error',
+                    message: messages.create.inform.legalUpdateRequired,
+                    color: 'red',
+                    icon: <X />
+                });
             } else {
                 notifications.show({
                     title: 'Error',
@@ -766,7 +837,7 @@ export default function RegistBookmarkPage() {
                             </Tabs.Panel>
                         </Tabs>
 
-                        <Group justify={activeDid && aturi ? "right" : "space-between"}>
+                        <Group justify={activeDid && aturi ? "right" : "space-between"} align="flex-end">
                             {activeDid ? (
                                 <>
                                     {!aturi && (
@@ -791,8 +862,8 @@ export default function RegistBookmarkPage() {
                                         leftSection={<BookmarkPlus size={16} />}
                                         onClick={handleSubmit}
                                         loading={isSubmit}
-                                        disabled={!activeDid || isSubmit}
-                                    >
+                                        disabled={!activeDid || isSubmit || !legalPreferenceHydrated || !legalAcknowledgementsLoaded || !canSubmitBookmark}
+                                        >
                                         {messages.create.button.regist}
                                     </Button>
                                 </>
@@ -816,6 +887,9 @@ export default function RegistBookmarkPage() {
                                 </>
                             )}
                         </Group>
+                        <Text size="xs" c={shouldShowLegalUpdateMessage ? 'red' : 'dimmed'} data-testid="bookmark-submit-status" style={{ minHeight: 18 }}>
+                            {submitStatusMessage || '\u00A0'}
+                        </Text>
                     </Stack>
                 </Box>
             </Stack>

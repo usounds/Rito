@@ -90,6 +90,10 @@ export default function Header() {
             <Link href={`/${locale}/about`} className={classes.link}>
               {messages.header.about}
             </Link>
+
+            <Link href={`/${locale}/how-to-use`} className={classes.link}>
+              {messages.header.howToUse}
+            </Link>
           </Group>
 
           <Group visibleFrom="sm">
@@ -128,6 +132,9 @@ export default function Header() {
             </Link>
             <Link href={`/${locale}/about`} className={classes.link} onClick={closeDrawer}>
               {messages.header.about}
+            </Link>
+            <Link href={`/${locale}/how-to-use`} className={classes.link} onClick={closeDrawer}>
+              {messages.header.howToUse}
             </Link>
           </Stack>
 

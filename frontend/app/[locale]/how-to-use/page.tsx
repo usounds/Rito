@@ -1,10 +1,10 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { AboutOverview } from "@/components/features/Features";
+import { HowToUseGuide } from "@/components/features/Features";
 import { routing } from "@/i18n/routing";
-import { Container } from "@mantine/core";
-import { getTranslations, setRequestLocale } from "next-intl/server";
-import type { Metadata } from "next";
 import { getBaseUrl, getDefaultOgImage, getPublicPageAlternates } from "@/seo/publicPages";
+import { Container } from "@mantine/core";
+import type { Metadata } from "next";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 
 export function generateStaticParams() {
     return routing.locales.map(locale => ({ locale }));
@@ -19,17 +19,17 @@ export async function generateMetadata({
     const t = await getTranslations({ locale });
     const baseUrl = getBaseUrl();
     const ogImage = getDefaultOgImage(baseUrl);
-    const title = t("aboutDetails.meta.title");
-    const description = t("aboutDetails.intro");
+    const title = t("howToUseDetails.meta.title");
+    const description = t("howToUseDetails.intro");
 
     return {
         title,
         description,
-        alternates: getPublicPageAlternates(locale, '/about'),
+        alternates: getPublicPageAlternates(locale, '/how-to-use'),
         openGraph: {
             title,
             description,
-            url: `${baseUrl}/${locale}/about`,
+            url: `${baseUrl}/${locale}/how-to-use`,
             images: [{ ...ogImage, alt: title }],
             type: 'website',
         },
@@ -42,7 +42,7 @@ export async function generateMetadata({
     };
 }
 
-export default async function AboutPage({
+export default async function HowToUsePage({
     params,
 }: {
     params: Promise<{ locale: string }>;
@@ -52,20 +52,20 @@ export default async function AboutPage({
     const t = await getTranslations({ locale });
 
     const baseUrl = getBaseUrl();
+    const workflowKeys = ['save', 'organize', 'discover'] as const;
     const jsonLd = {
         "@context": "https://schema.org",
-        "@type": "AboutPage",
-        "name": t("header.about"),
-        "description": t("aboutDetails.intro"),
-        "url": `${baseUrl}/${locale}/about`,
+        "@type": "HowTo",
+        "name": t("howToUseDetails.hero.title"),
+        "description": t("howToUseDetails.intro"),
+        "url": `${baseUrl}/${locale}/how-to-use`,
         "inLanguage": locale,
-        "mainEntity": {
-            "@type": "SoftwareApplication",
-            "name": t("title"),
-            "applicationCategory": "SocialNetworkingApplication",
-            "operatingSystem": "All",
-            "description": t("aboutDetails.intro"),
-        }
+        "step": workflowKeys.map((key, index) => ({
+            "@type": "HowToStep",
+            "position": index + 1,
+            "name": t(`howToUseDetails.workflow.${key}.title`),
+            "text": t(`howToUseDetails.workflow.${key}.description`),
+        })),
     };
 
     return (
@@ -75,9 +75,9 @@ export default async function AboutPage({
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
             <Container>
-                <Breadcrumbs items={[{ label: t("header.about") }]} />
+                <Breadcrumbs items={[{ label: t("header.howToUse") }]} />
             </Container>
-            <AboutOverview t={t} locale={locale} />
+            <HowToUseGuide t={t} locale={locale} />
         </div>
     );
 }

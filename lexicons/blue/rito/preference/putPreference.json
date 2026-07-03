@@ -24,6 +24,14 @@
                             "type": "array",
                             "items": { "type": "string" },
                             "description": "Moderation categories that should not be blurred."
+                        },
+                        "termsNoticeAcknowledgedRevisionDate": {
+                            "type": "string",
+                            "description": "Latest terms of service revision date agreed by the user."
+                        },
+                        "privacyNoticeAcknowledgedRevisionDate": {
+                            "type": "string",
+                            "description": "Latest privacy policy revision date agreed by the user."
                         }
                     }
                 }

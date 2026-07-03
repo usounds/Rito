@@ -53,6 +53,8 @@ model UserDidHandle {
   did    String   @id
   handle String   @default("unknown")
   unblur_moderation_categories String[] @default([])
+  terms_notice_acknowledged_revision_date String?
+  privacy_notice_acknowledged_revision_date String?
 
   bookmarks Bookmark[] @relation("BookmarkUser")
   posts     Post[]     @relation("PostUser")

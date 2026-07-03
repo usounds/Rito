@@ -1,6 +1,10 @@
 import { Page } from '@playwright/test';
 
 export async function setupApiStubs(page: Page) {
+  await page.addInitScript(() => {
+    document.cookie = 'cookie-consent=denied; path=/; SameSite=Lax';
+  });
+
   // アニメーションを無効化し、通知を非表示にするCSSを注入
   await page.addStyleTag({
     content: `
@@ -43,6 +47,14 @@ export async function setupApiStubs(page: Page) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ csrfToken: 'test-csrf-token' }),
+    });
+  });
+
+  await page.route('**/api/oauth/getServideAuth**', async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Not authorized' }),
     });
   });
 
@@ -135,6 +147,28 @@ export async function mockLogin(page: Page, did: string, handle: string) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ csrfToken: 'mock-csrf' }),
+    });
+  });
+
+  await page.route('**/api/oauth/getServideAuth**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ token: 'mock-preference-token' }),
+    });
+  });
+
+  await page.route('**/xrpc/blue.rito.preference.getPreference', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        enableAutoGenerateBookmark: true,
+        langForAutoGenertateBookmark: 'ja',
+        unblurModerationCategories: ['illicit/violent'],
+        termsNoticeAcknowledgedRevisionDate: '2026-07-03',
+        privacyNoticeAcknowledgedRevisionDate: '',
+      }),
     });
   });
 

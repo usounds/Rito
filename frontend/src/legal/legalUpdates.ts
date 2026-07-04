@@ -11,7 +11,7 @@ export type LegalAcknowledgements = Partial<Record<LegalDocumentType, string | n
 export const latestLegalUpdates: LegalUpdate[] = [
   {
     document: 'terms',
-    revisionDate: '2026-07-03',
+    revisionDate: '2026-07-04',
     path: 'tos',
   },
 ];

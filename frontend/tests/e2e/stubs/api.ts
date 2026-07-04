@@ -166,7 +166,7 @@ export async function mockLogin(page: Page, did: string, handle: string) {
         enableAutoGenerateBookmark: true,
         langForAutoGenertateBookmark: 'ja',
         unblurModerationCategories: ['illicit/violent'],
-        termsNoticeAcknowledgedRevisionDate: '2026-07-03',
+        termsNoticeAcknowledgedRevisionDate: '2026-07-04',
         privacyNoticeAcknowledgedRevisionDate: '',
       }),
     });

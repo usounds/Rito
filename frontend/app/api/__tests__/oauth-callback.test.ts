@@ -52,11 +52,11 @@ describe('API: /api/oauth/callback', () => {
     expect(prisma.userDidHandle.upsert).toHaveBeenCalledWith({
       where: { did: 'did:plc:testuser' },
       update: {
-        terms_notice_acknowledged_revision_date: '2026-07-03',
+        terms_notice_acknowledged_revision_date: '2026-07-04',
       },
       create: {
         did: 'did:plc:testuser',
-        terms_notice_acknowledged_revision_date: '2026-07-03',
+        terms_notice_acknowledged_revision_date: '2026-07-04',
       },
     });
   });

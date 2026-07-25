@@ -6,7 +6,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 4600",
-    "update": "pnpm dlx npm-check-updates -u && pnpm install && pnpm update",
+    "update": "pnpm dlx npm-check-updates -u && pnpm install --minimum-release-age 1440 && pnpm update --minimum-release-age 1440",
     "build": "pnpm run prisma:generate && next build",
     "prisma:copy": " cp ../backend/prisma/schema.prisma ./prisma/schema.prisma",
     "prisma:generate": "pnpm exec prisma generate --schema=./prisma/schema.prisma",

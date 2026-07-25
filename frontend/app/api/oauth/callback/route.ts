@@ -3,7 +3,6 @@ import { getOAuthClient } from '@/logic/HandleOauthClientNode'
 import { prisma } from '@/logic/HandlePrismaClient'
 import { Agent } from "@atproto/api";
 import crypto from "crypto";
-import { latestLegalUpdates } from '@/legal/legalUpdates';
 
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "secret";
 
@@ -36,31 +35,6 @@ export async function GET(req: NextRequest) {
     // 認証成功
     const agent = new Agent(session);
     await agent.getProfile({ actor: agent.did || '' });
-
-    const legalAcknowledgementUpdate: {
-      terms_notice_acknowledged_revision_date?: string;
-      privacy_notice_acknowledged_revision_date?: string;
-    } = {};
-    for (const update of latestLegalUpdates) {
-      if (update.document === 'terms') {
-        legalAcknowledgementUpdate.terms_notice_acknowledged_revision_date = update.revisionDate;
-      } else {
-        legalAcknowledgementUpdate.privacy_notice_acknowledged_revision_date = update.revisionDate;
-      }
-    }
-    await prisma.userDidHandle.upsert({
-      where: { did: session.did },
-      update: {
-        ...legalAcknowledgementUpdate,
-      },
-      create: {
-        did: session.did,
-        ...legalAcknowledgementUpdate,
-      },
-    }).catch((e: unknown) => {
-      const message = e instanceof Error ? e.message : 'unknown error';
-      console.error('Failed to update legal acknowledgement dates', message);
-    });
 
     // ログイン成功時にのみ updatedAt を更新する
     await prisma.nodeOAuthSession.update({

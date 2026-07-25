@@ -39,11 +39,7 @@ export async function GET(req: Request) {
     }),
     prisma.userDidHandle.findUnique({
       where: { did },
-      select: {
-        unblur_moderation_categories: true,
-        terms_notice_acknowledged_revision_date: true,
-        privacy_notice_acknowledged_revision_date: true,
-      }
+      select: { unblur_moderation_categories: true }
     })
   ])
 
@@ -51,9 +47,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
     enableAutoGenerateBookmark: !!record,
     langForAutoGenertateBookmark: record?.lang || '',
-    unblurModerationCategories: userHandle?.unblur_moderation_categories || [],
-    termsNoticeAcknowledgedRevisionDate: userHandle?.terms_notice_acknowledged_revision_date || '',
-    privacyNoticeAcknowledgedRevisionDate: userHandle?.privacy_notice_acknowledged_revision_date || '',
+    unblurModerationCategories: userHandle?.unblur_moderation_categories || []
   }, { status: 200 });
 
 

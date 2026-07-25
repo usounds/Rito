@@ -45,40 +45,6 @@ test.describe('Bookmark Operations', () => {
     await expect(page.getByText('登録しました')).toBeVisible({ timeout: 20000 });
   });
 
-  test('should disable registration when legal acknowledgements are missing', async ({ page }) => {
-    await page.route('**/api/oauth/getServideAuth**', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ token: 'legal-pref-token' }),
-      });
-    });
-
-    await page.route('**/xrpc/blue.rito.preference.getPreference', async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          enableAutoGenerateBookmark: true,
-          langForAutoGenertateBookmark: 'ja',
-          unblurModerationCategories: ['illicit/violent'],
-          termsNoticeAcknowledgedRevisionDate: '',
-          privacyNoticeAcknowledgedRevisionDate: '',
-        }),
-      });
-    });
-
-    await page.goto('/ja/bookmark/register');
-
-    await page.fill('input[placeholder="https://rito.blue"]', 'https://example.com/post/1');
-    await page.fill('input[placeholder="リト"]', 'テストタイトル1');
-
-    const submitButton = page.getByRole('button', { name: '登録', exact: true });
-    await expect(submitButton).toBeDisabled({ timeout: 10000 });
-    await expect(page.getByTestId('bookmark-submit-status')).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('利用規約またはプライバシーポリシーの更新に同意してください')).toBeVisible();
-  });
-
   test('should validate empty registration', async ({ page }) => {
     await page.goto('/ja/bookmark/register');
     
@@ -166,16 +132,5 @@ test.describe('Bookmark Operations', () => {
     
     // 登録ページへ遷移し、URLにsubjectが含まれていることを確認
     await expect(page).toHaveURL(/.*\/bookmark\/register\?subject=.*/);
-  });
-});
-
-test.describe('Bookmark legal state', () => {
-  test.beforeEach(async ({ page }) => {
-    await setupApiStubs(page);
-    await page.goto('/ja/bookmark/register');
-  });
-
-  test('should always show why registration is unavailable when logged out', async ({ page }) => {
-    await expect(page.getByTestId('bookmark-submit-status')).toHaveText('ブックマークを登録するにはログインが必要です');
   });
 });

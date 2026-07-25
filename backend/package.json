@@ -7,7 +7,7 @@
   "scripts": {
     "start": "pnpm exec tsx src/index.ts",
     "dev": "pnpm exec tsx --watch src/index.ts",
-    "update": "pnpm up -L && pnpm install",
+    "update": "pnpm up -L --minimum-release-age 1440 && pnpm install --minimum-release-age 1440",
     "prisma:apply": "pnpm prisma migrate dev --name init",
     "prisma:generate": "pnpm prisma generate",
     "docker:build": "docker build -t rito-backend:latest .",

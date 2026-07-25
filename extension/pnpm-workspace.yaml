@@ -2,6 +2,9 @@ allowBuilds:
   esbuild: true
   spawn-sync: true
 
+# Avoid versions published within the last 24 hours to reduce supply-chain risk.
+minimumReleaseAge: 1440
+
 minimumReleaseAgeExclude:
   - '@atcute/bluesky@4.0.6'
   - '@atcute/multibase@1.2.1'

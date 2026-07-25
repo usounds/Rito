@@ -11,6 +11,8 @@ description: Ritoのパッケージ更新と脆弱性修正を自動化して管
 
 ユーザーからパッケージ更新の指示があった場合、以下のフローを**ユーザーの承認（Yes/No）を待つことなく**、エラーが発生しない限り一気通貫で実行してください。
 
+すべての依存関係更新・インストールでは、pnpmの`minimumReleaseAge`を24時間（`1440`分）に設定する。公開から24時間未満のバージョンはサプライチェーンリスクを考慮して除外し、`minimumReleaseAgeExclude`に明示されている例外以外は更新対象にしない。
+
 ### 1. 変更検知とプリチェック（自動実行）
 まず、プロジェクトルートで以下の確認を行います。
 
@@ -23,14 +25,14 @@ description: Ritoのパッケージ更新と脆弱性修正を自動化して管
 
 1. **ディレクトリ移動**: `cd backend`
 2. **アップデート実行**: 
-   - `pnpm run update` (定義済みの更新スクリプト)
-   - `pnpm update` (マイナー/パッチ更新)
+   - `pnpm run update` (定義済みの24時間カットオフ付き更新スクリプト)
+   - `pnpm update --minimum-release-age 1440` (マイナー/パッチ更新)
 3. **脆弱性修正とトラブルシューティング**:
    - `pnpm audit fix` を実行。
    - `pnpm audit` を再実行して残っている脆弱性を確認。
    - 脆弱性が残っている場合：
      - `pnpm audit --json` 等で原因となっているパッケージを特定。
-     - 原因パッケージに対して個別に `pnpm update <package_name>` を試行。
+     - 原因パッケージに対して個別に `pnpm update <package_name> --minimum-release-age 1440` を試行。
      - 再度 `pnpm audit fix` を実行。
    - それでも解決しない場合は、影響範囲（開発環境のみか等）を判断し、完了報告に詳細を記載する。
 4. **検証**:
@@ -42,14 +44,14 @@ description: Ritoのパッケージ更新と脆弱性修正を自動化して管
 
 1. **ディレクトリ移動**: `cd frontend`
 2. **アップデート実行**: 
-   - `pnpm run update` (ncuを利用したメジャー更新を含むスクリプト)
-   - `pnpm update`
+   - `pnpm run update` (ncuを利用した、24時間カットオフ付きのメジャー更新を含むスクリプト)
+   - `pnpm update --minimum-release-age 1440`
 3. **脆弱性修正とトラブルシューティング**:
    - `pnpm audit fix` を実行。
    - `pnpm audit` を再実行して残っている脆弱性を確認。
    - 脆弱性が残っている場合：
      - `pnpm audit --json` 等で原因となっているパッケージを特定。
-     - 原因パッケージに対して個別に `pnpm update <package_name>` を試行。
+     - 原因パッケージに対して個別に `pnpm update <package_name> --minimum-release-age 1440` を試行。
      - 再度 `pnpm audit fix` を実行.
    - それでも解決しない場合は、影響範囲（開発環境のみか等）を判断し、完了報告に詳細を記載する。
 4. **検証**:
@@ -62,14 +64,14 @@ description: Ritoのパッケージ更新と脆弱性修正を自動化して管
 
 1. **ディレクトリ移動**: `cd extension`
 2. **アップデート実行**: 
-   - `pnpm run update` (定義済みの更新スクリプト)
-   - `pnpm update` (マイナー/パッチ更新)
+   - `pnpm run update` (定義済みの24時間カットオフ付き更新スクリプト)
+   - `pnpm update --minimum-release-age 1440` (マイナー/パッチ更新)
 3. **脆弱性修正とトラブルシューティング**:
    - `pnpm audit fix` を実行。
    - `pnpm audit` を再実行して残っている脆弱性を確認。
    - 脆弱性が残っている場合：
      - `pnpm audit --json` 等で原因となっているパッケージを特定。
-     - 原因パッケージに対して個別に `pnpm update <package_name>` を試行。
+     - 原因パッケージに対して個別に `pnpm update <package_name> --minimum-release-age 1440` を試行。
      - 再度 `pnpm audit fix` を実行。
    - それでも解決しない場合は、影響範囲（開発環境のみか等）を判断し、完了報告に詳細を記載する。
 4. **検証**:

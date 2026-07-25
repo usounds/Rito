@@ -38,6 +38,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
 COPY --from=build /app/src ./src
 COPY --from=build /app/package.json ./package.json
+# pnpm exec also validates build-script permissions at runtime.
+COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # 本番用の起動コマンド
 CMD ["pnpm", "exec", "tsx", "src/index.ts"]

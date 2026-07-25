@@ -25,6 +25,7 @@ export function Auto() {
     const [isSaving, setIsSaving] = useState(false);
 
     const duplicateCheck = useRef(false);
+    const hasInitializedLocalModeration = useRef(false);
 
     const fetchStatus = useCallback(async () => {
         if (!userProf || duplicateCheck.current) return;
@@ -90,10 +91,11 @@ export function Auto() {
     }, [userProf, fetchStatus]);
 
     useEffect(() => {
-        if (isHydrated && unblurModerationCategories.length > 0 && localUnblurCategories.length === 0) {
+        if (isHydrated && !hasInitializedLocalModeration.current) {
             setLocalUnblurCategories(unblurModerationCategories);
+            hasInitializedLocalModeration.current = true;
         }
-    }, [isHydrated, unblurModerationCategories, localUnblurCategories.length]);
+    }, [isHydrated, unblurModerationCategories]);
 
 
     async function changeenableAutoGenerateBookmark() {

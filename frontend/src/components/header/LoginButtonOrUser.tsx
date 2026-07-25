@@ -19,6 +19,8 @@ type LoginButtonOrUserProps = {
     closeDrawer?: () => void;
 };
 
+const bookmarkDelayNotificationId = 'bookmark-delay';
+
 export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
     const [loginOpened, setLoginOpened] = useState(false);
     const activeDid = useXrpcAgentStore(state => state.activeDid);
@@ -133,6 +135,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                     if (data.diffMinutes !== 0) {
                         // 遅延ありの処理
                         notifications.show({
+                            id: bookmarkDelayNotificationId,
                             title: 'Error',
                             message: messages.error.delay,
                             color: 'red',

@@ -2,34 +2,36 @@
 	"title": "Rito",
 	"description": "A social bookmarking service built on the atproto. It provides a place to bookmark and share anything on the web, simply and with attention to detail.",
 	"aboutDetails": {
-		"meta": {
-			"title": "About Rito | Bookmarks for atproto"
-		},
-		"hero": {
-			"title": "About Rito"
-		},
 		"intro": "Rito is an atproto-based social bookmarking service for saving useful links, adding your own context, and discovering what other people found worth keeping. Use your existing atproto account, including Bluesky accounts, without creating a separate Rito identity.",
-		"preview": {
-			"title": "Find links again later"
-		},
-		"what": {
-			"title": "What Rito is for",
-			"description": "Rito keeps links together with the context that makes them worth saving.",
-			"bookmark": {
-				"title": "Keep links",
-				"description": "Save public URLs such as articles, tools, videos, and app pages as bookmarks."
+		"workflow": {
+			"title": "What you can do with Rito",
+			"description": "A bookmark becomes more than a URL. Rito combines the page information with community context so that links remain useful after they leave your timeline.",
+			"save": {
+				"title": "Save links from across the web",
+				"description": "Register articles, tools, videos, app pages, and other public URLs. Rito collects available page metadata such as the title, description, and preview image."
 			},
-			"account": {
-				"title": "Use atproto",
-				"description": "Sign in with an atproto account, including Bluesky accounts, without creating a separate Rito identity."
+			"organize": {
+				"title": "Add comments and tags",
+				"description": "Record why a link matters, group related bookmarks with tags, and search them later instead of relying on a social timeline or browser history."
 			},
-			"context": {
-				"title": "Add context",
-				"description": "Comments and tags make it easier to remember why a link mattered when you return to it later."
+			"discover": {
+				"title": "Discover links through people",
+				"description": "The home page brings together recently saved and discussed links. Search and category views help you move from a broad feed to a specific subject."
+			},
+			"access": {
+				"title": "Save from your normal browser",
+				"description": "Use the website, Chrome extension, Firefox add-on, or bookmarklet. They all lead to the same Rito bookmarks associated with your atproto account."
 			}
 		},
+		"categories": {
+			"title": "Why the home page uses automatic categories",
+			"description": "Shared links arrive with different tags, languages, and levels of detail. Rito classifies them into a small, consistent set of topics so the Discover page stays navigable as the collection grows.",
+			"input": "Classification considers the page title and description first, then tags and the bookmarker's comment.",
+			"result": "Each bookmark is assigned one primary topic, such as Technology, Social, Food, Travel, Entertainment, Photo, or atproto. Unclear items fall back to General.",
+			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized."
+		},
 		"myApps": {
-			"title": "My Apps",
+			"title": "My Apps: see the atproto services in your repo",
 			"description": "An atproto repository contains collections identified by NSIDs. My Apps turns those technical collection names into a visual catalog of services your account has records for.",
 			"collections": "After you log in, Rito reads the collection list exposed by your PDS and groups related NSIDs by service.",
 			"catalog": "When a matching service bookmark exists, Rito shows its website title, description, image, and tags, making unfamiliar collection names easier to understand.",
@@ -38,109 +40,8 @@
 		},
 		"data": {
 			"title": "What happens to your data",
-			"description": "Rito writes your bookmark records to your atproto Personal Data Server (PDS). Rito also indexes the information needed to provide public discovery, search, previews, categories, and safety filtering. Bookmarks intended for this social service may therefore be visible to other people; do not use Rito as a private vault for sensitive URLs or notes.",
-			"oauthTitle": "OAuth without sharing your password",
-			"oauthDescription": "Authentication happens directly on the connected PDS screen. Rito does not collect or store your password.",
-			"controlTitle": "Permission control",
-			"controlDescription": "You keep control of your account. Before approval, you can review what Rito is allowed to read and write."
+			"description": "Rito writes your bookmark records to your atproto Personal Data Server (PDS). Rito also indexes the information needed to provide public discovery, search, previews, categories, and safety filtering. Bookmarks intended for this social service may therefore be visible to other people; do not use Rito as a private vault for sensitive URLs or notes."
 		}
-	},
-		"howToUseDetails": {
-			"meta": {
-				"title": "How to use Rito | Save links with your Bluesky account"
-			},
-			"hero": {
-				"title": "How to use Rito"
-			},
-		"intro": "Rito lets you sign in with an atproto account such as Bluesky and save web links with comments and tags.",
-		"what": {
-			"title": "What Rito is",
-			"description": "Rito combines personal bookmark saving with social features for sharing interests with other users.",
-			"accountTitle": "No separate account required",
-			"accountDescription": "If you already have an atproto account, you can sign in without creating a separate Rito account.",
-			"shareTitle": "Open sharing and visibility",
-			"shareDescription": "Bookmarks registered in Rito are public on the internet. This open design helps people with shared interests exchange knowledge and find related information."
-		},
-		"data": {
-			"pdsTitle": "Data ownership through your PDS",
-			"pdsDescription": "Rito uses the atproto model, so bookmark data is saved to the Personal Data Server tied to your account. This keeps your records portable to compatible services."
-		},
-		"workflow": {
-			"title": "How bookmarking works",
-			"description": "The page shows the flow from saving a link to finding it again later.",
-			"save": {
-				"title": "01. Enter a URL",
-				"description": "Save public URLs such as articles, tools, videos, and app pages."
-			},
-			"organize": {
-				"title": "02. Add context",
-				"description": "Write why you kept the link so it makes sense when you come back."
-			},
-			"discover": {
-				"title": "03. Tag it",
-				"description": "Group related links with tags so they stay easy to follow."
-			},
-			"access": {
-				"title": "04. Find it again",
-				"description": "Use the home page, search, and category views to revisit saved links."
-			}
-		},
-		"categories": {
-			"title": "Browse by category",
-			"description": "Shared links arrive with different tags, languages, and levels of detail. Rito classifies them into a small, consistent set of topics so they remain easier to browse.",
-			"input": "Classification considers the page title and description first, then tags and the bookmarker's comment.",
-			"result": "Each bookmark receives one primary topic, such as Technology, Social, Food, Travel, Entertainment, Photo, or atproto.",
-			"reason": "Categories are a browsing aid, not an endorsement of the linked content or a statement about the author."
-		},
-		"tags": {
-			"title": "Manual tags",
-			"description": "Tags are labels you add yourself. They let you group bookmarks around your own interests, projects, and ways of organizing.",
-			"manual": "Categories are assigned automatically, while tags are created and attached by you.",
-			"use": "Use tags for project names, reading queues, research topics, or any personal grouping.",
-			"search": "Tags make it easier to revisit bookmarks by your own labels and search habits."
-		},
-		"search": {
-			"title": "Organize and search saved bookmarks",
-			"description": "Rito helps you find saved links through automatic categories, tags, and filtering.",
-			"filterTitle": "Filtering search",
-			"filterDescription": "You can filter by exact tag or user handle, narrow results by mutual-follow relationships, and exclude conditions with a leading minus sign. Partial text search over link or comment bodies is not supported."
-		},
-		"browser": {
-			"title": "Register from your browser",
-			"description": "Send the page you are viewing to Rito from your browser or bookmarks.",
-			"chrome": "Save from the Chrome extension.",
-			"firefox": "Save from the Firefox add-on.",
-			"bookmarklet": "Save from the bookmarklet."
-		},
-		"login": {
-			"title": "Sign in with your account",
-			"description": "Rito uses PDS and OAuth to sign you in without receiving your password.",
-			"step1": {
-				"title": "Enter your handle",
-				"description": "Enter the handle you use for Bluesky or another atproto account."
-			},
-			"step2": {
-				"title": "Authenticate on your PDS",
-				"description": "Rito redirects you to the connected PDS screen. Enter your password there; it is not sent to Rito."
-			},
-			"step3": {
-				"title": "Approve access",
-				"description": "Review what Rito can read and write, then approve the request to finish signing in."
-			}
-		},
-		"sync": {
-			"title": "Sync with Bluesky",
-			"description": "Rito works through the atproto network and can connect bookmark activity with Bluesky.",
-			"shareTitle": "Share from Rito to Bluesky",
-			"shareDescription": "When you register a bookmark, you can also post it to Bluesky so followers can see the link on their timeline.",
-			"saveTitle": "Save Bluesky posts in Rito",
-			"saveDescription": "Register a Bluesky post URL in Rito to keep it as a bookmark and find it later with tags or categories."
-		},
-		"start": {
-			"title": "Start using Rito",
-			"description": "If you already have an atproto account, you can start social bookmarking without creating another account."
-		},
-		"aboutLink": "About Rito"
 	},
 	"loading": "Loading",
 	"button": {
@@ -165,7 +66,6 @@
 		"browse": "Search",
 		"discover": "Discover",
 		"about": "About",
-		"howToUse": "How to use",
 		"myapps": "My Apps",
 		"needlogin": "Login is required to use this feature",
 		"notbookmarked": "Unregistered bookmark",
@@ -349,8 +249,6 @@
 			"bookmark": "Bookmarked on Rito",
 			"ogp": "View {0} and others' bookmarks",
 			"needlogin": "Login is required to register a bookmark",
-			"checkingStatus": "Checking whether you can register right now",
-			"legalUpdateRequired": "Please agree to the updated terms or privacy policy",
 			"referInRito": "Refer in Rito",
 			"originalSource": "Source"
 		},
@@ -574,11 +472,5 @@
 		"accept": "Accept",
 		"decline": "Decline",
 		"readMore": "Privacy Policy"
-	},
-	"legalUpdateNotice": {
-		"message": "On {date}, the following documents were updated: {documents}. Please review and agree.",
-		"agree": "I agree",
-		"terms": "Terms of Service",
-		"privacy": "Privacy Policy"
 	}
 }

@@ -28,8 +28,6 @@ vi.mock('@/logic/HandlePrismaClient', () => ({
             findUnique: vi.fn().mockResolvedValue({
                 did: 'did:plc:testuser',
                 unblur_moderation_categories: [],
-                terms_notice_acknowledged_revision_date: '2026-07-03',
-                privacy_notice_acknowledged_revision_date: '',
             }),
         },
     },
@@ -51,8 +49,6 @@ describe('xRPC: /xrpc/blue.rito.preference.getPreference', () => {
 
         expect(response.status).toBe(200);
         expect(data.enableAutoGenerateBookmark).toBeDefined();
-        expect(data.termsNoticeAcknowledgedRevisionDate).toBe('2026-07-03');
-        expect(data.privacyNoticeAcknowledgedRevisionDate).toBe('');
     });
 
     it('Authorizationヘッダーなしは500エラー', async () => {

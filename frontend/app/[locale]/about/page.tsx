@@ -1,5 +1,5 @@
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { AboutOverview } from "@/components/features/Features";
+import { FeaturesGrid, getFeatureItems } from "@/components/features/Features";
 import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
 import { getTranslations, setRequestLocale } from "next-intl/server";
@@ -19,7 +19,7 @@ export async function generateMetadata({
     const t = await getTranslations({ locale });
     const baseUrl = getBaseUrl();
     const ogImage = getDefaultOgImage(baseUrl);
-    const title = t("aboutDetails.meta.title");
+    const title = `${t("header.about")} | ${t("title")}`;
     const description = t("aboutDetails.intro");
 
     return {
@@ -52,6 +52,7 @@ export default async function AboutPage({
     const t = await getTranslations({ locale });
 
     const baseUrl = getBaseUrl();
+    const featureItems = getFeatureItems(t, locale);
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "AboutPage",
@@ -65,6 +66,7 @@ export default async function AboutPage({
             "applicationCategory": "SocialNetworkingApplication",
             "operatingSystem": "All",
             "description": t("aboutDetails.intro"),
+            "featureList": featureItems.map(feature => `${feature.title}: ${feature.description}`),
         }
     };
 
@@ -77,7 +79,7 @@ export default async function AboutPage({
             <Container>
                 <Breadcrumbs items={[{ label: t("header.about") }]} />
             </Container>
-            <AboutOverview t={t} locale={locale} />
+            <FeaturesGrid t={t} locale={locale} />
         </div>
     );
 }

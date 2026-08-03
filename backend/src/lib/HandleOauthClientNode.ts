@@ -66,6 +66,9 @@ const sessionStore = {
 const key1 = await JoseKey.fromImportable(process.env.OAUTH_PRIVATE_JWK || '', 'key1')
 
 export const client = new NodeOAuthClient({
+  // Explicitly opt in only for isolated tests that run a local OAuth/PDS mock.
+  allowHttp: process.env.OAUTH_ALLOW_HTTP === 'true',
+
   // This object will be used to build the payload of the /client-metadata.json
   // endpoint metadata, exposing the client metadata to the OAuth server.
   clientMetadata: {

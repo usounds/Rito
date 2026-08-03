@@ -235,6 +235,34 @@ export function shouldProcessAsRitoPost(tags: string[], via?: string): boolean {
 }
 
 /**
+ * Cheap synchronous filter used before retaining a Jetstream post event in a queue.
+ */
+export function isRitoPostCandidate(record: unknown): boolean {
+    if (!record || typeof record !== 'object') return false;
+
+    const post = record as {
+        $type?: unknown;
+        via?: unknown;
+        facets?: unknown;
+        embed?: {
+            $type?: unknown;
+            external?: { uri?: unknown };
+        };
+    };
+
+    if (post.$type !== 'app.bsky.feed.post') return false;
+
+    const tags = extractTagsFromFacets(Array.isArray(post.facets) ? post.facets : []);
+    if (!shouldProcessAsRitoPost(tags, typeof post.via === 'string' ? post.via : undefined)) {
+        return false;
+    }
+
+    return post.embed?.$type === 'app.bsky.embed.external'
+        && typeof post.embed.external?.uri === 'string'
+        && post.embed.external.uri.length > 0;
+}
+
+/**
  * Parse domain from URL string
  */
 export function parseDomainFromUrl(urlString: string): string | null {

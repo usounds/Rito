@@ -11,16 +11,18 @@ RUN npm install -g pnpm
 # 依存関係だけ先にコピーしてインストール
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 
-# 本番用依存だけインストール
-RUN pnpm install 
+# lockfileどおりに依存関係をインストール
+RUN pnpm install --frozen-lockfile
 
 # ソースコードをコピー
 COPY . .
 
-# Prisma クライアントを生成
+# Prisma Client生成に必要な接続先をbuildへ渡す
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
-RUN pnpm exec prisma generate
+
+# Prisma Clientを生成してTypeScriptを事前コンパイルし、本番不要の依存関係を除去
+RUN pnpm run build && pnpm prune --prod
 
 # ---------- Production Stage ----------
 FROM node:22-alpine AS production
@@ -30,16 +32,11 @@ RUN apk update && apk upgrade --no-cache
 
 WORKDIR /app
 
-# pnpm インストール
-RUN npm install -g pnpm
-
 # build ステージから必要なファイルだけコピー
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/prisma ./prisma
-COPY --from=build /app/src ./src
+COPY --from=build /app/dist ./dist
 COPY --from=build /app/package.json ./package.json
-# pnpm exec also validates build-script permissions at runtime.
-COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 
 # 本番用の起動コマンド
-CMD ["pnpm", "exec", "tsx", "src/index.ts"]
+CMD ["node", "dist/index.js"]

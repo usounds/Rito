@@ -5,6 +5,9 @@ export default defineConfig({
   srcDir: 'src',
   publicDir: resolve(__dirname, 'public'),
   modules: [],
+  zip: {
+    excludeSources: ['**/*.zip'],
+  },
   manifest: {
     name: '__MSG_extensionName__',
     description: '__MSG_extensionDescription__',

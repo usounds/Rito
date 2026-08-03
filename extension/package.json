@@ -1,6 +1,6 @@
 {
   "name": "rito-extension",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "type": "module",
   "packageManager": "pnpm@11.17.0",
   "description": "Rito's browser extension for bookmarking.",
@@ -10,11 +10,11 @@
     "dev:firefox": "wxt -b firefox",
     "update": "pnpm dlx npm-check-updates -u && pnpm install && pnpm update",
     "build": "wxt build && wxt build -b firefox",
-    "zip": "wxt zip && wxt zip -b firefox",
+    "zip": "wxt zip && wxt zip -b firefox --sources",
     "postinstall": "wxt prepare",
     "compile": "tsc --noEmit",
-    "submit:chrome": "dotenv -e .env.submit -- npx publish-browser-extension@latest --chrome-zip .output/rito-extension-$npm_package_version-chrome.zip",
-    "submit:firefox": "dotenv -e .env.submit -- npx publish-browser-extension@latest --firefox-zip .output/rito-extension-$npm_package_version-firefox.zip --firefox-sources-zip .output/rito-extension-$npm_package_version-sources.zip",
+    "submit:chrome": "dotenv -e .env.submit -- npx publish-browser-extension@5.1.0 --chrome-zip .output/rito-extension-$(node -p \"require('./package.json').version\")-chrome.zip",
+    "submit:firefox": "dotenv -e .env.submit -- npx publish-browser-extension@5.1.0 --firefox-zip .output/rito-extension-$(node -p \"require('./package.json').version\")-firefox.zip --firefox-sources-zip .output/rito-extension-$(node -p \"require('./package.json').version\")-sources.zip",
     "lex-gen": "lex-cli generate -c ./lex.config.js"
   },
   "dependencies": {

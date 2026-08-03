@@ -18,6 +18,7 @@ import type * as AppBskyActorGetProfile from '@atcute/bluesky/types/app/actor/ge
 import type * as AppBskyFeedPost from '@atcute/bluesky/types/app/feed/post';
 import type * as AppBskyRichTextFacet from '@atcute/bluesky/types/app/richtext/facet';
 import type * as AppBskyEmbedExternal from '@atcute/bluesky/types/app/embed/external';
+import { isRitoPostCandidate } from './utils.js';
 
 const isPostRecord = (v: unknown): v is AppBskyFeedPost.Main & { via?: string } =>
   !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.feed.post';
@@ -28,7 +29,19 @@ const isEmbedExternal = (v: unknown): v is AppBskyEmbedExternal.Main =>
 const isTagFeature = (v: unknown): v is AppBskyRichTextFacet.Tag =>
   !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.richtext.facet#tag';
 const queue = new PQueue({ concurrency: 1 });
+const postQueue = new PQueue({ concurrency: 1 });
 const analysisQueue = new PQueue({ concurrency: 2 });
+const QUEUE_WARNING_SIZE = 1000;
+
+function enqueueTask(name: string, target: PQueue, task: () => Promise<void>): void {
+  if (target.size === QUEUE_WARNING_SIZE) {
+    logger.warn(`${name} queue reached ${QUEUE_WARNING_SIZE} waiting tasks`);
+  }
+
+  void target.add(task).catch((error) => {
+    logger.error(`${name} queue task failed: ${error instanceof Error ? error.message : String(error)}`);
+  });
+}
 
 // Type definitions for API responses
 interface DidDocument {
@@ -90,6 +103,7 @@ const publicAgent = new Client({
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY, // 環境変数にAPIキーを設定しておく
 });
+const ritoApiBaseUrl = process.env.RITO_API_BASE_URL ?? 'https://rito.blue';
 
 async function checkModeration(texts: string[]): Promise<string[]> {
   try {
@@ -659,7 +673,8 @@ async function init() {
 
       tags.splice(tags.indexOf('rito.blue'), 1)
 
-      if (record.via === 'リト' || record.via === 'Rito') return;
+      const via = (record as AppBskyFeedPost.Main & { via?: string }).via;
+      if (via === 'リト' || via === 'Rito') return;
 
       if (record.embed && isEmbedExternal(record.embed) && record.embed.external?.uri) {
         links.push(record.embed.external.uri);
@@ -710,7 +725,7 @@ async function init() {
 
       const exists = await prisma.postToBookmark.findUnique({
         where: { sub: event.did },
-        select: { sub: true }, // 必要な情報だけ取得
+        select: { sub: true, lang: true },
       });
 
       if (!exists) {
@@ -732,7 +747,7 @@ async function init() {
       } catch (err) {
         return
       }
-      const domainCheck = await fetch(`https://rito.blue/api/checkDomain?domain=${domain}`);
+      const domainCheck = await fetch(`${ritoApiBaseUrl}/api/checkDomain?domain=${domain}`);
       const domainData = await domainCheck.json() as DomainCheckResult;
 
       if (domainData.result) {
@@ -745,7 +760,7 @@ async function init() {
       let ogImage = '';
 
       try {
-        const ogp = await fetch(`https://rito.blue/api/fetchOgp?url=${encodeURIComponent(urlString)}`);
+        const ogp = await fetch(`${ritoApiBaseUrl}/api/fetchOgp?url=${encodeURIComponent(urlString)}`);
         const ogpData = await ogp.json() as OgpResult;
 
         if (ogpData.result?.ogTitle) ogpTitle = ogpData.result.ogTitle;
@@ -1001,42 +1016,48 @@ async function init() {
     }
   }
 
+  async function deletePost(event: CommitDeleteEvent<typeof POST_COLLECTION>) {
+    cursor = event.time_us.toString();
+    const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+
+    try {
+      await prisma.postUri.deleteMany({
+        where: { postUri: aturi },
+      });
+
+      const deletedPosts = await prisma.post.deleteMany({
+        where: { uri: aturi },
+      });
+      if (deletedPosts.count > 0) {
+        logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
+      }
+    } catch (err) {
+      logger.error(`Error in deletePost for ${aturi}: ${err}`);
+    }
+  }
+
   // イベント登録
   // BOOKMARK
-  jetstream.onCreate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
-  jetstream.onUpdate(BOOKMARK, event => queue.add(() => upsertBookmark(event)));
-  jetstream.onDelete(BOOKMARK, event => queue.add(() => deleteBookmark(event)));
+  jetstream.onCreate(BOOKMARK, event => enqueueTask('main', queue, () => upsertBookmark(event)));
+  jetstream.onUpdate(BOOKMARK, event => enqueueTask('main', queue, () => upsertBookmark(event)));
+  jetstream.onDelete(BOOKMARK, event => enqueueTask('main', queue, () => deleteBookmark(event)));
 
   // POST_COLLECTION
   const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
   const isForceEnabled = process.env.ENABLE_POST_COLLECTION === 'true';
 
   if (!isLocal || isForceEnabled) {
-    jetstream.onCreate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-    jetstream.onUpdate(POST_COLLECTION, event => queue.add(() => upsertPost(event)));
-    jetstream.onDelete(POST_COLLECTION, async (event: CommitDeleteEvent<typeof POST_COLLECTION>) => {
-      cursor = event.time_us.toString();
-      const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-
-      try {
-        // 1. Post に紐づく PostUri を先に削除
-        await prisma.postUri.deleteMany({
-          where: { postUri: aturi }, // PostUri.postUri が外部キー
-        });
-
-        // 2. Post を削除
-        const deletedPosts = await prisma.post.deleteMany({
-          where: { uri: aturi },
-        });
-        if (deletedPosts.count > 0) {
-          logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
-        } else {
-          //logger.info(`No post found for deletion: ${aturi}`);
-        }
-      } catch (err) {
-        logger.error(`Error in onDelete post for ${aturi}: ${err}`);
-      }
+    jetstream.onCreate(POST_COLLECTION, event => {
+      if (!isRitoPostCandidate(event.commit.record)) return;
+      enqueueTask('post', postQueue, () => upsertPost(event));
     });
+    jetstream.onUpdate(POST_COLLECTION, event => {
+      if (!isRitoPostCandidate(event.commit.record)) return;
+      enqueueTask('post', postQueue, () => upsertPost(event));
+    });
+    jetstream.onDelete(POST_COLLECTION, event =>
+      enqueueTask('post', postQueue, () => deletePost(event))
+    );
 
     logger.info(`POST_COLLECTION handlers are ENABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled})`);
   } else {
@@ -1044,13 +1065,13 @@ async function init() {
   }
 
   // SERVICE
-  jetstream.onCreate(SERVICE, event => queue.add(() => upsertResolver(event)));
-  jetstream.onUpdate(SERVICE, event => queue.add(() => upsertResolver(event)));
-  jetstream.onDelete(SERVICE, event => queue.add(() => deleteResolver(event)));
+  jetstream.onCreate(SERVICE, event => enqueueTask('main', queue, () => upsertResolver(event)));
+  jetstream.onUpdate(SERVICE, event => enqueueTask('main', queue, () => upsertResolver(event)));
+  jetstream.onDelete(SERVICE, event => enqueueTask('main', queue, () => deleteResolver(event)));
 
-  jetstream.onCreate(LIKE, event => queue.add(() => upsertLike(event)));
-  jetstream.onUpdate(LIKE, event => queue.add(() => upsertLike(event)));
-  jetstream.onDelete(LIKE, event => queue.add(() => deleteLike(event)));
+  jetstream.onCreate(LIKE, event => enqueueTask('main', queue, () => upsertLike(event)));
+  jetstream.onUpdate(LIKE, event => enqueueTask('main', queue, () => upsertLike(event)));
+  jetstream.onDelete(LIKE, event => enqueueTask('main', queue, () => deleteLike(event)));
 
   jetstream.start();
 }

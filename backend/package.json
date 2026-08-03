@@ -5,7 +5,8 @@
   "main": "index.js",
   "target": "esnext",
   "scripts": {
-    "start": "pnpm exec tsx src/index.ts",
+    "build": "pnpm run prisma:generate && tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
     "dev": "pnpm exec tsx --watch src/index.ts",
     "update": "pnpm up -L && pnpm install",
     "prisma:apply": "pnpm prisma migrate dev --name init",
@@ -14,6 +15,7 @@
     "docker:run": "docker run -it --rm --name rito-backend --env-file .env rito-backend:latest",
     "docker:push": "docker buildx build --platform linux/amd64 -t ghcr.io/usounds/rito-backend:latest . --push",
     "test": "vitest run",
+    "test:e2e:docker": "node e2e/docker-image.e2e.mjs",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "check-missing": "tsx src/scripts/verify_posts_and_likes.ts",
@@ -41,8 +43,6 @@
     "p-queue": "^9.3.3",
     "pg": "^8.22.0",
     "pino": "^10.3.1",
-    "pino-pretty": "^13.1.3",
-    "tsx": "^4.23.1",
     "ws": "^8.21.1"
   },
   "devDependencies": {
@@ -50,7 +50,9 @@
     "@types/pg": "8.20.0",
     "@types/ws": "^8.18.1",
     "@vitest/coverage-v8": "^4.1.10",
+    "pino-pretty": "^13.1.3",
     "prisma": "^7.9.0",
+    "tsx": "^4.23.1",
     "typescript": "^7.0.2",
     "vite": "^8.1.5",
     "vitest": "^4.1.10"

@@ -1,11 +1,13 @@
+/* eslint-disable no-console */
 const v8 = require('node:v8');
 const http = require('node:http');
 
 const oauthMockPort = Number(process.env.E2E_OAUTH_MOCK_PORT ?? 0);
 if (oauthMockPort > 0) {
   const issuer = `http://localhost:${oauthMockPort}`;
-  http.createServer(async (request, response) => {
+  const server = http.createServer(async (request, response) => {
     response.setHeader('content-type', 'application/json');
+    response.setHeader('x-content-type-options', 'nosniff');
 
     if (request.url === '/.well-known/oauth-authorization-server') {
       response.end(JSON.stringify({
@@ -39,7 +41,13 @@ if (oauthMockPort > 0) {
 
     response.statusCode = 404;
     response.end(JSON.stringify({ error: 'not found' }));
-  }).listen(oauthMockPort, '127.0.0.1', () => {
+  });
+
+  server.on('error', (err) => {
+    console.error('Mock OAuth server error:', err);
+  });
+
+  server.listen(oauthMockPort, '127.0.0.1', () => {
     console.log(JSON.stringify({ event: 'mock-oauth-pds-listening', oauthMockPort }));
   });
 }
@@ -48,3 +56,4 @@ process.once('SIGTERM', () => {
   v8.takeCoverage();
   process.exit(0);
 });
+

@@ -2,7 +2,7 @@
   "name": "rito-extension",
   "version": "1.2.7",
   "type": "module",
-  "packageManager": "pnpm@11.17.0",
+  "packageManager": "pnpm@11.20.0",
   "description": "Rito's browser extension for bookmarking.",
   "private": true,
   "scripts": {
@@ -27,11 +27,11 @@
   },
   "devDependencies": {
     "@atcute/lex-cli": "^3.2.1",
-    "@types/chrome": "^0.2.2",
-    "@types/node": "^26.1.1",
+    "@types/chrome": "^0.2.5",
+    "@types/node": "^26.1.2",
     "dotenv-cli": "^11.0.0",
     "typescript": "^7.0.2",
-    "vite": "^8.1.5",
-    "wxt": "^0.20.27"
+    "vite": "^8.2.1",
+    "wxt": "^0.21.3"
   }
 }

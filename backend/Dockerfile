@@ -1,5 +1,5 @@
 # ---------- Build Stage ----------
-FROM node:22-alpine AS build
+FROM node:24-alpine AS build
 
 RUN apk update && apk upgrade --no-cache
 # 作業ディレクトリ
@@ -25,7 +25,7 @@ ENV DATABASE_URL=$DATABASE_URL
 RUN pnpm run build && pnpm prune --prod
 
 # ---------- Production Stage ----------
-FROM node:22-alpine AS production
+FROM node:24-alpine AS production
 
 ENV NODE_ENV=production
 RUN apk update && apk upgrade --no-cache

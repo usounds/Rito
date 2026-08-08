@@ -48,23 +48,6 @@ const apiServer = http.createServer(async (request, response) => {
     return;
   }
 
-  if (request.method === 'POST' && request.url === '/xrpc/com.atproto.repo.putRecord') {
-    const chunks = [];
-    for await (const chunk of request) chunks.push(chunk);
-    const body = JSON.parse(Buffer.concat(chunks).toString('utf8'));
-    console.log(JSON.stringify({
-      event: 'mock-put-record',
-      authorization: request.headers.authorization,
-      hasDpopProof: typeof request.headers.dpop === 'string',
-      body,
-    }));
-    response.end(JSON.stringify({
-      uri: `at://${body.repo}/${body.collection}/${body.rkey}`,
-      cid: 'bafyreie2etestcid',
-    }));
-    return;
-  }
-
   response.statusCode = 404;
   response.end(JSON.stringify({ error: 'not found' }));
 });
@@ -146,17 +129,32 @@ server.on('connection', (socket) => {
     record: { ...candidateRecord, $type: 'blue.rito.feed.bookmark' },
     rkey: 'filtered-wrong-type',
   });
+  send({
+    collection: 'app.bsky.feed.post',
+    record: { ...candidateRecord, facets: [null] },
+    rkey: 'filtered-null-facet',
+  });
+  send({
+    collection: 'app.bsky.feed.post',
+    record: { ...candidateRecord, facets: [{ features: {} }] },
+    rkey: 'filtered-non-array-features',
+  });
+  send({
+    collection: 'app.bsky.feed.post',
+    record: { ...candidateRecord, facets: [{ features: [null] }] },
+    rkey: 'filtered-null-feature',
+  });
 
   send({
     collection: 'app.bsky.feed.post',
     record: candidateRecord,
-    rkey: 'candidate-create',
+    rkey: 'candidate-post',
   });
   send({
     collection: 'app.bsky.feed.post',
     operation: 'update',
     record: { ...candidateRecord, text: '#rito.blue updated' },
-    rkey: 'candidate-update',
+    rkey: 'candidate-post',
   });
   send({
     collection: 'app.bsky.feed.post',
@@ -203,6 +201,7 @@ server.on('connection', (socket) => {
     event: 'mock-events-sent',
     unrelatedCount,
     filteredBranchCount: 4,
+    malformedFacetCount: 3,
     relevantPostCount: 2,
     lifecycleEventCount: 10,
   }));

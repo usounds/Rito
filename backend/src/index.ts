@@ -10,7 +10,6 @@ import pLimit from "p-limit";
 import PQueue from 'p-queue';
 import { client as oauthClient } from "./lib/HandleOauthClientNode.js";
 import { Agent } from "@atproto/api";
-import * as TID from '@atcute/tid';
 import { ActorIdentifier } from '@atcute/lexicons/syntax';
 import { BlueRitoFeedLike, BlueRitoServiceSchema } from './lexicons/index.js';
 import type { XRPCQueries } from '@atcute/lexicons/ambient';
@@ -18,7 +17,7 @@ import type * as AppBskyActorGetProfile from '@atcute/bluesky/types/app/actor/ge
 import type * as AppBskyFeedPost from '@atcute/bluesky/types/app/feed/post';
 import type * as AppBskyRichTextFacet from '@atcute/bluesky/types/app/richtext/facet';
 import type * as AppBskyEmbedExternal from '@atcute/bluesky/types/app/embed/external';
-import { isRitoPostCandidate } from './utils.js';
+import { deriveBookmarkRkeyFromPost, isRitoPostCandidate } from './utils.js';
 
 const isPostRecord = (v: unknown): v is AppBskyFeedPost.Main & { via?: string } =>
   !!v && typeof v === 'object' && '$type' in v && v.$type === 'app.bsky.feed.post';
@@ -787,7 +786,7 @@ async function init() {
 
       const session = await oauthClient.restore(event.did);
       const agent = new Agent(session);
-      const rkeyLocal = TID.now();
+      const bookmarkRkey = deriveBookmarkRkeyFromPost(event.commit.rkey);
 
       function normalizeComment(text: string): string {
         let result = text
@@ -814,7 +813,7 @@ async function init() {
       await agent.com.atproto.repo.putRecord({
         repo: event.did, // ここが対象ユーザーの DID
         collection: 'blue.rito.feed.bookmark',
-        rkey: rkeyLocal, // レコードキー
+        rkey: bookmarkRkey,
         record: {
           subject: uniqueLinks[0],
           createdAt: new Date().toISOString(),

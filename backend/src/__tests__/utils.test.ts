@@ -13,6 +13,7 @@ import {
     extractLinksFromPost,
     extractTagsFromFacets,
     shouldProcessAsRitoPost,
+    deriveBookmarkRkeyFromPost,
     isRitoPostCandidate,
     parseDomainFromUrl,
     DidDocument,
@@ -329,7 +330,7 @@ describe('extractTagsFromFacets', () => {
     });
 
     it('should handle undefined facets', () => {
-        expect(extractTagsFromFacets(undefined as any)).toEqual([]);
+        expect(extractTagsFromFacets(undefined)).toEqual([]);
     });
 
     it('should ignore non-tag features', () => {
@@ -342,6 +343,28 @@ describe('extractTagsFromFacets', () => {
             }
         ];
         expect(extractTagsFromFacets(facets)).toEqual(['valid']);
+    });
+
+    it.each([
+        null,
+        {},
+        [null],
+        [{ features: {} }],
+        [{ features: [null] }],
+        [{ features: [{ $type: 'app.bsky.richtext.facet#tag' }] }],
+        [{ features: [{ $type: 'app.bsky.richtext.facet#tag', tag: 123 }] }],
+    ])('should safely ignore malformed facets: %j', (facets) => {
+        expect(extractTagsFromFacets(facets)).toEqual([]);
+    });
+
+    it('should preserve valid tags alongside malformed facet entries', () => {
+        const facets = [
+            null,
+            { features: {} },
+            { features: [null, { $type: 'app.bsky.richtext.facet#tag', tag: 'rito.blue' }] },
+        ];
+
+        expect(extractTagsFromFacets(facets)).toEqual(['rito.blue']);
     });
 });
 
@@ -397,6 +420,34 @@ describe('isRitoPostCandidate', () => {
 
     it('rejects non-post records', () => {
         expect(isRitoPostCandidate({ ...candidate, $type: 'blue.rito.feed.bookmark' })).toBe(false);
+    });
+
+    it.each([
+        [null],
+        [{ features: {} }],
+        [{ features: [null] }],
+    ])('rejects malformed facets without throwing: %j', (facets) => {
+        expect(isRitoPostCandidate({ ...candidate, facets })).toBe(false);
+    });
+
+    it('accepts a valid tag even when sibling facet entries are malformed', () => {
+        expect(isRitoPostCandidate({
+            ...candidate,
+            facets: [null, { features: {} }, ...candidate.facets],
+        })).toBe(true);
+    });
+});
+
+describe('deriveBookmarkRkeyFromPost', () => {
+    it('reuses the source post rkey for idempotent bookmark writes', () => {
+        const postRkey = '3ms6udckukcsz';
+
+        expect(deriveBookmarkRkeyFromPost(postRkey)).toBe(postRkey);
+        expect(deriveBookmarkRkeyFromPost(postRkey)).toBe(postRkey);
+    });
+
+    it('keeps bookmarks for different posts distinct', () => {
+        expect(deriveBookmarkRkeyFromPost('post-a')).not.toBe(deriveBookmarkRkeyFromPost('post-b'));
     });
 });
 

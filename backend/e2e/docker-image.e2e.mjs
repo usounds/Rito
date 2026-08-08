@@ -265,8 +265,7 @@ try {
     return logs.includes('"event":"mock-oauth-pds-listening"')
       && logs.includes(`Deleted bookmark: ${bookmarkUri}`)
       && logs.includes(`Deleted post: ${postUri} (1 records)`)
-      && logs.includes(`Post to bookmark created: at://${testDid}/app.bsky.feed.post/candidate-create`)
-      && logs.includes(`Post to bookmark created: at://${testDid}/app.bsky.feed.post/candidate-update`)
+      && logs.includes(`Post to bookmark created: at://${testDid}/app.bsky.feed.post/candidate-post`)
       && logs.includes(`Deleted like: at://${testDid}/blue.rito.feed.like/like-lifecycle`)
       && logs.includes(`Deleted resolver: blue.rito.e2e -> ${testDid}`)
       && logs.includes(`Async analysis complete for ${bookmarkUri}: technology and Moderation: null`);
@@ -302,6 +301,7 @@ try {
   const mockLogs = docker('logs', mock).stdout;
   if (!mockLogs.includes('"unrelatedCount":20000')
     || !mockLogs.includes('"filteredBranchCount":4')
+    || !mockLogs.includes('"malformedFacetCount":3')
     || !mockLogs.includes('"relevantPostCount":2')
     || !mockLogs.includes('"lifecycleEventCount":10')) {
     throw new Error(`Mock Jetstream did not send the expected events:\n${mockLogs}`);
@@ -313,6 +313,10 @@ try {
     .map((line) => JSON.parse(line));
   if (putRecords.length !== 2) {
     throw new Error(`Expected two OAuth putRecord calls, received ${putRecords.length}:\n${mockLogs}`);
+  }
+  const uniqueBookmarkRkeys = new Set(putRecords.map(({ body }) => body.rkey));
+  if (uniqueBookmarkRkeys.size !== 1 || !uniqueBookmarkRkeys.has('candidate-post')) {
+    throw new Error(`Repeated post updates targeted different bookmark rkeys: ${JSON.stringify([...uniqueBookmarkRkeys])}`);
   }
   for (const [index, putRecord] of putRecords.entries()) {
     const { body } = putRecord;
@@ -343,9 +347,11 @@ try {
     image,
     unrelatedPostsFiltered: 20_000,
     filteredPostBranches: 4,
+    malformedFacetsFiltered: 3,
     relevantPostsQueued: 2,
     lifecycleEventsProcessed: 10,
     oauthPutRecordsVerified: putRecords.length,
+    uniqueBookmarkRkeys: uniqueBookmarkRkeys.size,
     databaseCounts,
     memoryMiB: Math.round((memoryBytes / 1024 / 1024) * 10) / 10,
     queueSaturationDetected: false,

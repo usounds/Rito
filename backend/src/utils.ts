@@ -201,17 +201,26 @@ export function extractLinksFromPost(record: any): string[] {
 /**
  * Extract hashtags from post facets
  */
-export function extractTagsFromFacets(facets: any[]): string[] {
+export function extractTagsFromFacets(facets: unknown): string[] {
     const tags: string[] = [];
 
-    if (facets) {
-        for (const facet of facets) {
-            if (facet.features) {
-                for (const feature of facet.features) {
-                    if (feature.$type === 'app.bsky.richtext.facet#tag' && feature.tag) {
-                        tags.push(feature.tag);
-                    }
-                }
+    if (!Array.isArray(facets)) return tags;
+
+    for (const facet of facets) {
+        if (!facet || typeof facet !== 'object' || !('features' in facet)) continue;
+
+        const features = facet.features;
+        if (!Array.isArray(features)) continue;
+
+        for (const feature of features) {
+            if (!feature || typeof feature !== 'object') continue;
+
+            if ('$type' in feature
+                && feature.$type === 'app.bsky.richtext.facet#tag'
+                && 'tag' in feature
+                && typeof feature.tag === 'string'
+                && feature.tag.length > 0) {
+                tags.push(feature.tag);
             }
         }
     }
@@ -235,6 +244,13 @@ export function shouldProcessAsRitoPost(tags: string[], via?: string): boolean {
 }
 
 /**
+ * Reuse the source post record key so repeated updates target one bookmark.
+ */
+export function deriveBookmarkRkeyFromPost(postRkey: string): string {
+    return postRkey;
+}
+
+/**
  * Cheap synchronous filter used before retaining a Jetstream post event in a queue.
  */
 export function isRitoPostCandidate(record: unknown): boolean {
@@ -252,7 +268,7 @@ export function isRitoPostCandidate(record: unknown): boolean {
 
     if (post.$type !== 'app.bsky.feed.post') return false;
 
-    const tags = extractTagsFromFacets(Array.isArray(post.facets) ? post.facets : []);
+    const tags = extractTagsFromFacets(post.facets);
     if (!shouldProcessAsRitoPost(tags, typeof post.via === 'string' ? post.via : undefined)) {
         return false;
     }

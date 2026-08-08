@@ -30,7 +30,6 @@
     "@atcute/bluesky": "^4.0.15",
     "@atcute/client": "^5.1.1",
     "@atcute/lexicons": "^2.0.3",
-    "@atcute/tid": "^1.1.4",
     "@atproto/api": "^0.20.33",
     "@atproto/jwk-jose": "^0.2.4",
     "@atproto/oauth-client-node": "^0.4.9",

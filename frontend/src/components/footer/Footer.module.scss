@@ -17,7 +17,6 @@ $mantine-breakpoint-xl: 88em;
   transition: background-color 0.3s, border-color 0.3s;
 }
 
-
 .inner {
   display: flex;
   justify-content: space-between;
@@ -27,11 +26,39 @@ $mantine-breakpoint-xl: 88em;
 
   @media (max-width: $mantine-breakpoint-xs) {
     flex-direction: column;
+    gap: var(--mantine-spacing-sm);
+    text-align: center;
   }
 }
 
 .links {
   @media (max-width: $mantine-breakpoint-xs) {
-    margin-top: var(--mantine-spacing-md);
+    margin-top: var(--mantine-spacing-xs);
+    justify-content: center;
+  }
+}
+
+.linkItem {
+  text-decoration: none;
+  cursor: pointer;
+  color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
+  font-size: 0.875rem;
+  white-space: nowrap;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--mantine-color-blue-6);
+  }
+}
+
+.socialIcon {
+  display: inline-flex;
+  align-items: center;
+  color: light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-3));
+  font-size: 20px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: var(--mantine-color-blue-6);
   }
 }

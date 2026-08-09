@@ -1,12 +1,13 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Article } from '@/components/bookmarkcard/Article';
+import { ArticleListItem } from '@/components/bookmarkcard/ArticleListItem';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert } from '@mantine/core';
+import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
-import { Info } from 'lucide-react';
+import { Info, LayoutGrid, List } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
 import classes from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
@@ -16,9 +17,22 @@ export function MyBookmark() {
     const messages = useMessages();
     const locale = useLocale();
 
-    // --- フックは必ず最初に ---
+    // --- フック ---
     const [tags, setTags] = useState<string[]>([]);
     const [query, setQuery] = useState<string>("");
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+    useEffect(() => {
+        const savedMode = localStorage.getItem('rito_bookmark_view_mode') as 'grid' | 'list' | null;
+        if (savedMode === 'grid' || savedMode === 'list') {
+            setViewMode(savedMode);
+        }
+    }, []);
+
+    const handleViewModeChange = (mode: 'grid' | 'list') => {
+        setViewMode(mode);
+        localStorage.setItem('rito_bookmark_view_mode', mode);
+    };
 
     // ユーザーのブックマークからタグと件数を集計
     const { allTags, tagCounts } = useMemo(() => {
@@ -64,47 +78,96 @@ export function MyBookmark() {
         );
     }
 
-
     return (
         <Stack gap="md">
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-                <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <TagsInput
-                        label={messages.search.field.tag.title}
-                        placeholder={messages.search.field.tag.placeholder}
-                        value={tags}
-                        onChange={(newTags) => setTags(newTags.map(tag => tag.replace(/#/g, "")))}
+            <Group justify="space-between" align="flex-end">
+                <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
+                    <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        <TagsInput
+                            label={messages.search.field.tag.title}
+                            placeholder={messages.search.field.tag.placeholder}
+                            value={tags}
+                            onChange={(newTags) => setTags(newTags.map(tag => tag.replace(/#/g, "")))}
+                            styles={{ input: { fontSize: 16 } }}
+                            clearable
+                        />
+                        <TagSuggestion
+                            tags={allTags}
+                            selectedTags={tags}
+                            setTags={setTags}
+                            tagCounts={tagCounts}
+                        />
+                    </Box>
+                    <TextInput
+                        label={messages.mybookmark.field.search.title}
+                        placeholder={messages.mybookmark.field.search.placeholder}
+                        value={query}
+                        onChange={(e) => setQuery(e.currentTarget.value)}
                         styles={{ input: { fontSize: 16 } }}
-                        clearable
                     />
-                    <TagSuggestion
-                        tags={allTags}
-                        selectedTags={tags}
-                        setTags={setTags}
-                        tagCounts={tagCounts}
-                    />
-                </Box>
-                <TextInput
-                    label={messages.mybookmark.field.search.title}
-                    placeholder={messages.mybookmark.field.search.placeholder}
-                    value={query}
-                    onChange={(e) => setQuery(e.currentTarget.value)}
-                    styles={{ input: { fontSize: 16 } }}
-                />
-            </SimpleGrid>
+                </SimpleGrid>
+
+                <Group gap={4} mb={4}>
+                    <Tooltip label="グリッド表示">
+                        <ActionIcon
+                            variant={viewMode === 'grid' ? 'filled' : 'light'}
+                            color="blue"
+                            size="lg"
+                            onClick={() => handleViewModeChange('grid')}
+                            aria-label="Grid view"
+                        >
+                            <LayoutGrid size={18} />
+                        </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="リスト表示">
+                        <ActionIcon
+                            variant={viewMode === 'list' ? 'filled' : 'light'}
+                            color="blue"
+                            size="lg"
+                            onClick={() => handleViewModeChange('list')}
+                            aria-label="List view"
+                        >
+                            <List size={18} />
+                        </ActionIcon>
+                    </Tooltip>
+                </Group>
+            </Group>
 
             {myBookmark.length === 0 &&
                 <Alert my="sm" variant="light" color="blue" title={messages.mybookmark.empty} icon={<Info size={18} />} />
             }
 
-            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
-                {filteredBookmarks.map((b, index) => {
-                    // 現在の locale に一致するコメントを優先
-                    const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
+            {viewMode === 'grid' ? (
+                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+                    {filteredBookmarks.map((b, index) => {
+                        const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
 
-                    return (
-                        <div key={b.uri} className={classes.articleItem}>
-                            <Article
+                        return (
+                            <div key={b.uri} className={classes.articleItem}>
+                                <Article
+                                    url={b.subject}
+                                    title={selectedComment?.title ?? ""}
+                                    comment={selectedComment?.comment ?? ""}
+                                    tags={b.tags}
+                                    image={b.ogpImage}
+                                    date={new Date(b.indexedAt)}
+                                    moderations={[]}
+                                    likes={b.likes || []}
+                                    likeDisabled={true}
+                                    priority={index < 6}
+                                />
+                            </div>
+                        );
+                    })}
+                </SimpleGrid>
+            ) : (
+                <Stack gap="xs">
+                    {filteredBookmarks.map((b, index) => {
+                        const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
+
+                        return (
+                            <ArticleListItem
+                                key={b.uri}
                                 url={b.subject}
                                 title={selectedComment?.title ?? ""}
                                 comment={selectedComment?.comment ?? ""}
@@ -116,10 +179,10 @@ export function MyBookmark() {
                                 likeDisabled={true}
                                 priority={index < 6}
                             />
-                        </div>
-                    );
-                })}
-            </SimpleGrid>
+                        );
+                    })}
+                </Stack>
+            )}
         </Stack>
     );
 }

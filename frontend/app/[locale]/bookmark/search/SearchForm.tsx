@@ -1,6 +1,6 @@
 'use client';
-import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box, Select } from '@mantine/core';
-import { Search, RotateCw } from 'lucide-react';
+import { Button, Checkbox, Group, TagsInput, SimpleGrid, Box, Select, ActionIcon, Tooltip } from '@mantine/core';
+import { Search, RotateCw, LayoutGrid, List } from 'lucide-react';
 import { useMessages } from 'next-intl';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTopLoader } from 'nextjs-toploader';
@@ -40,23 +40,35 @@ export function SearchForm({
   const [isLoading, setIsLoading] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const messages = useMessages();
   const router = useRouter();
   const loader = useTopLoader();
   const pathname = usePathname();
 
-  // App Router 用: クエリパラメータを取得
   const searchParams = useSearchParams();
 
-  // 選択タグに基づいて関連タグを取得
+  useEffect(() => {
+    const savedMode = localStorage.getItem('rito_bookmark_view_mode') as 'grid' | 'list' | null;
+    if (savedMode === 'grid' || savedMode === 'list') {
+      setViewMode(savedMode);
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: 'grid' | 'list') => {
+    setViewMode(mode);
+    localStorage.setItem('rito_bookmark_view_mode', mode);
+    window.dispatchEvent(new Event('rito_view_mode_changed'));
+  };
+
   const fetchRelatedTags = useCallback(async (selectedTags: string[], targetHandles?: string[], targetRelationship?: string) => {
     try {
       const params = new URLSearchParams();
       if (selectedTags.length > 0) {
         params.set('tags', selectedTags.join(','));
       }
-      const handlesToUse = targetHandles || handles;
-      const relationshipToUse = targetRelationship || relationship;
+      const handlesToUse = targetHandles !== undefined ? targetHandles : handles;
+      const relationshipToUse = targetRelationship !== undefined ? targetRelationship : relationship;
 
       if (relationshipToUse === 'specified' && handlesToUse.length > 0) {
         params.set('actor', handlesToUse.join(','));
@@ -68,20 +80,18 @@ export function SearchForm({
       const res = await fetch(`/xrpc/blue.rito.feed.getLatestBookmarkTag?${params.toString()}`);
       if (res.ok) {
         const data: TagRanking[] = await res.json();
-        // タグリストを更新
         let tagNames = data.map(r => r.tag);
-        // タグ未選択時のみ Verified を先頭に追加
         if (selectedTags.length === 0 && !tagNames.includes("Verified")) {
           tagNames = ["Verified", ...tagNames];
         }
         setMyTag(tagNames);
-        // 件数マップを更新
         setDynamicTagCounts(Object.fromEntries(data.map(r => [r.tag, r.count])));
       }
     } catch (err) {
       console.error("Error fetching related tags:", err);
     }
-  }, [handles, relationship, activeDid]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeDid]);
 
   useEffect(() => {
     if (!searchParams) return;
@@ -101,12 +111,10 @@ export function SearchForm({
     else if (handleParam) initialRel = 'specified';
     setRelationship(initialRel);
 
-    // 初期ロード時に関連タグを取得
     fetchRelatedTags(initialTags, initialHandles, initialRel);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  // タグ・ハンドル・モード変更時に関連タグを再取得
   useEffect(() => {
     fetchRelatedTags(tags);
   }, [tags, handles, relationship, fetchRelatedTags]);
@@ -135,7 +143,7 @@ export function SearchForm({
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000); // 2秒後にリセット
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy: ", err);
     }
@@ -158,7 +166,6 @@ export function SearchForm({
       });
 
       if (res.ok) {
-        // actor.handle を候補として表示
         setSuggestions(res.data.actors.map((a) => a.handle));
       }
     } catch (err) {
@@ -173,7 +180,7 @@ export function SearchForm({
       const res = await fetch('/api/graph/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type: 'both' }), // Always sync both
+        body: JSON.stringify({ type: 'both' }),
       });
       if (res.ok) {
         setLastSyncedAt(Date.now());
@@ -208,7 +215,6 @@ export function SearchForm({
     <form onSubmit={handleSubmit}>
       <Group grow mb="xs">
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
-          {/* タグ入力とサジェッションを縦並びに */}
           <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <TagsInput
               label={messages.search.field.tag.title}
@@ -230,7 +236,6 @@ export function SearchForm({
             />
           </Box>
 
-          {/* ユーザー入力 (モード選択 + ハンドル入力 or 同期ボタン) */}
           <Box>
             <Select
               label={messages.search.field.mode.title}
@@ -287,7 +292,6 @@ export function SearchForm({
       </Group>
 
       <Box style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
-
         <Checkbox
           label={messages.search.field.commentpriority.title}
           checked={commentPriority === 'ogp'}
@@ -297,21 +301,48 @@ export function SearchForm({
         />
       </Box>
 
-      <Group justify="center" mb="xs">
-        <Button
-          type="submit"
-          loading={isLoading}
-          leftSection={<Search size={14} />}
-        >
-          {messages.search.button.search}
-        </Button>
-        <Button
-          color={copied ? "teal" : "gray"}
-          onClick={handleCopy}
-          leftSection={<ClipboardPaste size={14} />}
-        >
-          {copied ? messages.search.button.urlcopyed : messages.search.button.urlcopy}
-        </Button>
+      <Group justify="space-between" align="center" mb="md">
+        <Group gap="xs">
+          <Button
+            type="submit"
+            loading={isLoading}
+            leftSection={<Search size={14} />}
+          >
+            {messages.search.button.search}
+          </Button>
+          <Button
+            color={copied ? "teal" : "gray"}
+            onClick={handleCopy}
+            leftSection={<ClipboardPaste size={14} />}
+          >
+            {copied ? messages.search.button.urlcopyed : messages.search.button.urlcopy}
+          </Button>
+        </Group>
+
+        <Group gap={4}>
+          <Tooltip label="カード（グリッド）表示">
+            <ActionIcon
+              variant={viewMode === 'grid' ? 'filled' : 'light'}
+              color="blue"
+              size="md"
+              onClick={() => handleViewModeChange('grid')}
+              aria-label="Grid view"
+            >
+              <LayoutGrid size={16} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label="リスト表示">
+            <ActionIcon
+              variant={viewMode === 'list' ? 'filled' : 'light'}
+              color="blue"
+              size="md"
+              onClick={() => handleViewModeChange('list')}
+              aria-label="List view"
+            >
+              <List size={16} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
       </Group>
     </form>
   );

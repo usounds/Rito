@@ -28,9 +28,11 @@ export default function RegistBookmarkPage() {
     const locale = useLocale();
     const searchParams = useSearchParams();
     const router = useRouter();
-    const aturi = searchParams.get("aturi") || undefined;
+    const urlParam = searchParams.get("url") || undefined;
     const subjectParam = searchParams.get("subject") || undefined;
     const titleParam = searchParams.get("title") || undefined;
+    const textParam = searchParams.get("text") || undefined;
+    const aturi = searchParams.get("aturi") || undefined;
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
         { lang: "ja", title: "", comment: "", moderations: [] },
@@ -74,33 +76,41 @@ export default function RegistBookmarkPage() {
     }, [myBookmark]);
 
     useEffect(() => {
-        if (!subjectParam && !titleParam && !aturi) {
+        const extractedUrlFromText = textParam ? textParam.match(/https?:\/\/[^\s]+/)?.[0] : undefined;
+        const targetUrl = urlParam || subjectParam || extractedUrlFromText;
+        const targetTitle = titleParam || (textParam && textParam !== extractedUrlFromText ? textParam : undefined);
+
+        if (!targetUrl && !targetTitle && !aturi) {
             setIsSettingUp(false)
             return
         }
 
-        if (subjectParam) {
+        if (targetUrl) {
             try {
-                const decodedUrl = decodeURIComponent(subjectParam);
+                const decodedUrl = decodeURIComponent(targetUrl);
                 setUrl(stripTrackingParams(decodedUrl));
             } catch (err) {
-                console.error("Invalid URL:", subjectParam, err);
-                setUrl(decodeURIComponent(subjectParam)); // fallback
+                console.error("Invalid URL:", targetUrl, err);
+                setUrl(decodeURIComponent(targetUrl)); // fallback
             }
         }
 
-        if (titleParam) {
-            const decodedTitle = decodeURIComponent(titleParam);
-            setComments(prev =>
-                prev.map(comment =>
-                    comment.lang === locale
-                        ? { ...comment, title: decodedTitle } // 現在の locale に合致するものだけ更新
-                        : comment
-                )
-            );
+        if (targetTitle) {
+            try {
+                const decodedTitle = decodeURIComponent(targetTitle);
+                setComments(prev =>
+                    prev.map(comment =>
+                        comment.lang === locale
+                            ? { ...comment, title: decodedTitle }
+                            : comment
+                    )
+                );
+            } catch (err) {
+                console.error("Invalid Title:", targetTitle, err);
+            }
         }
 
-        if (subjectParam || titleParam) {
+        if (targetUrl || targetTitle) {
             setIsSettingUp(false)
             return
         }

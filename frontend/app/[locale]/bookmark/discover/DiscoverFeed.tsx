@@ -1,9 +1,11 @@
 "use client";
 
 import { Article } from '@/components/bookmarkcard/Article';
-import { SimpleGrid } from '@mantine/core';
+import { ArticleListItem } from '@/components/bookmarkcard/ArticleListItem';
+import { SimpleGrid, Stack, Group, ActionIcon, Tooltip } from '@mantine/core';
 import { useIntersection } from '@mantine/hooks';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { LayoutGrid, List } from 'lucide-react';
 import { fetchCategoryBookmarks } from '@app/actions/fetchCategoryBookmarks';
 import { stripTrackingParams } from '@/logic/stripTrackingParams';
 import { Bookmark, Comment } from '@/type/ApiTypes';
@@ -20,6 +22,19 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
     const [page, setPage] = useState(1); // Initial data is page 0
     const [hasMore, setHasMore] = useState(true);
     const [loading, setLoading] = useState(false);
+    const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+    useEffect(() => {
+        const savedMode = localStorage.getItem('rito_bookmark_view_mode') as 'grid' | 'list' | null;
+        if (savedMode === 'grid' || savedMode === 'list') {
+            setViewMode(savedMode);
+        }
+    }, []);
+
+    const handleViewModeChange = (mode: 'grid' | 'list') => {
+        setViewMode(mode);
+        localStorage.setItem('rito_bookmark_view_mode', mode);
+    };
 
     // Keep track of Uris to avoid duplication across pages
     const seenUris = useRef(new Set(initialBookmarks.map(b => b.uri)));
@@ -48,14 +63,10 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
 
                 const normalizedSubject = stripTrackingParams(b.subject.endsWith('/') ? b.subject.slice(0, -1) : b.subject);
 
-                // Check if we already have this subject (conceptually the same article)
                 if (seenSubjects.current.has(normalizedSubject)) {
-                    // It's a duplicate subject (different URI maybe, or same), so we should MERGE tags
-                    // into the existing bookmark in state.
                     setBookmarks(prev => prev.map(existing => {
                         const existingNorm = stripTrackingParams(existing.subject.endsWith('/') ? existing.subject.slice(0, -1) : existing.subject);
                         if (existingNorm === normalizedSubject) {
-                            // Merge tags
                             const mergedTags = new Set(existing.tags);
                             if (Array.isArray(b.tags)) {
                                 b.tags.forEach((t: string) => mergedTags.add(t));
@@ -68,7 +79,6 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
                         return existing;
                     }));
 
-                    // Mark this specific URI as seen so we don't process it again loosely
                     seenUris.current.add(b.uri);
                     continue;
                 }
@@ -89,7 +99,6 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
     }, [category, page]);
 
     useEffect(() => {
-        // Reset state when category changes
         setBookmarks(initialBookmarks);
         setPage(1);
         setHasMore(true);
@@ -123,10 +132,27 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
                 ...((!b.ogpTitle || !b.ogpDescription) ? (comment.moderations || []) : []),
             ];
 
-        // b.commentCount comes from enrichBookmarks
         const bookmarkCount = b.commentCount || 0;
-        // Fix date string serialization issue if passed from server
         const displayDate = new Date(b.createdAt || b.created_at || Date.now());
+
+        if (viewMode === 'list') {
+            return (
+                <ArticleListItem
+                    key={b.uri}
+                    url={b.subject}
+                    title={displayTitle}
+                    handle={b.handle}
+                    comment={displayComment || ''}
+                    tags={b.tags}
+                    image={b.ogpImage}
+                    date={displayDate}
+                    moderations={moderationList}
+                    likes={b.likes || []}
+                    bookmarkCount={bookmarkCount}
+                    priority={priority}
+                />
+            );
+        }
 
         return (
             <div key={b.uri} className={classes.articleItem}>
@@ -148,25 +174,57 @@ export default function DiscoverFeed({ initialBookmarks, category, locale }: Dis
     };
 
     return (
-        <>
-            <div className={classes.articleGrid}>
-                <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
+        <Stack gap="md">
+            <Group justify="flex-end" mt="xs" mb={0}>
+                <Group gap={4}>
+                    <Tooltip label="カード（グリッド）表示">
+                        <ActionIcon
+                            variant={viewMode === 'grid' ? 'filled' : 'light'}
+                            color="blue"
+                            size="md"
+                            onClick={() => handleViewModeChange('grid')}
+                            aria-label="Grid view"
+                        >
+                            <LayoutGrid size={16} />
+                        </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="リスト表示">
+                        <ActionIcon
+                            variant={viewMode === 'list' ? 'filled' : 'light'}
+                            color="blue"
+                            size="md"
+                            onClick={() => handleViewModeChange('list')}
+                            aria-label="List view"
+                        >
+                            <List size={16} />
+                        </ActionIcon>
+                    </Tooltip>
+                </Group>
+            </Group>
+
+            {viewMode === 'grid' ? (
+                <div className={classes.articleGrid}>
+                    <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="sm" verticalSpacing="sm">
+                        {bookmarks.map((b, index) => renderArticle(b, index < 2))}
+                    </SimpleGrid>
+                </div>
+            ) : (
+                <Stack gap="xs">
                     {bookmarks.map((b, index) => renderArticle(b, index < 2))}
-                </SimpleGrid>
-            </div>
+                </Stack>
+            )}
+
             {hasMore && (
                 <div ref={ref} className={classes.loadingContainer}>
                     {loading && (
-                        <>
-                            <div className={classes.loadingDots}>
-                                <div className={classes.loadingDot} />
-                                <div className={classes.loadingDot} />
-                                <div className={classes.loadingDot} />
-                            </div>
-                        </>
+                        <div className={classes.loadingDots}>
+                            <div className={classes.loadingDot} />
+                            <div className={classes.loadingDot} />
+                            <div className={classes.loadingDot} />
+                        </div>
                     )}
                 </div>
             )}
-        </>
+        </Stack>
     );
 }

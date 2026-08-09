@@ -8,6 +8,9 @@ import { fetchBookmarksAction } from '@app/[locale]/bookmark/search/latestbookma
 vi.mock('@mantine/core', () => ({
     SimpleGrid: ({ children }: { children: React.ReactNode }) => <div data-testid="grid">{children}</div>,
     Stack: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    Group: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+    ActionIcon: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => <button onClick={onClick}>{children}</button>,
+    Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
     Center: vi.fn().mockImplementation(({ children, ...props }) => <div data-testid="center" {...props}>{children}</div>),
     Loader: () => <div data-testid="loader">Loading...</div>,
     Text: ({ children }: { children: React.ReactNode }) => <span>{children}</span>,

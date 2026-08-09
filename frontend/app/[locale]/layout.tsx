@@ -110,6 +110,7 @@ export async function generateMetadata({
       description: t("ogp.description"),
       images: [ogImage.url],
     },
+    manifest: '/manifest.webmanifest',
   };
 }
 

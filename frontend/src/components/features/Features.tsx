@@ -226,6 +226,11 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             <div className={classes.categoryCloud}>
               {categoryKeys.map((key, index) => <span key={key} data-tone={index % 5}>{t(`category.${key}`)}</span>)}
             </div>
+            <Link href={`/${locale}/`} className={classes.cardAction}>
+              <Button variant="light" leftSection={<Compass size={14} />}>
+                {getSafeText(t, locale, 'aboutDetails.categories.action', 'トップページを開く', 'Open Home')}
+              </Button>
+            </Link>
           </div>
 
           <div className={`${classes.detailItem} ${classes.privateCard}`}>
@@ -236,8 +241,8 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             <Text mt="sm" lh={1.75}>
               {getSafeText(t, locale, 'aboutDetails.privateBookmark.description', '全体に公開したくないリンクは、自分のみに保存できます。ご自身のPDS内の専用Spaceに記録されるため、全体一覧や検索に載ることはありません。', 'Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.')}
             </Text>
-            <Link href={`/${locale}/my/bookmark`} style={{ textDecoration: 'none' }}>
-              <Button mt="lg" variant="light" leftSection={<Lock size={14} />}>
+            <Link href={`/${locale}/my/bookmark`} className={classes.cardAction}>
+              <Button variant="light" leftSection={<Lock size={14} />}>
                 {getSafeText(t, locale, 'aboutDetails.privateBookmark.action', 'マイブックマークを開く', 'Open My Bookmarks')}
               </Button>
             </Link>
@@ -256,8 +261,10 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
                 </div>
               ))}
             </div>
-            <Link href={`/${locale}/my/app`} style={{ textDecoration: 'none' }}>
-              <Button mt="lg" variant="light">{t('aboutDetails.myApps.action')}</Button>
+            <Link href={`/${locale}/my/app`} className={classes.cardAction}>
+              <Button variant="light" leftSection={<Grid3X3 size={14} />}>
+                {t('aboutDetails.myApps.action')}
+              </Button>
             </Link>
           </div>
         </SimpleGrid>

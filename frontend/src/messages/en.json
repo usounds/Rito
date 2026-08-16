@@ -28,7 +28,8 @@
 			"description": "Shared links arrive with different tags, languages, and levels of detail. Rito classifies them into a small, consistent set of topics so the Discover page stays navigable as the collection grows.",
 			"input": "Classification considers the page title and description first, then tags and the bookmarker's comment.",
 			"result": "Each bookmark is assigned one primary topic, such as Technology, Social, Food, Travel, Entertainment, Photo, or atproto. Unclear items fall back to General.",
-			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized."
+			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized.",
+			"action": "Open Home"
 		},
 		"myApps": {
 			"title": "My Apps: see the atproto services in your repo",

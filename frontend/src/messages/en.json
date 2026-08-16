@@ -40,10 +40,7 @@
 		},
 		"privateBookmark": {
 			"title": "Private bookmarks just for you",
-			"description": "Save private links without publishing them to the public feed. Built on AT Protocol Proposal 0016, they are stored in a protected Space inside your own PDS.",
-			"privacy": "Private bookmarks are never indexed into public discovery or search, keeping them invisible to others.",
-			"storage": "Records live directly in your personal PDS rather than ephemeral browser storage.",
-			"boundary": "Protected by dedicated OAuth scopes, granting access only when explicitly authorized.",
+			"description": "Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.",
 			"action": "Open My Bookmarks"
 		},
 		"data": {

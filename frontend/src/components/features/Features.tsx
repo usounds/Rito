@@ -239,19 +239,8 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
               {getSafeText(t, locale, 'aboutDetails.privateBookmark.title', '自分のみの非公開ブックマーク', 'Private bookmarks just for you')}
             </Title>
             <Text mt="sm" lh={1.75}>
-              {getSafeText(t, locale, 'aboutDetails.privateBookmark.description', '全体に公開したくないプライベートなリンクは、自分のみに保存できます。AT Protocol Proposal 0016に準拠し、ご自身のPDS内に暗号保護された専用Spaceへ記録されます。', 'Save private links without publishing them to the public feed. Built on AT Protocol Proposal 0016, they are stored in a protected Space inside your own PDS.')}
+              {getSafeText(t, locale, 'aboutDetails.privateBookmark.description', '全体に公開したくないリンクは、自分のみに保存できます。ご自身のPDS内の専用Spaceに記録されるため、全体一覧や検索に載ることはありません。', 'Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.')}
             </Text>
-            <List size="sm" mt="md" spacing="xs" withPadding>
-              <ListItem>
-                {getSafeText(t, locale, 'aboutDetails.privateBookmark.privacy', '全体一覧や検索にはインデックスされず、他の利用者から閲覧されることはありません。', 'Private bookmarks are never indexed into public discovery or search, keeping them invisible to others.')}
-              </ListItem>
-              <ListItem>
-                {getSafeText(t, locale, 'aboutDetails.privateBookmark.storage', 'ブラウザの一時領域ではなく、ご自身のPDS内に安全に保管されます。', 'Records live directly in your personal PDS rather than ephemeral browser storage.')}
-              </ListItem>
-              <ListItem>
-                {getSafeText(t, locale, 'aboutDetails.privateBookmark.boundary', '専用のOAuthスコープで保護され、必要な権限のみでアクセスします。', 'Protected by dedicated OAuth scopes, granting access only when explicitly authorized.')}
-              </ListItem>
-            </List>
             <Link href={`/${locale}/my/bookmark`} style={{ textDecoration: 'none' }}>
               <Button mt="lg" variant="light" leftSection={<Lock size={14} />}>
                 {getSafeText(t, locale, 'aboutDetails.privateBookmark.action', 'マイブックマークを開く', 'Open My Bookmarks')}

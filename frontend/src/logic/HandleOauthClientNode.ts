@@ -2,7 +2,7 @@
 import { NodeOAuthClient, NodeSavedState, NodeSavedSession } from '@atproto/oauth-client-node'
 import { JoseKey } from '@atproto/jwk-jose'
 import { prisma } from '@/logic/HandlePrismaClient'
-import { SCOPE } from "@/type/OauthConstants"
+import { SCOPE, ALL_SCOPES } from "@/type/OauthConstants"
 import crypto from "crypto"
 
 const COOKIE_SECRET = process.env.COOKIE_SECRET || "secret"
@@ -80,7 +80,7 @@ export async function getOAuthClient() {
       policy_uri: `${process.env.NEXT_PUBLIC_URL}/privacy`,
       redirect_uris: [`${process.env.NEXT_PUBLIC_URL}/api/oauth/callback`],
       grant_types: ['authorization_code', 'refresh_token'],
-      scope: SCOPE.join(" "),
+      scope: ALL_SCOPES.join(" "),
       response_types: ['code'],
       application_type: 'web',
       token_endpoint_auth_method: 'private_key_jwt',

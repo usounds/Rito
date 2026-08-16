@@ -39,6 +39,19 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
     );
   }
 
+  // Enforce CSRF token verification for all mutating procedures
+  if (options.type === "procedure") {
+    const csrfCookie = req.cookies.get("CSRF_TOKEN")?.value;
+    const csrfHeader = req.headers.get("x-csrf-token") || req.headers.get("X-CSRF-Token");
+
+    if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+      return NextResponse.json(
+        { error: "Forbidden", message: "Invalid CSRF token" },
+        { status: 403, headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
+  }
+
   try {
     const client = await getOAuthClient();
     const session = await client.restore(did);
@@ -71,12 +84,21 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
       result = await agent.call(options.method, undefined, body);
     }
 
-    return NextResponse.json(result.data, {
+    const response = NextResponse.json(result.data, {
       status: 200,
       headers: {
         "Cache-Control": "private, no-store, max-age=0, must-revalidate",
       },
     });
+
+    if (options.type === "procedure") {
+      response.cookies.delete({
+        name: "CSRF_TOKEN",
+        path: "/",
+      });
+    }
+
+    return response;
   } catch (err: any) {
     const status =
       err?.status ||

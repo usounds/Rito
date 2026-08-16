@@ -9,8 +9,8 @@ interface PrivateBadgeProps {
 export function PrivateBadge({ size = 'sm' }: PrivateBadgeProps) {
   return (
     <Badge
-      variant="filled"
-      color="violet"
+      variant="light"
+      color="indigo"
       size={size}
       leftSection={<Lock size={size === 'xs' ? 10 : 12} />}
       styles={{
@@ -20,7 +20,7 @@ export function PrivateBadge({ size = 'sm' }: PrivateBadgeProps) {
         },
       }}
     >
-      Private
+      自分のみ
     </Badge>
   );
 }

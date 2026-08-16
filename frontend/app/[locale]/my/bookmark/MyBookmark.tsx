@@ -5,7 +5,7 @@ import { ArticleListItem } from '@/components/bookmarkcard/ArticleListItem';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip, Tabs } from '@mantine/core';
+import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip, SegmentedControl, Center } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
 import { Globe, Info, LayoutGrid, List, Lock } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
@@ -19,6 +19,7 @@ export function MyBookmark() {
     const locale = useLocale();
 
     // --- フック ---
+    const [currentTab, setCurrentTab] = useState<'public' | 'private'>('public');
     const [tags, setTags] = useState<string[]>([]);
     const [query, setQuery] = useState<string>("");
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -80,17 +81,37 @@ export function MyBookmark() {
     }
 
     return (
-        <Tabs defaultValue="public" color="blue" variant="outline">
-            <Tabs.List mb="md">
-                <Tabs.Tab value="public" leftSection={<Globe size={16} />}>
-                    公開ブックマーク
-                </Tabs.Tab>
-                <Tabs.Tab value="private" leftSection={<Lock size={16} />} color="violet">
-                    プライベート
-                </Tabs.Tab>
-            </Tabs.List>
+        <Stack gap="lg">
+            <Group justify="flex-start">
+                <SegmentedControl
+                    value={currentTab}
+                    onChange={(val) => setCurrentTab(val as 'public' | 'private')}
+                    radius="xl"
+                    size="sm"
+                    data={[
+                        {
+                            value: 'public',
+                            label: (
+                                <Center style={{ gap: 6, padding: '2px 8px' }}>
+                                    <Globe size={15} />
+                                    <span style={{ fontWeight: 500 }}>公開</span>
+                                </Center>
+                            ),
+                        },
+                        {
+                            value: 'private',
+                            label: (
+                                <Center style={{ gap: 6, padding: '2px 8px' }}>
+                                    <Lock size={15} />
+                                    <span style={{ fontWeight: 500 }}>自分のみ</span>
+                                </Center>
+                            ),
+                        },
+                    ]}
+                />
+            </Group>
 
-            <Tabs.Panel value="public">
+            {currentTab === 'public' ? (
                 <Stack gap="md">
             <Group justify="space-between" align="flex-end">
                 <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
@@ -196,11 +217,9 @@ export function MyBookmark() {
                 </Stack>
             )}
                 </Stack>
-            </Tabs.Panel>
-
-            <Tabs.Panel value="private">
+            ) : (
                 <PrivateBookmarkList />
-            </Tabs.Panel>
-        </Tabs>
+            )}
+        </Stack>
     );
 }

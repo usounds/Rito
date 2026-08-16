@@ -1,0 +1,18 @@
+{
+  "lexicon": 1,
+  "id": "blue.rito.space.bookmark",
+  "defs": {
+    "main": {
+      "type": "space",
+      "description": "A private bookmark space for personal bookmark management.",
+      "key": "literal:self",
+      "name": "Rito Private Bookmarks",
+      "name:lang": {
+        "ja": "リトプライベートブックマーク"
+      },
+      "collections": [
+        "blue.rito.private.feed.bookmark"
+      ]
+    }
+  }
+}

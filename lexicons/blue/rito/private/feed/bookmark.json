@@ -1,0 +1,93 @@
+{
+  "lexicon": 1,
+  "id": "blue.rito.private.feed.bookmark",
+  "defs": {
+    "locale": {
+      "type": "object",
+      "required": [
+        "lang",
+        "title"
+      ],
+      "properties": {
+        "lang": {
+          "type": "string",
+          "enum": [
+            "ja",
+            "en"
+          ],
+          "maxLength": 6,
+          "description": "Comments Language"
+        },
+        "title": {
+          "type": "string",
+          "description": "URI's title",
+          "maxGraphemes": 50,
+          "maxLength": 500
+        },
+        "comment": {
+          "type": "string",
+          "description": "URI's comment. It can use GitHub Flavored Markdown.",
+          "maxGraphemes": 10000,
+          "maxLength": 100000
+        }
+      }
+    },
+    "main": {
+      "type": "record",
+      "description": "Records a private bookmark within a permissioned repo.",
+      "key": "tid",
+      "record": {
+        "type": "object",
+        "required": [
+          "comments",
+          "subject",
+          "createdAt"
+        ],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "format": "uri"
+          },
+          "comments": {
+            "type": "array",
+            "description": "Title and comment in different languages.",
+            "minLength": 1,
+            "items": {
+              "type": "ref",
+              "ref": "blue.rito.private.feed.bookmark#locale"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "description": "Tags describing the uri's description (max 10 tags, 25 charactors)",
+            "maxLength": 10,
+            "items": {
+              "type": "string",
+              "minGraphemes": 1,
+              "maxGraphemes": 25,
+              "minLength": 1,
+              "maxLength": 250
+            }
+          },
+          "ogpTitle": {
+            "type": "string",
+            "description": "OGP Title"
+          },
+          "ogpDescription": {
+            "type": "string",
+            "description": "OGP Description"
+          },
+          "ogpImage": {
+            "type": "string",
+            "format": "uri",
+            "description": "OGP Image Uri"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "datetime"
+          }
+        }
+      }
+    }
+  }
+}

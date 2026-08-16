@@ -117,6 +117,9 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
     const client = await getOAuthClient();
     const session = await client.restore(did);
     const agent = new Agent(session);
+    try {
+      agent.configureProxy(null);
+    } catch {}
     ensureSpaceLexicons(agent);
 
     let result: any;

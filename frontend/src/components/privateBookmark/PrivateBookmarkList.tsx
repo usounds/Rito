@@ -247,7 +247,7 @@ export function PrivateBookmarkList() {
               </Box>
               <TextInput
                 label={messages.mybookmark?.field?.search?.title || '単語検索'}
-                placeholder={messages.mybookmark?.field?.search?.placeholder || 'プライベートブックマークを検索'}
+                placeholder={messages.mybookmark?.field?.search?.placeholder || 'ブックマークを検索'}
                 value={query}
                 onChange={(e) => setQuery(e.currentTarget.value)}
                 styles={{ input: { fontSize: 16 } }}
@@ -270,7 +270,7 @@ export function PrivateBookmarkList() {
               <Tooltip label="グリッド表示">
                 <ActionIcon
                   variant={viewMode === 'grid' ? 'filled' : 'light'}
-                  color="violet"
+                  color="indigo"
                   size="lg"
                   onClick={() => handleViewModeChange('grid')}
                   aria-label="Grid view"
@@ -281,7 +281,7 @@ export function PrivateBookmarkList() {
               <Tooltip label="リスト表示">
                 <ActionIcon
                   variant={viewMode === 'list' ? 'filled' : 'light'}
-                  color="violet"
+                  color="indigo"
                   size="lg"
                   onClick={() => handleViewModeChange('list')}
                   aria-label="List view"
@@ -294,7 +294,7 @@ export function PrivateBookmarkList() {
 
           {isLoading && (
             <Center my="xl">
-              <Loader color="violet" size="md" />
+              <Loader color="indigo" size="md" />
             </Center>
           )}
 
@@ -302,11 +302,11 @@ export function PrivateBookmarkList() {
             <Alert
               my="sm"
               variant="light"
-              color="violet"
-              title="プライベートブックマークはありません"
+              color="indigo"
+              title="非公開のブックマークはありません"
               icon={<Lock size={18} />}
             >
-              右下のブックマーク登録ボタンから「🔒 プライベートとして保存」を選択して登録してください。
+              右下のブックマーク登録ボタンから「🔒 自分のみ」を選択して登録してください。
             </Alert>
           )}
 

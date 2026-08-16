@@ -4,7 +4,7 @@ import type {} from '@atcute/lexicons/ambient';
 
 const _localeSchema = /*#__PURE__*/ v.object(
 	{
-		"$type": /*#__PURE__*/ v.optional(/*#__PURE__*/ v.literal("blue.rito.feed.bookmark#locale")),
+		"$type": /*#__PURE__*/ v.optional(/*#__PURE__*/ v.literal("blue.rito.private.feed.bookmark#locale")),
 		/**
 		 * URI's comment. It can use GitHub Flavored Markdown.
 		 * @maxLength 100000
@@ -40,7 +40,7 @@ const _mainSchema = /*#__PURE__*/ v.record(
 	/*#__PURE__*/ v.tidString(),
 	/*#__PURE__*/ v.object(
 		{
-			"$type": /*#__PURE__*/ v.literal("blue.rito.feed.bookmark"),
+			"$type": /*#__PURE__*/ v.literal("blue.rito.private.feed.bookmark"),
 			/**
 			 * Title and comment in different languages.
 			 * @minLength 1
@@ -96,6 +96,6 @@ export interface Locale extends v.InferInput<typeof localeSchema> {}
 export interface Main extends v.InferInput<typeof mainSchema> {}
 declare module '@atcute/lexicons/ambient' {
 	interface Records {
-		"blue.rito.feed.bookmark": mainSchema;
+		"blue.rito.private.feed.bookmark": mainSchema;
 	}
 }

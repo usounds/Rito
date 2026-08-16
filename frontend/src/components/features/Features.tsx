@@ -1,4 +1,4 @@
-import { Button, Container, Group, List, ListItem, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import { Button, Container, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
 import { ArrowRight, AtSign, Bookmark, Database, FileText, Grid3X3, Link2, Lock, MessageSquare, Sparkles, Star, Tags } from 'lucide-react';
 import { Compass } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
@@ -226,11 +226,6 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             <div className={classes.categoryCloud}>
               {categoryKeys.map((key, index) => <span key={key} data-tone={index % 5}>{t(`category.${key}`)}</span>)}
             </div>
-            <List size="sm" mt="md" spacing="xs" withPadding>
-              <ListItem>{t('aboutDetails.categories.input')}</ListItem>
-              <ListItem>{t('aboutDetails.categories.result')}</ListItem>
-              <ListItem>{t('aboutDetails.categories.reason')}</ListItem>
-            </List>
           </div>
 
           <div className={`${classes.detailItem} ${classes.privateCard}`}>
@@ -261,11 +256,6 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
                 </div>
               ))}
             </div>
-            <List size="sm" mt="md" spacing="xs" withPadding>
-              <ListItem>{t('aboutDetails.myApps.collections')}</ListItem>
-              <ListItem>{t('aboutDetails.myApps.catalog')}</ListItem>
-              <ListItem>{t('aboutDetails.myApps.boundary')}</ListItem>
-            </List>
             <Link href={`/${locale}/my/app`} style={{ textDecoration: 'none' }}>
               <Button mt="lg" variant="light">{t('aboutDetails.myApps.action')}</Button>
             </Link>

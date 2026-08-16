@@ -38,9 +38,17 @@
 			"boundary": "My Apps is an informational catalog. Opening it does not install an app, grant new permissions, or prove that you currently use or endorse every listed service.",
 			"action": "Open My Apps"
 		},
+		"privateBookmark": {
+			"title": "Private bookmarks just for you",
+			"description": "Save private links without publishing them to the public feed. Built on AT Protocol Proposal 0016, they are stored in a protected Space inside your own PDS.",
+			"privacy": "Private bookmarks are never indexed into public discovery or search, keeping them invisible to others.",
+			"storage": "Records live directly in your personal PDS rather than ephemeral browser storage.",
+			"boundary": "Protected by dedicated OAuth scopes, granting access only when explicitly authorized.",
+			"action": "Open My Bookmarks"
+		},
 		"data": {
 			"title": "What happens to your data",
-			"description": "Rito writes your bookmark records to your atproto Personal Data Server (PDS). Rito also indexes the information needed to provide public discovery, search, previews, categories, and safety filtering. Bookmarks intended for this social service may therefore be visible to other people; do not use Rito as a private vault for sensitive URLs or notes."
+			"description": "Public bookmark records are written to your atproto Personal Data Server (PDS) and indexed for public discovery and search. Bookmarks saved as private are stored in a dedicated Space adhering to AT Protocol Proposal 0016 and are never shared publicly or indexed for search."
 		}
 	},
 	"loading": "Loading",
@@ -76,6 +84,11 @@
 				"title": "Bookmarks",
 				"description": "Manage Bluesky and websites together with your Bluesky account",
 				"longdescription": "You can manage websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
+			},
+			"privatebookmark": {
+				"title": "Private Bookmarks",
+				"description": "Save to your own protected PDS Space without publishing",
+				"longdescription": "Links you prefer not to share publicly can be saved as private bookmarks. Built on AT Protocol Proposal 0016, they are stored securely in a protected Space inside your own PDS."
 			},
 			"atproto": {
 				"title": "Build with atproto",

@@ -1,5 +1,5 @@
 import { Button, Container, Group, List, ListItem, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
-import { ArrowRight, AtSign, Bookmark, Database, FileText, Grid3X3, Link2, MessageSquare, Sparkles, Star, Tags } from 'lucide-react';
+import { ArrowRight, AtSign, Bookmark, Database, FileText, Grid3X3, Link2, Lock, MessageSquare, Sparkles, Star, Tags } from 'lucide-react';
 import { Compass } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -25,6 +25,11 @@ export function getFeatureItems(t: Awaited<ReturnType<typeof getTranslations>>, 
       icon: Bookmark,
       title: t('header.feature.allbookmark.title'),
       description: t('header.feature.allbookmark.longdescription'),
+    },
+    {
+      icon: Lock,
+      title: t('header.feature.privatebookmark.title'),
+      description: t('header.feature.privatebookmark.longdescription'),
     },
     {
       icon: AtSign,
@@ -187,7 +192,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           </SimpleGrid>
         </section>
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg" className={classes.spotlightGrid}>
+        <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="lg" className={classes.spotlightGrid}>
           <div className={`${classes.detailItem} ${classes.categoryCard}`}>
             <div className={classes.cardIcon}><Sparkles size={21} /></div>
             <Title order={2} className={classes.cardTitle}>{t('aboutDetails.categories.title')}</Title>
@@ -200,6 +205,22 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
               <ListItem>{t('aboutDetails.categories.result')}</ListItem>
               <ListItem>{t('aboutDetails.categories.reason')}</ListItem>
             </List>
+          </div>
+
+          <div className={`${classes.detailItem} ${classes.privateCard}`}>
+            <div className={classes.cardIcon}><Lock size={21} /></div>
+            <Title order={2} className={classes.cardTitle}>{t('aboutDetails.privateBookmark.title')}</Title>
+            <Text mt="sm" lh={1.75}>{t('aboutDetails.privateBookmark.description')}</Text>
+            <List size="sm" mt="md" spacing="xs" withPadding>
+              <ListItem>{t('aboutDetails.privateBookmark.privacy')}</ListItem>
+              <ListItem>{t('aboutDetails.privateBookmark.storage')}</ListItem>
+              <ListItem>{t('aboutDetails.privateBookmark.boundary')}</ListItem>
+            </List>
+            <Link href={`/${locale}/my/bookmark`} style={{ textDecoration: 'none' }}>
+              <Button mt="lg" variant="light" leftSection={<Lock size={14} />}>
+                {t('aboutDetails.privateBookmark.action')}
+              </Button>
+            </Link>
           </div>
 
           <div className={`${classes.detailItem} ${classes.appsCard}`}>

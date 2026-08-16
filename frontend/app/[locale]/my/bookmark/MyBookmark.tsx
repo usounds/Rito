@@ -5,10 +5,11 @@ import { ArticleListItem } from '@/components/bookmarkcard/ArticleListItem';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip } from '@mantine/core';
+import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip, Tabs } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
-import { Info, LayoutGrid, List } from 'lucide-react';
+import { Globe, Info, LayoutGrid, List, Lock } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
+import { PrivateBookmarkList } from "@/components/privateBookmark/PrivateBookmarkList";
 import classes from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
 export function MyBookmark() {
@@ -79,7 +80,18 @@ export function MyBookmark() {
     }
 
     return (
-        <Stack gap="md">
+        <Tabs defaultValue="public" color="blue" variant="outline">
+            <Tabs.List mb="md">
+                <Tabs.Tab value="public" leftSection={<Globe size={16} />}>
+                    公開ブックマーク
+                </Tabs.Tab>
+                <Tabs.Tab value="private" leftSection={<Lock size={16} />} color="violet">
+                    プライベート
+                </Tabs.Tab>
+            </Tabs.List>
+
+            <Tabs.Panel value="public">
+                <Stack gap="md">
             <Group justify="space-between" align="flex-end">
                 <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
                     <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -183,6 +195,12 @@ export function MyBookmark() {
                     })}
                 </Stack>
             )}
-        </Stack>
+                </Stack>
+            </Tabs.Panel>
+
+            <Tabs.Panel value="private">
+                <PrivateBookmarkList />
+            </Tabs.Panel>
+        </Tabs>
     );
 }

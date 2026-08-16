@@ -9,6 +9,67 @@ export interface ProxyXrpcOptions {
   validateBody?: (body: any, authDid: string) => boolean | string;
 }
 
+const SPACE_LEXICONS = [
+  {
+    lex: 1,
+    id: "com.atproto.space.getSpace",
+    defs: { main: { type: "query" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.listRecords",
+    defs: { main: { type: "query" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.getRecord",
+    defs: { main: { type: "query" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.createRecord",
+    defs: { main: { type: "procedure" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.putRecord",
+    defs: { main: { type: "procedure" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.deleteRecord",
+    defs: { main: { type: "procedure" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.space.createSpace",
+    defs: { main: { type: "procedure" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.simplespace.createSpace",
+    defs: { main: { type: "procedure" } },
+  },
+  {
+    lex: 1,
+    id: "com.atproto.simplespace.listMembers",
+    defs: { main: { type: "query" } },
+  },
+];
+
+function ensureSpaceLexicons(agent: Agent) {
+  const lexicons = (agent as any).lex || (agent as any).xrpc?.lex;
+  if (!lexicons) return;
+
+  for (const doc of SPACE_LEXICONS) {
+    try {
+      if (!lexicons.get?.(doc.id)) {
+        lexicons.add(doc);
+      }
+    } catch {}
+  }
+}
+
 /**
  * Proxy XRPC calls for Space & Permissioned Data to user's PDS via authenticated OAuth session.
  * Enforces:
@@ -56,6 +117,7 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
     const client = await getOAuthClient();
     const session = await client.restore(did);
     const agent = new Agent(session);
+    ensureSpaceLexicons(agent);
 
     let result: any;
 

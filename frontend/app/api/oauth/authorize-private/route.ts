@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
-import { SCOPE, PRIVATE_BOOKMARK_SCOPE } from "@/type/OauthConstants";
+import { ALL_SCOPES } from "@/type/OauthConstants";
 
 type Body = {
   returnTo?: string;
@@ -46,23 +46,10 @@ export async function POST(req: NextRequest) {
 
   try {
     const client = await getOAuthClient();
-    let currentScopes: string[] = [];
-
-    try {
-      const oauthSession = await client.restore(did);
-      const tokenInfo = await oauthSession.getTokenInfo();
-      currentScopes = (tokenInfo.scope || "").split(" ").filter(Boolean);
-    } catch (restoreErr) {
-      console.warn("Could not restore session for token info, using default scopes", restoreErr);
-      currentScopes = SCOPE;
-    }
-
-    const newScopes = Array.from(
-      new Set([...currentScopes, ...SCOPE, PRIVATE_BOOKMARK_SCOPE])
-    ).join(" ");
+    const scopes = ALL_SCOPES.join(" ");
 
     const url = await client.authorize(did, {
-      scope: newScopes,
+      scope: scopes,
       prompt: "consent",
     });
 

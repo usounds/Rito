@@ -98,16 +98,28 @@ export async function requestPrivateAuthorization(returnTo?: string): Promise<vo
   }
 }
 
+async function getCsrfToken(): Promise<string> {
+  try {
+    const res = await fetch('/api/csrf');
+    const data = await res.json();
+    return data.csrfToken || '';
+  } catch {
+    return '';
+  }
+}
+
 /**
  * Initialize self-only space on user's PDS
  */
 export async function initializeSpace(did: string): Promise<{ success: boolean; error?: string }> {
   try {
+    const csrfToken = await getCsrfToken();
     const res = await fetch('/xrpc/com.atproto.simplespace.createSpace', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
         type: SPACE_TYPE,
@@ -211,11 +223,13 @@ export async function createPrivateBookmarkRecord(
   const spaceUri = getSpaceUri(did);
   const targetRkey = rkey || (await import('@atcute/tid')).now();
   try {
+    const csrfToken = await getCsrfToken();
     const res = await fetch('/xrpc/com.atproto.space.createRecord', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
         space: spaceUri,
@@ -266,11 +280,13 @@ export async function deletePrivateBookmarkRecord(
 ): Promise<{ success: boolean; error?: string }> {
   const spaceUri = getSpaceUri(did);
   try {
+    const csrfToken = await getCsrfToken();
     const res = await fetch('/xrpc/com.atproto.space.deleteRecord', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store',
+        'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
         space: spaceUri,

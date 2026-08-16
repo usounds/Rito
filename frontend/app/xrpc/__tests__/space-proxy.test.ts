@@ -87,12 +87,7 @@ describe('xRPC: Space Proxy Routes', () => {
   });
 
   describe('com.atproto.space.createRecord', () => {
-    it('proxies createRecord procedure to PDS with body', async () => {
-      mockCall.mockResolvedValueOnce({
-        success: true,
-        data: { uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self/did:plc:valid/blue.rito.private.feed.bookmark/123' },
-      });
-
+    it('returns 403 when CSRF token is missing on procedure', async () => {
       const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createRecord', {
         method: 'POST',
         headers: {
@@ -108,6 +103,53 @@ describe('xRPC: Space Proxy Routes', () => {
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
 
       const res = await createRecordPOST(req);
+      expect(res.status).toBe(403);
+    });
+
+    it('returns 403 when CSRF token does not match cookie', async () => {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createRecord', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/bookmark/register',
+          'X-CSRF-Token': 'tokenA',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          collection: 'blue.rito.private.feed.bookmark',
+          record: { subject: 'https://example.com' },
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'tokenB');
+
+      const res = await createRecordPOST(req);
+      expect(res.status).toBe(403);
+    });
+
+    it('proxies createRecord procedure to PDS with valid CSRF token and body', async () => {
+      mockCall.mockResolvedValueOnce({
+        success: true,
+        data: { uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self/did:plc:valid/blue.rito.private.feed.bookmark/123' },
+      });
+
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createRecord', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/bookmark/register',
+          'X-CSRF-Token': 'valid-csrf-token',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          collection: 'blue.rito.private.feed.bookmark',
+          record: { subject: 'https://example.com' },
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'valid-csrf-token');
+
+      const res = await createRecordPOST(req);
       const data = await res.json();
 
       expect(res.status).toBe(200);
@@ -121,7 +163,7 @@ describe('xRPC: Space Proxy Routes', () => {
   });
 
   describe('com.atproto.space.deleteRecord', () => {
-    it('proxies deleteRecord procedure to PDS', async () => {
+    it('proxies deleteRecord procedure to PDS with valid CSRF', async () => {
       mockCall.mockResolvedValueOnce({
         success: true,
         data: {},
@@ -132,6 +174,7 @@ describe('xRPC: Space Proxy Routes', () => {
         headers: {
           'Content-Type': 'application/json',
           referer: 'http://localhost:3000/my/bookmark',
+          'X-CSRF-Token': 'delete-csrf-token',
         },
         body: JSON.stringify({
           space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
@@ -140,6 +183,7 @@ describe('xRPC: Space Proxy Routes', () => {
         }),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'delete-csrf-token');
 
       const res = await deleteRecordPOST(req);
       expect(res.status).toBe(200);

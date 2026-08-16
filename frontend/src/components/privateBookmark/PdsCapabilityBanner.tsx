@@ -32,7 +32,7 @@ export function PdsCapabilityBanner({
         my="md"
       >
         <Text size="sm">
-          お使いのPDSがプライベートデータ機能（AT Protocol Permissioned Data）に対応しているか確認しています...
+          お使いのPDSが非公開データ機能に対応しているか確認しています...
         </Text>
       </Alert>
     );
@@ -43,16 +43,16 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="yellow"
-        title="PDSが現在プライベート機能に未対応です"
+        title="PDSが現在非公開機能に未対応です"
         icon={<AlertCircle size={20} />}
         my="md"
       >
         <Stack gap="xs">
           <Text size="sm">
-            プライベートブックマークは AT Protocol Proposal 0016（Permissioned Data）に準拠して、ご自身のPDS内に暗号保護された専用Spaceとして保存されます。
+            非公開ブックマークはご自身のPDS内に暗号保護された専用Spaceとして保存されます。
           </Text>
           <Text size="xs" c="dimmed">
-            現在、接続先のPDSに <code>com.atproto.space.*</code> 機能がまだ配備されていないため、このアカウントではプライベートブックマークをご利用いただけません。
+            現在、接続先のPDSに <code>com.atproto.space.*</code> 機能がまだ配備されていないため、このアカウントでは自分のみのブックマークをご利用いただけません。
           </Text>
           {statusMessage && (
             <Text size="xs" c="dimmed">
@@ -75,7 +75,7 @@ export function PdsCapabilityBanner({
       >
         <Stack gap="sm">
           <Text size="sm">
-            プライベートブックマークのSpaceを読み書きするためには、<code>space:blue.rito.space.bookmark</code> スコープの認可が必要です。
+            自分のみのブックマークを読み書きするためには、<code>space:blue.rito.space.bookmark</code> スコープの認可が必要です。
           </Text>
           <Group>
             <Button
@@ -85,7 +85,7 @@ export function PdsCapabilityBanner({
               leftSection={<Lock size={14} />}
               onClick={onAuthorize}
             >
-              プライベート機能を認可する
+              非公開機能を認可する
             </Button>
           </Group>
         </Stack>
@@ -98,13 +98,13 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="indigo"
-        title="プライベートSpaceの初期化"
+        title="非公開Spaceの初期化"
         icon={<Sparkles size={20} />}
         my="md"
       >
         <Stack gap="sm">
           <Text size="sm">
-            PDS上にあなた専用のプライベートSpace（<code>blue.rito.space.bookmark/self</code>）を作成して、プライベートブックマーク機能を有効化します。
+            PDS上にあなた専用のSpaceを作成して、機能を有効化します。
           </Text>
           <Group>
             <Button

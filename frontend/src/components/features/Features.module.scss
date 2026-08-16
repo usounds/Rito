@@ -315,6 +315,17 @@ $mantine-breakpoint-xl: 88em;
   width: 280px;
 }
 
+.privateCard::after {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 68%);
+  content: '';
+  height: 280px;
+  pointer-events: none;
+  position: absolute;
+  right: -130px;
+  top: -130px;
+  width: 280px;
+}
+
 .categoryCloud {
   display: flex;
   flex-wrap: wrap;

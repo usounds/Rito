@@ -193,6 +193,71 @@ export async function listPrivateBookmarks(
 }
 
 /**
+ * Create a new private bookmark record
+ */
+export async function createPrivateBookmarkRecord(
+  did: string,
+  record: {
+    subject: string;
+    comments: { lang: 'ja' | 'en'; title: string; comment?: string }[];
+    tags: string[];
+    ogpTitle?: string;
+    ogpDescription?: string;
+    ogpImage?: string;
+    createdAt?: string;
+  },
+  rkey?: string
+): Promise<{ success: boolean; uri?: string; rkey?: string; error?: string }> {
+  const spaceUri = getSpaceUri(did);
+  const targetRkey = rkey || (await import('@atcute/tid')).now();
+  try {
+    const res = await fetch('/xrpc/com.atproto.space.createRecord', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
+      body: JSON.stringify({
+        space: spaceUri,
+        collection: COLLECTION,
+        repo: did,
+        rkey: targetRkey,
+        record: {
+          $type: COLLECTION,
+          subject: record.subject,
+          comments: record.comments,
+          tags: record.tags.length > 0 ? record.tags : undefined,
+          ogpTitle: record.ogpTitle || undefined,
+          ogpDescription: record.ogpDescription || undefined,
+          ogpImage: record.ogpImage || undefined,
+          createdAt: record.createdAt || new Date().toISOString(),
+        },
+      }),
+    });
+
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      return {
+        success: true,
+        uri: data.uri || getRecordUri(did, targetRkey),
+        rkey: targetRkey,
+      };
+    }
+
+    const errData = await res.json().catch(() => ({}));
+    return {
+      success: false,
+      error: errData.message || errData.error || `Failed to create private bookmark (${res.status})`,
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err?.message || 'Network error creating private bookmark',
+    };
+  }
+}
+
+/**
  * Delete a private bookmark record
  */
 export async function deletePrivateBookmarkRecord(

@@ -8,10 +8,11 @@ import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } 
 import * as TID from '@atcute/tid';
 import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { BadgeCheck, BookmarkPlus, Check, PanelsTopLeft, Tag, X } from 'lucide-react';
+import { BadgeCheck, BookmarkPlus, Check, Lock, PanelsTopLeft, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
+import { usePrivateBookmark } from "@/state/PrivateBookmark";
 import { Comment, Bookmark } from "@/type/ApiTypes";
 import { useSearchParams, useRouter } from 'next/navigation';
 import Breadcrumbs from "@/components/Breadcrumbs";
@@ -22,6 +23,7 @@ import { Authentication } from "@/components/Authentication";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { buildPost } from "@/logic/HandleBluesky";
 import { stripTrackingParams } from "@/logic/stripTrackingParams";
+import { createPrivateBookmarkRecord } from "@/logic/privateBookmark/pdsClient";
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -33,6 +35,7 @@ export default function RegistBookmarkPage() {
     const titleParam = searchParams.get("title") || undefined;
     const textParam = searchParams.get("text") || undefined;
     const aturi = searchParams.get("aturi") || undefined;
+    const [isPrivate, setIsPrivate] = useState(false);
     const [tags, setTags] = useState<string[]>([]);
     const [comments, setComments] = useState<Comment[]>([
         { lang: "ja", title: "", comment: "", moderations: [] },
@@ -414,6 +417,51 @@ export default function RegistBookmarkPage() {
             // activeComment,
         };
 
+        if (isPrivate) {
+            const privateResult = await createPrivateBookmarkRecord(activeDid, {
+                subject: url,
+                comments: filteredComments,
+                tags,
+                ogpTitle: ogpTitleLocal || undefined,
+                ogpDescription: ogpDescriptionLocal || undefined,
+                ogpImage: ogpImageLocal || undefined,
+                createdAt: new Date().toISOString(),
+            }, rkey || undefined);
+
+            if (privateResult.success && privateResult.uri && privateResult.rkey) {
+                usePrivateBookmark.getState().addBookmark({
+                    uri: privateResult.uri,
+                    rkey: privateResult.rkey,
+                    subject: url,
+                    comments: filteredComments,
+                    tags,
+                    ogpTitle: ogpTitleLocal || undefined,
+                    ogpDescription: ogpDescriptionLocal || undefined,
+                    ogpImage: ogpImageLocal || undefined,
+                    createdAt: new Date().toISOString(),
+                });
+
+                notifications.show({
+                    title: '保存完了',
+                    message: '自分のみ（非公開）ブックマークを保存しました。',
+                    color: 'indigo',
+                    icon: <Check />,
+                });
+
+                router.push('/my/bookmark');
+                return;
+            } else {
+                notifications.show({
+                    title: 'エラー',
+                    message: privateResult.error || 'プライベートブックマークの保存に失敗しました。',
+                    color: 'red',
+                    icon: <X />,
+                });
+                setIsSubmit(false);
+                return;
+            }
+        }
+
         let rkeyLocal
         const writes = []
 
@@ -780,21 +828,42 @@ export default function RegistBookmarkPage() {
                             {activeDid ? (
                                 <>
                                     {!aturi && (
-                                        <Group gap="xs" mb="sm">
+                                        <Stack gap="xs" mb="sm">
                                             <Switch
-                                                label={messages.create.field.posttobluesky.title}
-                                                description={messages.create.field.posttobluesky.description}
-                                                checked={isPostToBluesky}
-                                                onChange={(e) => setIsPostToBluesky(e.currentTarget.checked)}
+                                                label={
+                                                    <Group gap={6} align="center">
+                                                        <Lock size={15} />
+                                                        <Text size="sm" fw={500}>自分のみ（非公開）として保存</Text>
+                                                    </Group>
+                                                }
+                                                description="公開タイムラインやフィードには公開せず、ご自身のPDS内に保存します"
+                                                checked={isPrivate}
+                                                color="indigo"
+                                                onChange={(e) => {
+                                                    const checked = e.currentTarget.checked;
+                                                    setIsPrivate(checked);
+                                                    if (checked) {
+                                                        setIsPostToBluesky(false);
+                                                    }
+                                                }}
                                             />
-                                            <Switch
-                                                label={messages.create.field.useOriginalLink.title}
-                                                description={messages.create.field.useOriginalLink.description}
-                                                checked={isUseOriginalLink}
-                                                disabled={!isPostToBluesky}
-                                                onChange={(e) => setIsUseOriginalLink(e.currentTarget.checked)}
-                                            />
-                                        </Group>
+                                            <Group gap="md">
+                                                <Switch
+                                                    label={messages.create.field.posttobluesky.title}
+                                                    description={messages.create.field.posttobluesky.description}
+                                                    checked={isPostToBluesky}
+                                                    disabled={isPrivate}
+                                                    onChange={(e) => setIsPostToBluesky(e.currentTarget.checked)}
+                                                />
+                                                <Switch
+                                                    label={messages.create.field.useOriginalLink.title}
+                                                    description={messages.create.field.useOriginalLink.description}
+                                                    checked={isUseOriginalLink}
+                                                    disabled={!isPostToBluesky || isPrivate}
+                                                    onChange={(e) => setIsUseOriginalLink(e.currentTarget.checked)}
+                                                />
+                                            </Group>
+                                        </Stack>
                                     )}
                                     <Button
                                         ml="auto"

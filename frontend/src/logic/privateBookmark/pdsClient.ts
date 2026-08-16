@@ -87,8 +87,9 @@ export async function requestPrivateAuthorization(returnTo?: string): Promise<vo
   });
 
   if (!res.ok) {
-    const err = await res.text().catch(() => 'OAuth error');
-    throw new Error(`Failed to initiate private authorization: ${err}`);
+    const data = await res.json().catch(() => ({}));
+    const err = data.error || data.message || `HTTP ${res.status}`;
+    throw new Error(err);
   }
 
   const { url } = await res.json();

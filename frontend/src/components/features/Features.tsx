@@ -227,7 +227,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
               {categoryKeys.map((key, index) => <span key={key} data-tone={index % 5}>{t(`category.${key}`)}</span>)}
             </div>
             <Link href={`/${locale}/`} className={classes.cardAction}>
-              <Button variant="light" leftSection={<Compass size={14} />}>
+              <Button fullWidth variant="light" leftSection={<Compass size={14} />}>
                 {getSafeText(t, locale, 'aboutDetails.categories.action', 'トップページを開く', 'Open Home')}
               </Button>
             </Link>
@@ -241,8 +241,20 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             <Text mt="sm" lh={1.75}>
               {getSafeText(t, locale, 'aboutDetails.privateBookmark.description', '全体に公開したくないリンクは、自分のみに保存できます。ご自身のPDS内の専用Spaceに記録されるため、全体一覧や検索に載ることはありません。', 'Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.')}
             </Text>
+            <div className={classes.collectionPreview} aria-hidden="true">
+              <div>
+                <span className={classes.appMark} data-tone="1"><Lock size={15} /></span>
+                <code>blue.rito.space.bookmark</code>
+                <ArrowRight size={14} />
+              </div>
+              <div>
+                <span className={classes.appMark} data-tone="0"><Database size={15} /></span>
+                <code>blue.rito.private.feed.bookmark</code>
+                <ArrowRight size={14} />
+              </div>
+            </div>
             <Link href={`/${locale}/my/bookmark`} className={classes.cardAction}>
-              <Button variant="light" leftSection={<Lock size={14} />}>
+              <Button fullWidth variant="light" leftSection={<Lock size={14} />}>
                 {getSafeText(t, locale, 'aboutDetails.privateBookmark.action', 'マイブックマークを開く', 'Open My Bookmarks')}
               </Button>
             </Link>
@@ -262,7 +274,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
               ))}
             </div>
             <Link href={`/${locale}/my/app`} className={classes.cardAction}>
-              <Button variant="light" leftSection={<Grid3X3 size={14} />}>
+              <Button fullWidth variant="light" leftSection={<Grid3X3 size={14} />}>
                 {t('aboutDetails.myApps.action')}
               </Button>
             </Link>

@@ -5,3 +5,10 @@ export const SCOPE = [
     "rpc:app.bsky.actor.getProfile?aud=did:web:api.bsky.app%23bsky_appview",
     "blob:*/*",
 ];
+
+export const PRIVATE_BOOKMARK_SCOPE = "space:blue.rito.space.bookmark";
+
+export const ALL_SCOPES = [
+    ...SCOPE,
+    PRIVATE_BOOKMARK_SCOPE,
+];

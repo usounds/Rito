@@ -25,6 +25,7 @@ import {
   initializeSpace,
   listPrivateBookmarks,
   deletePrivateBookmarkRecord,
+  requestPrivateAuthorization,
 } from '@/logic/privateBookmark/pdsClient';
 import { PrivateBookmarkItem } from '@/logic/privateBookmark/types';
 import { TagSuggestion } from '@/components/TagSuggest';
@@ -181,6 +182,19 @@ export function PrivateBookmarkList() {
     }
   };
 
+  // Handle Step-up OAuth authorization
+  const handleAuthorize = async () => {
+    try {
+      await requestPrivateAuthorization();
+    } catch (err: any) {
+      notifications.show({
+        title: '認可の開始に失敗しました',
+        message: err?.message || 'OAuth認可画面への遷移に失敗しました。',
+        color: 'red',
+      });
+    }
+  };
+
   // Aggregated tags from in-memory bookmarks
   const { allTags, tagCounts } = useMemo(() => {
     if (!Array.isArray(bookmarks)) return { allTags: [], tagCounts: {} };
@@ -216,6 +230,7 @@ export function PrivateBookmarkList() {
         status={capabilityStatus}
         statusMessage={statusMessage}
         onInitializeSpace={handleInitializeSpace}
+        onAuthorize={handleAuthorize}
         isInitializing={isInitializing}
       />
 

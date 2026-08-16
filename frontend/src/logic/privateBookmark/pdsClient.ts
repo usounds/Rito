@@ -18,6 +18,22 @@ export function getRecordUri(did: string, rkey: string): string {
 export async function checkSpaceCapability(did: string): Promise<SpaceCapabilityResult> {
   const spaceUri = getSpaceUri(did);
   try {
+    // 1. Check if current session already has space: OAuth scope
+    const sessionRes = await fetch('/api/session-info', {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+    if (sessionRes.ok) {
+      const sessionData = await sessionRes.json().catch(() => ({}));
+      if (sessionData.hasSpaceScope === false) {
+        return {
+          status: 'needs_auth',
+          spaceUri,
+          message: 'OAuth scope space:blue.rito.space.bookmark authorization required',
+        };
+      }
+    }
+
+    // 2. Check PDS space endpoint and space existence
     const res = await fetch(`/xrpc/com.atproto.space.getSpace?space=${encodeURIComponent(spaceUri)}`, {
       method: 'GET',
       headers: {
@@ -50,6 +66,34 @@ export async function checkSpaceCapability(did: string): Promise<SpaceCapability
   } catch (err: any) {
     // Network / offline or local dev without space route
     return { status: 'unsupported', spaceUri, message: err?.message || 'Network error checking PDS space capability' };
+  }
+}
+
+/**
+ * Initiate Step-up OAuth authorization for private bookmark space
+ */
+export async function requestPrivateAuthorization(returnTo?: string): Promise<void> {
+  const targetReturnTo = returnTo || (typeof window !== 'undefined' ? window.location.href : '/my/bookmark');
+  const csrf = await fetch('/api/csrf').then((r) => r.json());
+  const res = await fetch('/api/oauth/authorize-private', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      returnTo: targetReturnTo,
+      csrf: csrf.csrfToken,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.text().catch(() => 'OAuth error');
+    throw new Error(`Failed to initiate private authorization: ${err}`);
+  }
+
+  const { url } = await res.json();
+  if (typeof window !== 'undefined') {
+    window.location.href = url;
   }
 }
 

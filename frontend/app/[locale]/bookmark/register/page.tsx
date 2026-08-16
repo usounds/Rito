@@ -443,7 +443,7 @@ export default function RegistBookmarkPage() {
 
                 notifications.show({
                     title: '保存完了',
-                    message: '自分のみ（非公開）ブックマークを保存しました。',
+                    message: '自分のみにブックマークを保存しました。',
                     color: 'indigo',
                     icon: <Check />,
                 });
@@ -833,7 +833,7 @@ export default function RegistBookmarkPage() {
                                                 label={
                                                     <Group gap={6} align="center">
                                                         <Lock size={15} />
-                                                        <Text size="sm" fw={500}>自分のみ（非公開）として保存</Text>
+                                                        <Text size="sm" fw={500}>自分のみに保存</Text>
                                                     </Group>
                                                 }
                                                 description="公開タイムラインやフィードには公開せず、ご自身のPDS内に保存します"

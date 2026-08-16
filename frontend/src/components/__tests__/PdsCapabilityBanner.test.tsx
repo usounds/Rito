@@ -25,7 +25,7 @@ describe('PdsCapabilityBanner', () => {
         statusMessage="Endpoint not found"
       />
     );
-    expect(screen.getByText(/PDSが現在プライベート機能に未対応です/)).toBeInTheDocument();
+    expect(screen.getByText(/PDSが現在非公開機能に未対応です/)).toBeInTheDocument();
     expect(screen.getByText(/Endpoint not found/)).toBeInTheDocument();
   });
 
@@ -38,7 +38,7 @@ describe('PdsCapabilityBanner', () => {
       />
     );
     expect(screen.getByText(/追加のOAuth認可が必要です/)).toBeInTheDocument();
-    const btn = screen.getByRole('button', { name: /プライベート機能を認可する/ });
+    const btn = screen.getByRole('button', { name: /非公開機能を認可する/ });
     await userEvent.click(btn);
     expect(onAuthorize).toHaveBeenCalledTimes(1);
   });
@@ -51,7 +51,7 @@ describe('PdsCapabilityBanner', () => {
         onInitializeSpace={onInitializeSpace}
       />
     );
-    expect(screen.getByText(/プライベートSpaceの初期化/)).toBeInTheDocument();
+    expect(screen.getByText(/非公開Spaceの初期化/)).toBeInTheDocument();
     const btn = screen.getByRole('button', { name: /Spaceを作成して有効化/ });
     await userEvent.click(btn);
     expect(onInitializeSpace).toHaveBeenCalledTimes(1);

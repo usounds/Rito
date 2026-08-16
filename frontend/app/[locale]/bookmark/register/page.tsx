@@ -836,7 +836,7 @@ export default function RegistBookmarkPage() {
                                                         <Text size="sm" fw={500}>自分のみに保存</Text>
                                                     </Group>
                                                 }
-                                                description="公開タイムラインやフィードには公開せず、ご自身のPDS内に保存します"
+                                                description="全体や検索には公開せず、ご自身のPDS内にのみ保存します"
                                                 checked={isPrivate}
                                                 color="indigo"
                                                 onChange={(e) => {

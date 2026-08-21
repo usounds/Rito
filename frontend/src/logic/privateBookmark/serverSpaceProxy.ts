@@ -1,73 +1,134 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Agent } from "@atproto/api";
 import { getOAuthClient, verifySignedDid } from "@/logic/HandleOauthClientNode";
+
+const SPACE_TYPE = "blue.rito.space.bookmark";
+const SPACE_KEY = "self";
+const COLLECTION = "blue.rito.private.feed.bookmark";
 
 export interface ProxyXrpcOptions {
   method: string;
   type: "query" | "procedure";
-  validateParams?: (params: Record<string, string>, authDid: string) => boolean | string;
-  validateBody?: (body: any, authDid: string) => boolean | string;
 }
 
-const SPACE_LEXICONS = [
-  {
-    lex: 1,
-    id: "com.atproto.space.getSpace",
-    defs: { main: { type: "query" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.listRecords",
-    defs: { main: { type: "query" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.getRecord",
-    defs: { main: { type: "query" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.createRecord",
-    defs: { main: { type: "procedure" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.putRecord",
-    defs: { main: { type: "procedure" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.deleteRecord",
-    defs: { main: { type: "procedure" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.space.createSpace",
-    defs: { main: { type: "procedure" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.simplespace.createSpace",
-    defs: { main: { type: "procedure" } },
-  },
-  {
-    lex: 1,
-    id: "com.atproto.simplespace.listMembers",
-    defs: { main: { type: "query" } },
-  },
-];
+function getExpectedSpaceUri(did: string): string {
+  return `at://${did}/space/${SPACE_TYPE}/${SPACE_KEY}`;
+}
 
-function ensureSpaceLexicons(agent: Agent) {
-  const lexicons = (agent as any).lex || (agent as any).xrpc?.lex;
-  if (!lexicons) return;
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-  for (const doc of SPACE_LEXICONS) {
-    try {
-      if (!lexicons.get?.(doc.id)) {
-        lexicons.add(doc);
-      }
-    } catch {}
+function hasOnlyKeys(value: Record<string, unknown>, allowedKeys: string[]): boolean {
+  return Object.keys(value).every((key) => allowedKeys.includes(key));
+}
+
+function getString(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+function validateRkey(value: unknown): boolean {
+  return typeof value === "string" && value.length > 0 && value.length <= 512 && /^[A-Za-z0-9._~:-]+$/.test(value);
+}
+
+function validateCommonRecordTarget(body: Record<string, unknown>, did: string): string | null {
+  if (body.space !== getExpectedSpaceUri(did)) return "Invalid private bookmark space";
+  if (body.repo !== did) return "Invalid private bookmark repo";
+  if (body.collection !== COLLECTION) return "Invalid private bookmark collection";
+  if (!validateRkey(body.rkey)) return "Invalid private bookmark record key";
+  return null;
+}
+
+function validatePrivateBookmarkQuery(
+  method: string,
+  params: Record<string, string>,
+  did: string,
+): string | null {
+  const expectedSpace = getExpectedSpaceUri(did);
+
+  if (method === "com.atproto.space.getSpace" || method === "com.atproto.simplespace.getSpace") {
+    if (Object.keys(params).some((key) => key !== "space") || params.space !== expectedSpace) {
+      return "Invalid private bookmark space";
+    }
+    return null;
   }
+
+  if (method === "com.atproto.space.listRecords") {
+    if (!hasOnlyKeys(params, ["space", "repo", "collection", "limit", "cursor"])) {
+      return "Unexpected private bookmark query parameter";
+    }
+    if (params.space !== expectedSpace || params.repo !== did || params.collection !== COLLECTION) {
+      return "Invalid private bookmark target";
+    }
+    const limit = Number(params.limit || "30");
+    if (!Number.isInteger(limit) || limit < 1 || limit > 100) {
+      return "Invalid private bookmark limit";
+    }
+    if (params.cursor && params.cursor.length > 2048) {
+      return "Invalid private bookmark cursor";
+    }
+    return null;
+  }
+
+  if (method === "com.atproto.space.getRecord") {
+    if (!hasOnlyKeys(params, ["space", "repo", "collection", "rkey"])) {
+      return "Unexpected private bookmark query parameter";
+    }
+    if (params.space !== expectedSpace || params.repo !== did || params.collection !== COLLECTION) {
+      return "Invalid private bookmark target";
+    }
+    return validateRkey(params.rkey) ? null : "Invalid private bookmark record key";
+  }
+
+  return "Unsupported private bookmark query";
+}
+
+function validatePrivateBookmarkProcedure(
+  method: string,
+  input: unknown,
+  did: string,
+): string | null {
+  if (!isRecord(input)) return "Invalid request body";
+
+  if (method === "com.atproto.simplespace.createSpace") {
+    if (!hasOnlyKeys(input, ["type", "skey", "policy", "appAccess"])) {
+      return "Unexpected private bookmark space setting";
+    }
+    if (input.type !== SPACE_TYPE || input.skey !== SPACE_KEY) {
+      return "Invalid private bookmark space setting";
+    }
+    if (
+      !isRecord(input.policy) ||
+      !hasOnlyKeys(input.policy, ["$type"]) ||
+      getString(input.policy.$type) !== "com.atproto.simplespace.defs#memberListPolicy" ||
+      !isRecord(input.appAccess) ||
+      !hasOnlyKeys(input.appAccess, ["$type"]) ||
+      getString(input.appAccess.$type) !== "com.atproto.simplespace.defs#open"
+    ) {
+      return "Invalid private bookmark access policy";
+    }
+    return null;
+  }
+
+  if (method === "com.atproto.space.createRecord" || method === "com.atproto.space.putRecord") {
+    if (!hasOnlyKeys(input, ["space", "repo", "collection", "rkey", "record"])) {
+      return "Unexpected private bookmark record field";
+    }
+    const targetError = validateCommonRecordTarget(input, did);
+    if (targetError) return targetError;
+    if (!isRecord(input.record) || input.record.$type !== COLLECTION) {
+      return "Invalid private bookmark record type";
+    }
+    return null;
+  }
+
+  if (method === "com.atproto.space.deleteRecord") {
+    if (!hasOnlyKeys(input, ["space", "repo", "collection", "rkey"])) {
+      return "Unexpected private bookmark record field";
+    }
+    return validateCommonRecordTarget(input, did);
+  }
+
+  return "Unsupported private bookmark procedure";
 }
 
 /**
@@ -122,11 +183,12 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
 
     if (options.type === "query") {
       const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
-      if (options.validateParams) {
-        const valErr = options.validateParams(searchParams, did);
-        if (typeof valErr === "string") {
-          return NextResponse.json({ error: "InvalidRequest", message: valErr }, { status: 400 });
-        }
+      const validationError = validatePrivateBookmarkQuery(options.method, searchParams, did);
+      if (validationError) {
+        return NextResponse.json(
+          { error: "InvalidRequest", message: validationError },
+          { status: 400, headers: { "Cache-Control": "private, no-store" } },
+        );
       }
       for (const [k, v] of Object.entries(searchParams)) {
         queryUrl.searchParams.append(k, v);
@@ -151,17 +213,18 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
         },
       });
     } else {
-      let body: any = {};
+      let body: unknown = {};
       try {
         body = await req.json();
       } catch {
         body = {};
       }
-      if (options.validateBody) {
-        const valErr = options.validateBody(body, did);
-        if (typeof valErr === "string") {
-          return NextResponse.json({ error: "InvalidRequest", message: valErr }, { status: 400 });
-        }
+      const validationError = validatePrivateBookmarkProcedure(options.method, body, did);
+      if (validationError) {
+        return NextResponse.json(
+          { error: "InvalidRequest", message: validationError },
+          { status: 400, headers: { "Cache-Control": "private, no-store" } },
+        );
       }
       fetchRes = await fetchFn(requestPath, {
         method: "POST",

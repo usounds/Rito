@@ -60,8 +60,12 @@ vi.mock('@/components/ArticleImage', () => ({
     default: ({ src }: { src: string }) => <img data-testid="article-image" src={src} alt="article" />,
 }));
 
+const mockEditMenu = vi.fn();
 vi.mock('@/components/EditMenu', () => ({
-    default: () => <div data-testid="edit-menu" />,
+    default: (props: { isPrivate?: boolean }) => {
+        mockEditMenu(props);
+        return <div data-testid="edit-menu" />;
+    },
 }));
 
 vi.mock('lucide-react', () => ({
@@ -112,6 +116,13 @@ describe('Article', () => {
     it('EditMenuを表示する', () => {
         render(<Article {...defaultProps} />);
         expect(screen.getByTestId('edit-menu')).toBeInTheDocument();
+    });
+
+    it('プライベートカードは公開detailsページへ遷移せず共有メニューへprivate状態を渡す', () => {
+        render(<Article {...defaultProps} isPrivate />);
+
+        expect(screen.getByText('テスト記事').closest('a')).toHaveAttribute('href', defaultProps.url);
+        expect(mockEditMenu).toHaveBeenLastCalledWith(expect.objectContaining({ isPrivate: true }));
     });
 
     it('at:// URIを正しく解析して表示', () => {

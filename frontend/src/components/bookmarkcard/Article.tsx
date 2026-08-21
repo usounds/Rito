@@ -38,6 +38,7 @@ type ArticleCardProps = {
     priority?: boolean;
     badge?: React.ReactNode;
     actionSection?: React.ReactNode;
+    isPrivate?: boolean;
 };
 
 export function Article({ 
@@ -54,7 +55,8 @@ export function Article({
     bookmarkCount, 
     priority = false,
     badge,
-    actionSection
+    actionSection,
+    isPrivate = false,
 }: ArticleCardProps) {
     const messages = useMessages();
     const locale = useLocale();
@@ -122,7 +124,7 @@ export function Article({
                             </Group>
 
                             <div className={classes.title}>
-                                <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                <Link href={isPrivate ? (localUrl || '') : `/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
                                     style={{ display: 'block', textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere', minHeight: '24px' }}>
                                     {title}
                                 </Link>
@@ -159,7 +161,7 @@ export function Article({
                     <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
                     <Group gap={6} ml="auto" align="center">
                         {actionSection}
-                        <EditMenu subject={url} title={title} tags={tags} image={imgSrc} description={comment} />
+                        <EditMenu subject={url} title={title} tags={tags} image={imgSrc} description={comment} isPrivate={isPrivate} />
                     </Group>
                 </div>
 

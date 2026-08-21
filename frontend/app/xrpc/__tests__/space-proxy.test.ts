@@ -22,6 +22,7 @@ import { GET as getSpaceGET } from '@app/xrpc/com.atproto.space.getSpace/route';
 import { POST as createRecordPOST } from '@app/xrpc/com.atproto.space.createRecord/route';
 import { GET as listRecordsGET } from '@app/xrpc/com.atproto.space.listRecords/route';
 import { POST as deleteRecordPOST } from '@app/xrpc/com.atproto.space.deleteRecord/route';
+import { POST as createSpacePOST } from '@app/xrpc/com.atproto.simplespace.createSpace/route';
 
 describe('xRPC: Space Proxy Routes', () => {
   beforeEach(() => {
@@ -95,8 +96,10 @@ describe('xRPC: Space Proxy Routes', () => {
         },
         body: JSON.stringify({
           space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          repo: 'did:plc:valid',
           collection: 'blue.rito.private.feed.bookmark',
-          record: { subject: 'https://example.com' },
+          rkey: '123',
+          record: { $type: 'blue.rito.private.feed.bookmark', subject: 'https://example.com' },
         }),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
@@ -115,8 +118,10 @@ describe('xRPC: Space Proxy Routes', () => {
         },
         body: JSON.stringify({
           space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          repo: 'did:plc:valid',
           collection: 'blue.rito.private.feed.bookmark',
-          record: { subject: 'https://example.com' },
+          rkey: '123',
+          record: { $type: 'blue.rito.private.feed.bookmark', subject: 'https://example.com' },
         }),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
@@ -145,8 +150,10 @@ describe('xRPC: Space Proxy Routes', () => {
         },
         body: JSON.stringify({
           space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          repo: 'did:plc:valid',
           collection: 'blue.rito.private.feed.bookmark',
-          record: { subject: 'https://example.com' },
+          rkey: '123',
+          record: { $type: 'blue.rito.private.feed.bookmark', subject: 'https://example.com' },
         }),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
@@ -161,6 +168,46 @@ describe('xRPC: Space Proxy Routes', () => {
         expect.stringContaining('/xrpc/com.atproto.space.createRecord'),
         expect.objectContaining({ method: 'POST' })
       );
+    });
+
+    it('rejects a record write targeting another DID', async () => {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createRecord', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/bookmark/register',
+          'X-CSRF-Token': 'valid-csrf-token',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:other/space/blue.rito.space.bookmark/self',
+          repo: 'did:plc:other',
+          collection: 'blue.rito.private.feed.bookmark',
+          rkey: '123',
+          record: { $type: 'blue.rito.private.feed.bookmark', subject: 'https://example.com' },
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'valid-csrf-token');
+
+      const res = await createRecordPOST(req);
+
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('com.atproto.space.listRecords', () => {
+    it('rejects a query targeting another DID', async () => {
+      const req = new NextRequest(
+        'http://localhost/xrpc/com.atproto.space.listRecords?space=at%3A%2F%2Fdid%3Aplc%3Aother%2Fspace%2Fblue.rito.space.bookmark%2Fself&repo=did%3Aplc%3Aother&collection=blue.rito.private.feed.bookmark&limit=30',
+        { headers: { referer: 'http://localhost:3000/my/bookmark' } },
+      );
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+
+      const res = await listRecordsGET(req);
+
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 
@@ -184,6 +231,7 @@ describe('xRPC: Space Proxy Routes', () => {
           space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
           collection: 'blue.rito.private.feed.bookmark',
           rkey: '123',
+          repo: 'did:plc:valid',
         }),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
@@ -195,6 +243,35 @@ describe('xRPC: Space Proxy Routes', () => {
         expect.stringContaining('/xrpc/com.atproto.space.deleteRecord'),
         expect.objectContaining({ method: 'POST' })
       );
+    });
+  });
+
+  describe('com.atproto.simplespace.createSpace', () => {
+    it('rejects additional access-policy fields', async () => {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.createSpace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/my/bookmark',
+          'X-CSRF-Token': 'valid-csrf-token',
+        },
+        body: JSON.stringify({
+          type: 'blue.rito.space.bookmark',
+          skey: 'self',
+          policy: {
+            $type: 'com.atproto.simplespace.defs#memberListPolicy',
+            members: ['did:plc:other'],
+          },
+          appAccess: { $type: 'com.atproto.simplespace.defs#open' },
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'valid-csrf-token');
+
+      const res = await createSpacePOST(req);
+
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
     });
   });
 });

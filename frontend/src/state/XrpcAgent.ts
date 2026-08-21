@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { AppBskyActorDefs } from '@atcute/bluesky';
 import { Client, simpleFetchHandler } from '@atcute/client';
+import { usePrivateBookmark } from '@/state/PrivateBookmark';
 
 type State = {
   activeDid: string | null;
@@ -25,7 +26,7 @@ type Action = {
 
 export const useXrpcAgentStore = create<State & Action>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       activeDid: null,
       handle: null,
       userProf: null,
@@ -41,7 +42,12 @@ export const useXrpcAgentStore = create<State & Action>()(
       }),
       isLoginProcess: false,
 
-      setActiveDid: (did: string | null) => set({ activeDid: did }),
+      setActiveDid: (did: string | null) => {
+        if (get().activeDid !== did) {
+          usePrivateBookmark.getState().reset();
+        }
+        set({ activeDid: did });
+      },
       setHandle: (handle: string | null) => set({ handle }),
       setUserProf: (userProf: AppBskyActorDefs.ProfileViewDetailed | null) =>
         set({ userProf }),

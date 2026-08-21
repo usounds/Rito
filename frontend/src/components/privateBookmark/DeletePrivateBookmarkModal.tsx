@@ -2,6 +2,7 @@
 import { Button, Group, Modal, Stack, Text } from '@mantine/core';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { useMessages } from 'next-intl';
 
 interface DeletePrivateBookmarkModalProps {
   opened: boolean;
@@ -17,6 +18,7 @@ export function DeletePrivateBookmarkModal({
   title,
 }: DeletePrivateBookmarkModalProps) {
   const [loading, setLoading] = useState(false);
+  const messages = useMessages() as any;
 
   const handleDelete = async () => {
     setLoading(true);
@@ -29,10 +31,10 @@ export function DeletePrivateBookmarkModal({
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title="プライベートブックマークの削除" centered>
+    <Modal opened={opened} onClose={onClose} title={messages.privateBookmark?.modal?.deleteTitle || 'プライベートブックマークの削除'} centered>
       <Stack gap="md">
         <Text size="sm">
-          このプライベートブックマークをPDSから削除しますか？この操作は取り消せません。
+          {messages.privateBookmark?.modal?.deleteMessage || 'このプライベートブックマークをPDSから削除しますか？この操作は取り消せません。'}
         </Text>
         {title && (
           <Text size="sm" fw={600} lineClamp={2}>
@@ -41,7 +43,7 @@ export function DeletePrivateBookmarkModal({
         )}
         <Group justify="flex-end" gap="sm">
           <Button variant="default" onClick={onClose} disabled={loading}>
-            キャンセル
+            {messages.privateBookmark?.modal?.cancel || 'キャンセル'}
           </Button>
           <Button
             color="red"
@@ -49,7 +51,7 @@ export function DeletePrivateBookmarkModal({
             loading={loading}
             onClick={handleDelete}
           >
-            削除する
+            {messages.privateBookmark?.modal?.delete || '削除する'}
           </Button>
         </Group>
       </Stack>

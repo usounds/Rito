@@ -153,6 +153,15 @@
 		"latest": "Latest Bookmark",
 		"login": "Please log in to manage your bookmarks",
 		"empty": "Please register your bookmarks from the bottom-right button.",
+		"tab": {
+			"public": "Public",
+			"private": "Only Me"
+		},
+		"viewMode": {
+			"grid": "Grid view",
+			"list": "List view",
+			"refresh": "Refresh"
+		},
 		"field": {
 			"search": {
 				"title": "Word Search",
@@ -239,9 +248,14 @@
 				"title": "Post to Bluesky",
 				"description": "Post to Bluesky when registering a bookmark"
 			},
+			"saveToPrivate": {
+				"title": "Save to Private",
+				"description": "Save privately to your PDS without publishing publicly or to search"
+			},
 			"useOriginalLink": {
 				"title": "Use original link",
-				"description": "Set the link destination of the OGP card to the original website"
+				"description": "Set the link destination of the OGP card to the original website",
+				"privateDescription": "Private bookmarks always use the original link target"
 			}
 		},
 		"button": {
@@ -257,6 +271,8 @@
 		"inform": {
 			"canverify": "You can register a verified comment for this URL",
 			"success": "Regist successfully",
+			"privateSuccessTitle": "Saved",
+			"privateSuccess": "Bookmark saved privately.",
 			"bookmark": "Bookmarked on Rito",
 			"ogp": "View {0} and others' bookmarks",
 			"needlogin": "Login is required to register a bookmark",
@@ -270,7 +286,8 @@
 			"blockUrl": "This domain cannot be bookmarked",
 			"unknownError": "Failed to regist",
 			"duplicate": "This URL is already registered",
-			"cannotgetogp": "Could not retrieve the title from the site"
+			"cannotgetogp": "Could not retrieve the title from the site",
+			"privateFailed": "Failed to save private bookmark."
 		}
 	},
 	"delete": {
@@ -431,11 +448,13 @@
 				"description": "Save bookmarks privately inside an encrypted Space on your PDS without publishing to the network (ATProto Spaces).",
 				"descriptionUnsupported": "The PDS your account belongs to does not support atproto spaces.",
 				"status": {
+					"checking": "Checking PDS capability...",
 					"ready": "Enabled (Space Created)",
 					"readyDesc": "A dedicated Space is active on your PDS. Private bookmarks are ready to use.",
 					"needs_space": "Not Initialized (Activation Required)",
 					"needs_spaceDesc": "Initialize and create a private bookmark Space on your PDS.",
 					"needs_auth": "OAuth Authorization Required",
+					"needs_authDesc": "Additional OAuth authorization is required to use private bookmarks.",
 					"unsupported": "PDS Unsupported",
 					"unsupportedDesc": "Private bookmarks are only available on PDS servers supporting ATProto Spaces (Proposal 0016)."
 				},
@@ -482,6 +501,43 @@
 			"saving": "Saving settings to the server",
 			"needlogin": "Need login",
 			"error": "A system error has occurred"
+		}
+	},
+	"privateBookmark": {
+		"badge": "Only Me",
+		"empty": "No private bookmarks found",
+		"emptyDescription": "Click the bookmark button on the bottom right and select \"🔒 Save to Private\" to save bookmarks here.",
+		"loadMore": "Load more",
+		"modal": {
+			"deleteTitle": "Delete Private Bookmark",
+			"deleteMessage": "Are you sure you want to delete this private bookmark from your PDS? This action cannot be undone.",
+			"cancel": "Cancel",
+			"delete": "Delete"
+		},
+		"banner": {
+			"checkingTitle": "Checking PDS capability",
+			"checkingDesc": "Checking if your PDS supports private space features...",
+			"unsupportedTitle": "PDS Currently Unsupported",
+			"unsupportedDesc1": "Private bookmarks are saved inside an encrypted Space on your PDS.",
+			"unsupportedDesc2": "The connected PDS does not have com.atproto.space.* deployed yet, so private bookmarks cannot be used with this account.",
+			"needsAuthTitle": "Additional OAuth Authorization Required",
+			"needsAuthDesc": "To read and write private bookmarks, authorization for the space:blue.rito.space.bookmark scope is required.",
+			"authorizeButton": "Authorize Private Space",
+			"initTitle": "Initialize Private Space",
+			"initDesc": "Create your dedicated Space on your PDS to enable private bookmarks.",
+			"initButton": "Create Space & Enable"
+		},
+		"inform": {
+			"spaceCreatedTitle": "Space Created",
+			"spaceCreated": "Private bookmarks are now enabled.",
+			"spaceFailedTitle": "Failed to Create Space",
+			"spaceFailed": "Failed to create Space on your PDS.",
+			"deletedTitle": "Deleted",
+			"deleted": "Private bookmark deleted successfully.",
+			"deleteFailedTitle": "Failed to Delete",
+			"deleteFailed": "Failed to delete private bookmark from PDS.",
+			"authFailedTitle": "Failed to Start Authorization",
+			"authFailed": "Failed to start OAuth authorization flow."
 		}
 	},
 	"category": {

@@ -134,7 +134,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} {...mantineHtmlProps}>
+    <html lang={locale} {...mantineHtmlProps} suppressHydrationWarning>
       <head>
         <ColorSchemeScript />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

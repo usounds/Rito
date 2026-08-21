@@ -1,9 +1,9 @@
-'use client';
 import { useMyBookmark } from "@/state/MyBookmark";
+import { usePrivateBookmark } from "@/state/PrivateBookmark";
 import { ActionIcon, Menu, Modal } from '@mantine/core';
 import { BookmarkPlus, CircleEllipsis, SquarePen, Trash2 } from 'lucide-react';
 import { useMessages } from 'next-intl';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { DeleteBookmark } from '@/components/DeleteBookmark';
 import { ShareOnBluesky } from '@/components/ShareOnBluesky';
 import { Share } from 'lucide-react';
@@ -23,43 +23,56 @@ export default function EditMenu({ subject, title, tags, image, description }: P
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [shareOnBluesky, setShareOnBluesky] = useState(false);
     const myBookmark = useMyBookmark(state => state.myBookmark);
+    const privateBookmarks = usePrivateBookmark(state => state.bookmarks);
     const locale = useLocale();
     const messages = useMessages();
     const router = useRouter();
 
-    // subject に対応するブックマークがあるか判定 (正規化して比較)
-    const matchedBookmark = myBookmark.find(b => {
-        const s1 = stripTrackingParams(subject);
-        const s2 = stripTrackingParams(b.subject);
-
-        if (s1 === s2) return true;
-
-        // http/https の場合は末尾スラッシュの有無を無視して比較
-        const normalize = (u: string) => {
-            try {
-                const urlObj = new URL(u);
-                if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
-                    return u.endsWith('/') ? u.slice(0, -1) : u;
-                }
-            } catch {
-                // ignore
+    const normalizeUrl = (u: string) => {
+        try {
+            const urlObj = new URL(u);
+            if (urlObj.protocol === "http:" || urlObj.protocol === "https:") {
+                return u.endsWith('/') ? u.slice(0, -1) : u;
             }
-            return u;
-        };
+        } catch {
+            // ignore
+        }
+        return u;
+    };
 
-        return normalize(s1) === normalize(s2);
-    });
+    // subject に対応するブックマークがあるか判定 (公開・非公開の両方を検索)
+    const matchedBookmark = useMemo(() => {
+        const s1 = stripTrackingParams(subject);
+        const norm1 = normalizeUrl(s1);
 
-    useEffect(() => {
-        // setData(prev => prev + " (processed on client)");
-    }, []);
+        // 1. 公開ブックマークから検索
+        const foundPublic = myBookmark.find(b => {
+            const s2 = stripTrackingParams(b.subject);
+            return s1 === s2 || norm1 === normalizeUrl(s2);
+        });
+        if (foundPublic) {
+            return { uri: foundPublic.uri, subject: foundPublic.subject, isPrivate: false };
+        }
 
+        // 2. 非公開ブックマークから検索
+        const foundPrivate = privateBookmarks.find(b => {
+            const s2 = stripTrackingParams(b.subject);
+            return s1 === s2 || norm1 === normalizeUrl(s2);
+        });
+        if (foundPrivate) {
+            return { uri: foundPrivate.uri, subject: foundPrivate.subject, isPrivate: true };
+        }
 
+        return null;
+    }, [myBookmark, privateBookmarks, subject]);
 
     const handleEdit = () => {
-        const targetUrl = `/${locale}/bookmark/register?aturi=${encodeURIComponent(
+        let targetUrl = `/${locale}/bookmark/register?aturi=${encodeURIComponent(
             matchedBookmark?.uri ?? ""
         )}&returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}`;
+        if (matchedBookmark?.isPrivate) {
+            targetUrl += `&isPrivate=true`;
+        }
         router.push(targetUrl);
     };
 

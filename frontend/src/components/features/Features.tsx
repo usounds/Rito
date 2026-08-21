@@ -1,5 +1,5 @@
-import { Button, Container, Group, List, ListItem, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
-import { ArrowRight, AtSign, Bookmark, Database, FileText, Grid3X3, Link2, MessageSquare, Sparkles, Star, Tags } from 'lucide-react';
+import { Button, Container, Group, SimpleGrid, Stack, Text, ThemeIcon, Title } from '@mantine/core';
+import { ArrowRight, AtSign, Bookmark, Database, FileText, Grid3X3, Link2, Lock, MessageSquare, Sparkles, Star, Tags } from 'lucide-react';
 import { Compass } from 'lucide-react';
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
@@ -19,12 +19,43 @@ interface FeatureProps {
   href?: string
 }
 
+function getSafeText(
+  t: Awaited<ReturnType<typeof getTranslations>>,
+  locale: string,
+  key: string,
+  fallbackJa: string,
+  fallbackEn: string
+): string {
+  try {
+    return t.has(key as any) ? t(key as any) : (locale === 'ja' ? fallbackJa : fallbackEn);
+  } catch {
+    return locale === 'ja' ? fallbackJa : fallbackEn;
+  }
+}
+
 export function getFeatureItems(t: Awaited<ReturnType<typeof getTranslations>>, locale: string) {
   return [
     {
       icon: Bookmark,
       title: t('header.feature.allbookmark.title'),
       description: t('header.feature.allbookmark.longdescription'),
+    },
+    {
+      icon: Lock,
+      title: getSafeText(
+        t,
+        locale,
+        'header.feature.privatebookmark.title',
+        '自分のみのブックマーク',
+        'Private Bookmarks'
+      ),
+      description: getSafeText(
+        t,
+        locale,
+        'header.feature.privatebookmark.longdescription',
+        '全体に公開したくないリンクは、自分のみに保存できます。AT Protocol Proposal 0016に準拠し、ご自身のPDS内に保護された専用Spaceとして安全に記録されます。',
+        'Links you prefer not to share publicly can be saved as private bookmarks. Built on AT Protocol Proposal 0016, they are stored securely in a protected Space inside your own PDS.'
+      ),
     },
     {
       icon: AtSign,
@@ -187,7 +218,7 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
           </SimpleGrid>
         </section>
 
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing="lg" className={classes.spotlightGrid}>
+        <SimpleGrid cols={{ base: 1, lg: 3 }} spacing="lg" className={classes.spotlightGrid}>
           <div className={`${classes.detailItem} ${classes.categoryCard}`}>
             <div className={classes.cardIcon}><Sparkles size={21} /></div>
             <Title order={2} className={classes.cardTitle}>{t('aboutDetails.categories.title')}</Title>
@@ -195,11 +226,38 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
             <div className={classes.categoryCloud}>
               {categoryKeys.map((key, index) => <span key={key} data-tone={index % 5}>{t(`category.${key}`)}</span>)}
             </div>
-            <List size="sm" mt="md" spacing="xs" withPadding>
-              <ListItem>{t('aboutDetails.categories.input')}</ListItem>
-              <ListItem>{t('aboutDetails.categories.result')}</ListItem>
-              <ListItem>{t('aboutDetails.categories.reason')}</ListItem>
-            </List>
+            <Link href={`/${locale}/`} className={classes.cardAction}>
+              <Button fullWidth variant="light" leftSection={<Compass size={14} />}>
+                {getSafeText(t, locale, 'aboutDetails.categories.action', 'トップページを開く', 'Open Home')}
+              </Button>
+            </Link>
+          </div>
+
+          <div className={`${classes.detailItem} ${classes.privateCard}`}>
+            <div className={classes.cardIcon}><Lock size={21} /></div>
+            <Title order={2} className={classes.cardTitle}>
+              {getSafeText(t, locale, 'aboutDetails.privateBookmark.title', '自分のみの非公開ブックマーク', 'Private bookmarks just for you')}
+            </Title>
+            <Text mt="sm" lh={1.75}>
+              {getSafeText(t, locale, 'aboutDetails.privateBookmark.description', '全体に公開したくないリンクは、自分のみに保存できます。ご自身のPDS内の専用Spaceに記録されるため、全体一覧や検索に載ることはありません。', 'Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.')}
+            </Text>
+            <div className={classes.collectionPreview} aria-hidden="true">
+              <div>
+                <span className={classes.appMark} data-tone="1"><Lock size={15} /></span>
+                <code>blue.rito.space.bookmark</code>
+                <ArrowRight size={14} />
+              </div>
+              <div>
+                <span className={classes.appMark} data-tone="0"><Database size={15} /></span>
+                <code>blue.rito.private.feed.bookmark</code>
+                <ArrowRight size={14} />
+              </div>
+            </div>
+            <Link href={`/${locale}/my/bookmark`} className={classes.cardAction}>
+              <Button fullWidth variant="light" leftSection={<Lock size={14} />}>
+                {getSafeText(t, locale, 'aboutDetails.privateBookmark.action', 'マイブックマークを開く', 'Open My Bookmarks')}
+              </Button>
+            </Link>
           </div>
 
           <div className={`${classes.detailItem} ${classes.appsCard}`}>
@@ -215,13 +273,10 @@ export function FeaturesGrid({ t, locale }: FeaturesGridProps) {
                 </div>
               ))}
             </div>
-            <List size="sm" mt="md" spacing="xs" withPadding>
-              <ListItem>{t('aboutDetails.myApps.collections')}</ListItem>
-              <ListItem>{t('aboutDetails.myApps.catalog')}</ListItem>
-              <ListItem>{t('aboutDetails.myApps.boundary')}</ListItem>
-            </List>
-            <Link href={`/${locale}/my/app`} style={{ textDecoration: 'none' }}>
-              <Button mt="lg" variant="light">{t('aboutDetails.myApps.action')}</Button>
+            <Link href={`/${locale}/my/app`} className={classes.cardAction}>
+              <Button fullWidth variant="light" leftSection={<Grid3X3 size={14} />}>
+                {t('aboutDetails.myApps.action')}
+              </Button>
             </Link>
           </div>
         </SimpleGrid>

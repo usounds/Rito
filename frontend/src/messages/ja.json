@@ -28,7 +28,8 @@
 			"description": "共有されるリンクはタグ、言語、説明の詳しさがそれぞれ異なります。件数が増えても「見つける」ページを探しやすく保つため、リトが共通のCategoryへ自動分類します。",
 			"input": "ページのタイトルと説明を優先し、タグとブックマークした人のコメントも参考にして判定します。",
 			"result": "テクノロジー、社会、食事、旅行、エンタメ、写真、atprotoなどから主なCategoryを1つ付けます。判断が難しい場合は「一般」になります。",
-			"reason": "Categoryは発見を助けるための目安であり、作者の属性やリンク先への推奨を示すものではありません。処理は非同期のため、新しいブックマークは一時的に未分類となる場合があります。"
+			"reason": "Categoryは発見を助けるための目安であり、作者の属性やリンク先への推奨を示すものではありません。処理は非同期のため、新しいブックマークは一時的に未分類となる場合があります。",
+			"action": "トップページを開く"
 		},
 		"myApps": {
 			"title": "マイアプリ：リポジトリに記録のあるatprotoサービス",
@@ -38,9 +39,14 @@
 			"boundary": "マイアプリは情報を確認するための一覧です。表示しただけでアプリがインストールされたり、新しい権限が付与されたり、現在もそのサービスを利用・推奨していることが証明されたりするものではありません。",
 			"action": "マイアプリを開く"
 		},
+		"privateBookmark": {
+			"title": "自分のみの非公開ブックマーク",
+			"description": "全体に公開したくないリンクは、自分のみに保存できます。ご自身のPDS内の専用Spaceに記録されるため、全体一覧や検索に載ることはありません。",
+			"action": "マイブックマークを開く"
+		},
 		"data": {
 			"title": "データがどのように扱われるか",
-			"description": "ブックマークのレコードは、利用者のatproto Personal Data Server（PDS）へ保存されます。またリトは、公開一覧、検索、プレビュー、Category、安全対策を提供するために必要な情報をインデックスします。このソーシャルサービスへ登録したブックマークはほかの人から見える場合があるため、機密性の高いURLや非公開メモの保管場所としては使用しないでください。"
+			"description": "公開ブックマークのレコードは、利用者のatproto PDSへ保存され、全体一覧や検索のためにインデックスされます。自分のみに保存したブックマークは、AT Protocol Proposal 0016に準拠した専用Spaceに保存され、全体や検索には一切公開されません。"
 		}
 	},
 	"loading": "読み込み中",
@@ -76,6 +82,11 @@
 				"title": "ブックマーク",
 				"description": "WebサイトをBlueskyのアカウントでまとめて管理",
 				"longdescription": "WebサイトをBlueskyのアカウントでまとめて管理できます。ブックマークにはコメントとタグをつけて管理できます。"
+			},
+			"privatebookmark": {
+				"title": "自分のみのブックマーク",
+				"description": "全体に公開せずPDS内の専用Spaceに保存",
+				"longdescription": "全体に公開したくないリンクは、自分のみに保存できます。AT Protocol Proposal 0016に準拠し、ご自身のPDS内に保護された専用Spaceとして安全に記録されます。"
 			},
 			"atproto": {
 				"title": "Build with atproto",
@@ -416,6 +427,25 @@
 	"settings": {
 		"title": "設定",
 		"section": {
+			"privateBookmark": {
+				"title": "プライベートブックマーク(α)",
+				"description": "全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）",
+				"descriptionUnsupported": "あなたのアカウントが属するPDSは、atproto spacesに未対応です。",
+				"status": {
+					"ready": "有効（Space作成済み）",
+					"readyDesc": "PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。",
+					"needs_space": "未作成（有効化が必要）",
+					"needs_spaceDesc": "お使いのPDSで非公開ブックマーク用Spaceを初期化して有効化します。",
+					"needs_auth": "OAuth認可が必要",
+					"unsupported": "PDS未対応",
+					"unsupportedDesc": "プライベートブックマーク機能は、ATProto Spaces（提案仕様0016）に対応したPDSでのみご利用いただけます。"
+				},
+				"button": {
+					"enable": "プライベートブックマークを有効化（Spaceを作成）",
+					"authorize": "非公開機能を認可する",
+					"enabled": "有効化済み"
+				}
+			},
 			"enableAutoGenerateBookmark": {
 				"title": "自動収集(β)",
 				"description": "Bluesky上で「#rito.blue」タグを付けたあなたの投稿を、自動でリトにブックマークします",

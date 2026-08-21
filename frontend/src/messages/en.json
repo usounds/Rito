@@ -28,7 +28,8 @@
 			"description": "Shared links arrive with different tags, languages, and levels of detail. Rito classifies them into a small, consistent set of topics so the Discover page stays navigable as the collection grows.",
 			"input": "Classification considers the page title and description first, then tags and the bookmarker's comment.",
 			"result": "Each bookmark is assigned one primary topic, such as Technology, Social, Food, Travel, Entertainment, Photo, or atproto. Unclear items fall back to General.",
-			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized."
+			"reason": "The category is a discovery aid, not a statement about the author or an endorsement of the linked content. Processing happens asynchronously, so a new bookmark may briefly appear as uncategorized.",
+			"action": "Open Home"
 		},
 		"myApps": {
 			"title": "My Apps: see the atproto services in your repo",
@@ -38,9 +39,14 @@
 			"boundary": "My Apps is an informational catalog. Opening it does not install an app, grant new permissions, or prove that you currently use or endorse every listed service.",
 			"action": "Open My Apps"
 		},
+		"privateBookmark": {
+			"title": "Private bookmarks just for you",
+			"description": "Save private links without publishing them to the public feed. Stored in a dedicated Space inside your own PDS, they will not appear in search or public discovery.",
+			"action": "Open My Bookmarks"
+		},
 		"data": {
 			"title": "What happens to your data",
-			"description": "Rito writes your bookmark records to your atproto Personal Data Server (PDS). Rito also indexes the information needed to provide public discovery, search, previews, categories, and safety filtering. Bookmarks intended for this social service may therefore be visible to other people; do not use Rito as a private vault for sensitive URLs or notes."
+			"description": "Public bookmark records are written to your atproto Personal Data Server (PDS) and indexed for public discovery and search. Bookmarks saved as private are stored in a dedicated Space adhering to AT Protocol Proposal 0016 and are never shared publicly or indexed for search."
 		}
 	},
 	"loading": "Loading",
@@ -76,6 +82,11 @@
 				"title": "Bookmarks",
 				"description": "Manage Bluesky and websites together with your Bluesky account",
 				"longdescription": "You can manage websites with your Bluesky account. Add comments and tags to bookmarks for convenient organization."
+			},
+			"privatebookmark": {
+				"title": "Private Bookmarks",
+				"description": "Save to your own protected PDS Space without publishing",
+				"longdescription": "Links you prefer not to share publicly can be saved as private bookmarks. Built on AT Protocol Proposal 0016, they are stored securely in a protected Space inside your own PDS."
 			},
 			"atproto": {
 				"title": "Build with atproto",
@@ -415,6 +426,25 @@
 	"settings": {
 		"title": "Settings",
 		"section": {
+			"privateBookmark": {
+				"title": "Private Bookmark (α)",
+				"description": "Save bookmarks privately inside an encrypted Space on your PDS without publishing to the network (ATProto Spaces).",
+				"descriptionUnsupported": "The PDS your account belongs to does not support atproto spaces.",
+				"status": {
+					"ready": "Enabled (Space Created)",
+					"readyDesc": "A dedicated Space is active on your PDS. Private bookmarks are ready to use.",
+					"needs_space": "Not Initialized (Activation Required)",
+					"needs_spaceDesc": "Initialize and create a private bookmark Space on your PDS.",
+					"needs_auth": "OAuth Authorization Required",
+					"unsupported": "PDS Unsupported",
+					"unsupportedDesc": "Private bookmarks are only available on PDS servers supporting ATProto Spaces (Proposal 0016)."
+				},
+				"button": {
+					"enable": "Enable Private Bookmarks (Create Space)",
+					"authorize": "Authorize Private Space",
+					"enabled": "Enabled"
+				}
+			},
 			"enableAutoGenerateBookmark": {
 				"title": "Automatic Collection (β)",
 				"description": "Automatically bookmarks your posts on Bluesky with the #rito.blue tag.",

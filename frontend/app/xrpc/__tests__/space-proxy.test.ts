@@ -23,6 +23,7 @@ import { POST as createRecordPOST } from '@app/xrpc/com.atproto.space.createReco
 import { GET as listRecordsGET } from '@app/xrpc/com.atproto.space.listRecords/route';
 import { POST as deleteRecordPOST } from '@app/xrpc/com.atproto.space.deleteRecord/route';
 import { POST as createSpacePOST } from '@app/xrpc/com.atproto.simplespace.createSpace/route';
+import { POST as deleteSpacePOST } from '@app/xrpc/com.atproto.simplespace.deleteSpace/route';
 
 describe('xRPC: Space Proxy Routes', () => {
   beforeEach(() => {
@@ -269,6 +270,87 @@ describe('xRPC: Space Proxy Routes', () => {
       req.cookies.set('CSRF_TOKEN', 'valid-csrf-token');
 
       const res = await createSpacePOST(req);
+
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('com.atproto.simplespace.deleteSpace', () => {
+    it('proxies deletion of the signed-in users private bookmark space', async () => {
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({}), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/settings',
+          'X-CSRF-Token': 'delete-space-csrf-token',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'delete-space-csrf-token');
+
+      const res = await deleteSpacePOST(req);
+
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/xrpc/com.atproto.simplespace.deleteSpace'),
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({
+            space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          }),
+        })
+      );
+    });
+
+    it('rejects deletion of another users space', async () => {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/settings',
+          'X-CSRF-Token': 'delete-space-csrf-token',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:other/space/blue.rito.space.bookmark/self',
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'delete-space-csrf-token');
+
+      const res = await deleteSpacePOST(req);
+
+      expect(res.status).toBe(400);
+      expect(mockFetch).not.toHaveBeenCalled();
+    });
+
+    it('rejects unexpected deletion fields', async () => {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          referer: 'http://localhost:3000/settings',
+          'X-CSRF-Token': 'delete-space-csrf-token',
+        },
+        body: JSON.stringify({
+          space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self',
+          repo: 'did:plc:valid',
+        }),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'delete-space-csrf-token');
+
+      const res = await deleteSpacePOST(req);
 
       expect(res.status).toBe(400);
       expect(mockFetch).not.toHaveBeenCalled();

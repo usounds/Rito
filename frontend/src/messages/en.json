@@ -50,7 +50,7 @@
 		}
 	},
 	"loading": "Loading",
-	"button": {
+			"button": {
 		"search": "Search",
 		"discover": "Discover",
 		"start": "Start"
@@ -262,7 +262,9 @@
 			"regist": "Register",
 			"delete": "Delete",
 			"close": "Back",
-			"ogp": "Fetch Title"
+				"ogp": "Get page info",
+				"ogpFetching": "Getting page info",
+				"ogpAgain": "Get again"
 		},
 		"tab": {
 			"en": "English",
@@ -276,8 +278,10 @@
 			"bookmark": "Bookmarked on Rito",
 			"ogp": "View {0} and others' bookmarks",
 			"needlogin": "Login is required to register a bookmark",
-			"referInRito": "Refer in Rito",
-			"originalSource": "Source"
+				"referInRito": "Refer in Rito",
+				"originalSource": "Source",
+				"pageInfoDescription": "Get the title, description, and image from the URL",
+				"pageInfoFetched": "Page info retrieved"
 		},
 		"error": {
 			"invalidurl": "Invalid URL format",
@@ -445,24 +449,38 @@
 		"section": {
 			"privateBookmark": {
 				"title": "Private Bookmark (α)",
-				"description": "Save bookmarks privately inside an encrypted Space on your PDS without publishing to the network (ATProto Spaces).",
+				"description": "Save bookmarks privately inside an encrypted Space on your PDS without publishing to the network (atproto spaces).",
 				"descriptionUnsupported": "The PDS your account belongs to does not support atproto spaces.",
 				"status": {
 					"checking": "Checking PDS capability...",
 					"ready": "Enabled (Space Created)",
 					"readyDesc": "A dedicated Space is active on your PDS. Private bookmarks are ready to use.",
 					"needs_space": "Not Initialized (Activation Required)",
-					"needs_spaceDesc": "Initialize and create a private bookmark Space on your PDS.",
 					"needs_auth": "OAuth Authorization Required",
 					"needs_authDesc": "Additional OAuth authorization is required to use private bookmarks.",
 					"unsupported": "PDS Unsupported",
-					"unsupportedDesc": "Private bookmarks are only available on PDS servers supporting ATProto Spaces (Proposal 0016)."
+					"unsupportedDesc": "Private bookmarks are only available on PDS servers supporting atproto spaces (Proposal 0016)."
 				},
 				"button": {
-					"enable": "Enable Private Bookmarks (Create Space)",
+					"enable": "Enable",
 					"authorize": "Authorize Private Space",
-					"enabled": "Enabled"
-				}
+					"enabled": "Enabled",
+					"leave": "Leave Private Bookmarks"
+				},
+				"deleteSpaceTitle": "Delete Space",
+				"deleteSpaceDesc": "Delete the dedicated Space and stop using the alpha feature.",
+				"deleteModal": {
+					"title": "Leave Private Bookmarks",
+					"warning": "This action cannot be undone.",
+					"description": "Your dedicated Space will be deleted. Saved private bookmarks will no longer be available.",
+					"cancel": "Cancel",
+					"confirm": "Delete Space and Leave"
+				},
+				"deleteSuccessTitle": "Private Bookmarks Left",
+				"deleteSuccess": "Your private bookmark Space was deleted.",
+				"deleteFailedTitle": "Space Deletion Error",
+				"deleteFailed": "Failed to delete the Space.",
+				"accountChanged": "Space deletion was canceled because the active account changed."
 			},
 			"enableAutoGenerateBookmark": {
 				"title": "Automatic Collection (β)",

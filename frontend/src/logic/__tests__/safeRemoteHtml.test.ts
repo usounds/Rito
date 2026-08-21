@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fetchSafeRemoteHtml, isPublicIpAddress } from '@/logic/safeRemoteHtml';
+import { createPinnedLookup, fetchSafeRemoteHtml, isPublicIpAddress } from '@/logic/safeRemoteHtml';
 
 describe('safeRemoteHtml', () => {
   it.each([
@@ -30,4 +30,40 @@ describe('safeRemoteHtml', () => {
       await expect(fetchSafeRemoteHtml(url)).rejects.toMatchObject({ status: expect.any(Number) });
     },
   );
+
+  it('Node.jsのall lookupでは固定IPを配列形式で返す', async () => {
+    const pinned = { address: '1.1.1.1', family: 4 as const };
+    const lookup = createPinnedLookup(pinned);
+
+    await new Promise<void>((resolve, reject) => {
+      lookup('example.com', { all: true }, (error, address, family) => {
+        try {
+          expect(error).toBeNull();
+          expect(address).toEqual([pinned]);
+          expect(family).toBeUndefined();
+          resolve();
+        } catch (assertionError) {
+          reject(assertionError);
+        }
+      });
+    });
+  });
+
+  it('単一lookupでは固定IPとfamilyを従来形式で返す', async () => {
+    const pinned = { address: '1.1.1.1', family: 4 as const };
+    const lookup = createPinnedLookup(pinned);
+
+    await new Promise<void>((resolve, reject) => {
+      lookup('example.com', { all: false }, (error, address, family) => {
+        try {
+          expect(error).toBeNull();
+          expect(address).toBe(pinned.address);
+          expect(family).toBe(pinned.family);
+          resolve();
+        } catch (assertionError) {
+          reject(assertionError);
+        }
+      });
+    });
+  });
 });

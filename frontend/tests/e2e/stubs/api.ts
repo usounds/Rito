@@ -147,6 +147,41 @@ export async function mockLogin(page: Page, did: string, handle: string) {
     });
   });
 
+  // Settings preference authorization
+  await page.route('**/api/oauth/getServideAuth?*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ token: 'mock-service-auth-token' }),
+    });
+  });
+
+  await page.route('**/xrpc/blue.rito.preference.getPreference', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        enableAutoGenerateBookmark: false,
+        unblurModerationCategories: [],
+      }),
+    });
+  });
+
+  // OGP preview
+  await page.route('**/api/fetchOgp?*', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        result: {
+          ogTitle: '取得したページタイトル',
+          ogDescription: '取得したページの説明',
+          ogImage: [],
+        },
+      }),
+    });
+  });
+
   // Session info for private bookmarks
   await page.route('**/api/session-info', async (route) => {
     await route.fulfill({
@@ -263,6 +298,15 @@ export async function mockLogin(page: Page, did: string, handle: string) {
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ success: true }),
+    });
+  });
+
+  // Delete Private Bookmark Space
+  await page.route('**/xrpc/com.atproto.simplespace.deleteSpace', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({}),
     });
   });
 

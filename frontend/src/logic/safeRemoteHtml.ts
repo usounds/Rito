@@ -3,6 +3,7 @@ import type { LookupAddress } from 'node:dns';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
+import type { LookupFunction } from 'node:net';
 
 const MAX_URL_LENGTH = 2048;
 const MAX_REDIRECTS = 3;
@@ -68,6 +69,16 @@ export function isPublicIpAddress(address: string): boolean {
   return false;
 }
 
+export function createPinnedLookup(pinned: LookupAddress): LookupFunction {
+  return (_hostname, options, callback) => {
+    if (options.all) {
+      callback(null, [pinned]);
+      return;
+    }
+    callback(null, pinned.address, pinned.family);
+  };
+}
+
 function parseRemoteUrl(rawUrl: string): URL {
   if (rawUrl.length > MAX_URL_LENGTH) {
     throw new SafeRemoteHtmlError('URL is too long', 400);
@@ -129,9 +140,7 @@ function requestHtml(url: URL, pinned: { address: string; family: 4 | 6 }): Prom
           accept: 'text/html,application/xhtml+xml;q=0.9',
           'user-agent': 'Rito OGP Fetcher/1.0',
         },
-        lookup: (_hostname, _options, callback) => {
-          callback(null, pinned.address, pinned.family);
-        },
+        lookup: createPinnedLookup(pinned),
       },
       (res) => {
         const declaredLength = Number(res.headers['content-length'] || 0);

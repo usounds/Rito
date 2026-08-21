@@ -6,8 +6,8 @@ import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { usePreferenceStore } from '@/state/Preference';
-import { AlertCircle, CheckCircle2, Lock, Save, ShieldAlert, Sparkles } from 'lucide-react';
-import { checkSpaceCapability, initializeSpace, requestPrivateAuthorization } from '@/logic/privateBookmark/pdsClient';
+import { AlertCircle, CheckCircle2, Lock, Save, ShieldAlert, Sparkles, Trash2 } from 'lucide-react';
+import { checkSpaceCapability, deletePrivateBookmarkSpace, initializeSpace, requestPrivateAuthorization } from '@/logic/privateBookmark/pdsClient';
 import { PdsCapabilityStatus } from '@/logic/privateBookmark/types';
 
 export function Auto() {
@@ -31,6 +31,9 @@ export function Auto() {
     const [spaceStatus, setSpaceStatus] = useState<PdsCapabilityStatus>('checking');
     const [spaceMessage, setSpaceMessage] = useState<string | null>(null);
     const [isInitializingSpace, setIsInitializingSpace] = useState(false);
+    const [deleteSpaceOpened, setDeleteSpaceOpened] = useState(false);
+    const [isDeletingSpace, setIsDeletingSpace] = useState(false);
+    const [spaceDeleteTargetDid, setSpaceDeleteTargetDid] = useState<string | null>(null);
 
     const duplicateCheck = useRef(false);
     const hasInitializedLocalModeration = useRef(false);
@@ -337,6 +340,55 @@ export function Auto() {
         }
     };
 
+    const openDeleteSpaceModal = () => {
+        if (!activeDid) return;
+        setSpaceDeleteTargetDid(activeDid);
+        setDeleteSpaceOpened(true);
+    };
+
+    const closeDeleteSpaceModal = () => {
+        if (isDeletingSpace) return;
+        setDeleteSpaceOpened(false);
+        setSpaceDeleteTargetDid(null);
+    };
+
+    const handleDeleteSpace = async () => {
+        if (!activeDid || !spaceDeleteTargetDid || activeDid !== spaceDeleteTargetDid) {
+            setDeleteSpaceOpened(false);
+            setSpaceDeleteTargetDid(null);
+            notifications.show({
+                title: messages.settings.section.privateBookmark?.deleteFailedTitle || 'Space削除エラー',
+                message: messages.settings.section.privateBookmark?.accountChanged || 'アカウントが切り替わったため、Spaceの削除を中止しました。',
+                color: 'red',
+            });
+            return;
+        }
+
+        setIsDeletingSpace(true);
+        try {
+            const result = await deletePrivateBookmarkSpace(spaceDeleteTargetDid);
+            if (result.success) {
+                setDeleteSpaceOpened(false);
+                setSpaceDeleteTargetDid(null);
+                setSpaceStatus('needs_space');
+                setSpaceMessage('Space is not created yet');
+                notifications.show({
+                    title: messages.settings.section.privateBookmark?.deleteSuccessTitle || '退会しました',
+                    message: messages.settings.section.privateBookmark?.deleteSuccess || 'プライベートブックマーク用Spaceを削除しました。',
+                    color: 'green',
+                });
+            } else {
+                notifications.show({
+                    title: messages.settings.section.privateBookmark?.deleteFailedTitle || 'Space削除エラー',
+                    message: messages.settings.section.privateBookmark?.deleteFailed || 'Spaceの削除に失敗しました。',
+                    color: 'red',
+                });
+            }
+        } finally {
+            setIsDeletingSpace(false);
+        }
+    };
+
     const handleAuthorize = async () => {
         try {
             await requestPrivateAuthorization();
@@ -419,7 +471,7 @@ export function Auto() {
             <Text size="xs" c="dimmed">
                 {spaceStatus === 'unsupported'
                     ? (messages.settings.section.privateBookmark?.descriptionUnsupported || 'あなたのアカウントが属するPDSは、atproto spacesに未対応です。')
-                    : (messages.settings.section.privateBookmark?.description || '全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）')}
+                    : (messages.settings.section.privateBookmark?.description || '全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（atproto spaces対応）')}
             </Text>
 
             {userProf != null && spaceStatus !== 'unsupported' && (
@@ -433,22 +485,49 @@ export function Auto() {
                         )}
 
                         {spaceStatus === 'ready' && (
-                            <Group justify="space-between" align="center" wrap="wrap">
-                                <div>
-                                    <Group gap="xs" align="center">
-                                        <CheckCircle2 size={18} color="var(--mantine-color-green-6)" />
-                                        <Text size="sm" fw={600} c="green">
-                                            {messages.settings.section.privateBookmark?.status?.ready || '有効（Space作成済み）'}
+                            <Stack gap="md">
+                                <Group justify="space-between" align="center" wrap="wrap">
+                                    <div>
+                                        <Group gap="xs" align="center">
+                                            <CheckCircle2 size={18} color="var(--mantine-color-green-6)" />
+                                            <Text size="sm" fw={600} c="green">
+                                                {messages.settings.section.privateBookmark?.status?.ready || '有効化済み'}
+                                            </Text>
+                                        </Group>
+                                        <Text size="xs" c="dimmed" mt={4}>
+                                            {messages.settings.section.privateBookmark?.status?.readyDesc || 'PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。'}
                                         </Text>
-                                    </Group>
-                                    <Text size="xs" c="dimmed" mt={4}>
-                                        {messages.settings.section.privateBookmark?.status?.readyDesc || 'PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。'}
-                                    </Text>
-                                </div>
-                                <Button variant="light" color="green" size="xs" disabled leftSection={<CheckCircle2 size={14} />}>
-                                    {messages.settings.section.privateBookmark?.button?.enabled || '有効化済み'}
-                                </Button>
-                            </Group>
+                                    </div>
+                                    <Button variant="light" color="green" size="xs" disabled leftSection={<CheckCircle2 size={14} />}>
+                                        {messages.settings.section.privateBookmark?.button?.enabled || '有効化済み'}
+                                    </Button>
+                                </Group>
+                                <Group
+                                    justify="space-between"
+                                    align="center"
+                                    wrap="wrap"
+                                    pt="sm"
+                                    style={{ borderTop: '1px solid var(--mantine-color-default-border)' }}
+                                >
+                                    <div>
+                                        <Text size="sm" fw={600}>
+                                            {messages.settings.section.privateBookmark?.deleteSpaceTitle || 'Spaceの削除'}
+                                        </Text>
+                                        <Text size="xs" c="dimmed" mt={4}>
+                                            {messages.settings.section.privateBookmark?.deleteSpaceDesc || '専用Spaceを削除して、アルファ版の利用を終了します。'}
+                                        </Text>
+                                    </div>
+                                    <Button
+                                        variant="outline"
+                                        color="red"
+                                        size="xs"
+                                        onClick={openDeleteSpaceModal}
+                                        leftSection={<Trash2 size={14} />}
+                                    >
+                                        {messages.settings.section.privateBookmark?.button?.leave || 'プライベートブックマークを退会'}
+                                    </Button>
+                                </Group>
+                            </Stack>
                         )}
 
                         {spaceStatus === 'needs_space' && (
@@ -460,9 +539,6 @@ export function Auto() {
                                             {messages.settings.section.privateBookmark?.status?.needs_space || '未作成（有効化が必要）'}
                                         </Text>
                                     </Group>
-                                    <Text size="xs" c="dimmed" mt={4}>
-                                        {messages.settings.section.privateBookmark?.status?.needs_spaceDesc || 'お使いのPDSで非公開ブックマーク用Spaceを初期化して有効化します。'}
-                                    </Text>
                                 </div>
                                 <Button
                                     variant="filled"
@@ -472,7 +548,7 @@ export function Auto() {
                                     onClick={handleInitializeSpace}
                                     leftSection={<Sparkles size={14} />}
                                 >
-                                    {messages.settings.section.privateBookmark?.button?.enable || 'プライベートブックマークを有効化（Spaceを作成）'}
+                                    {messages.settings.section.privateBookmark?.button?.enable || '有効化'}
                                 </Button>
                             </Group>
                         )}
@@ -504,6 +580,40 @@ export function Auto() {
                     </Stack>
                 </Paper>
             )}
+
+            <Modal
+                opened={deleteSpaceOpened}
+                onClose={closeDeleteSpaceModal}
+                closeOnClickOutside={!isDeletingSpace}
+                closeOnEscape={!isDeletingSpace}
+                withCloseButton={!isDeletingSpace}
+                title={messages.settings.section.privateBookmark?.deleteModal?.title || 'プライベートブックマークを退会'}
+                centered
+            >
+                <Stack gap="md">
+                    <Alert color="red" icon={<ShieldAlert size={18} />}>
+                        <Text size="sm" fw={600}>
+                            {messages.settings.section.privateBookmark?.deleteModal?.warning || 'この操作は元に戻せません。'}
+                        </Text>
+                        <Text size="xs" mt={4}>
+                            {messages.settings.section.privateBookmark?.deleteModal?.description || '専用Spaceを削除します。保存済みのプライベートブックマークは利用できなくなります。'}
+                        </Text>
+                    </Alert>
+                    <Group justify="flex-end">
+                        <Button variant="default" onClick={closeDeleteSpaceModal} disabled={isDeletingSpace}>
+                            {messages.settings.section.privateBookmark?.deleteModal?.cancel || 'キャンセル'}
+                        </Button>
+                        <Button
+                            color="red"
+                            loading={isDeletingSpace}
+                            onClick={handleDeleteSpace}
+                            leftSection={<Trash2 size={16} />}
+                        >
+                            {messages.settings.section.privateBookmark?.deleteModal?.confirm || 'Spaceを削除して退会'}
+                        </Button>
+                    </Group>
+                </Stack>
+            </Modal>
 
             <Title order={4}>{messages.settings.section.enableAutoGenerateBookmark.title}</Title>
             <Switch

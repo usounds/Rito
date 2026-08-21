@@ -6,9 +6,9 @@ import { useXrpcAgentStore } from "@/state/XrpcAgent";
 import { usePreferenceStore } from "@/state/PreferenceStore";
 import { isResourceUri, parseCanonicalResourceUri, ParsedCanonicalResourceUri } from '@atcute/lexicons/syntax';
 import * as TID from '@atcute/tid';
-import { Button, Group, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
+import { Button, Flex, Group, Input, Stack, Tabs, TagsInput, Textarea, TextInput, Container, Modal, Text, LoadingOverlay, Box } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { BadgeCheck, BookmarkPlus, Check, Lock, PanelsTopLeft, Tag, X } from 'lucide-react';
+import { BadgeCheck, BookmarkPlus, Check, Lock, RefreshCw, Sparkles, Tag, X } from 'lucide-react';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { useMyBookmark } from "@/state/MyBookmark";
@@ -43,6 +43,7 @@ export default function RegistBookmarkPage() {
     ]);
     const [url, setUrl] = useState<string>('');
     const [isFetchOGP, setIsFetchOGP] = useState(false);
+    const [pageInfoFetchStatus, setPageInfoFetchStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [isSubmit, setIsSubmit] = useState(false);
     const [isCanVerify, setIsVerify] = useState(false);
     const isPostToBluesky = usePreferenceStore(state => state.isPostToBluesky);
@@ -303,6 +304,10 @@ export default function RegistBookmarkPage() {
     const handleUrlChange = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
         const value = e.target.value;
         setUrl(value);
+        setPageInfoFetchStatus('idle');
+        setOgpTitle(null);
+        setOgpDescription(null);
+        setOgpImage(null);
         setIsVerify(false)
         setUrlError(null);
         setSchema(null);
@@ -347,6 +352,7 @@ export default function RegistBookmarkPage() {
     const handleGetOgp = async () => {
         setUrlError('')
         setTitleError('')
+        setPageInfoFetchStatus('idle')
 
         let ogpUrl = url
         if (schema && aturiParsed) {
@@ -377,7 +383,9 @@ export default function RegistBookmarkPage() {
                 setOgpTitle(data.result?.ogTitle || '');
                 setOgpDescription(data.result?.ogDescription || '');
                 setOgpImage(data.result?.ogImage?.[0]?.url || '')
+                setPageInfoFetchStatus('success')
             } else {
+                setPageInfoFetchStatus('error')
                 console.log('Failed to fetch OGP data');
                 notifications.show({
                     title: 'Error',
@@ -388,6 +396,7 @@ export default function RegistBookmarkPage() {
 
             }
         } catch {
+            setPageInfoFetchStatus('error')
             notifications.show({
                 title: 'Error',
                 message: messages.create.error.cannotgetogp,
@@ -879,6 +888,17 @@ export default function RegistBookmarkPage() {
         );
     };
 
+    const canFetchPageInfo = (() => {
+        if (!activeDid || isSubmit || !url) return false;
+        if (schema && aturiParsed) return true;
+        try {
+            const parsed = new URL(url);
+            return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+        } catch {
+            return false;
+        }
+    })();
+
     // --- UI ---
     return (
         <Container size="md" mx="auto" >
@@ -899,35 +919,56 @@ export default function RegistBookmarkPage() {
 
                     {/* Box 内の要素を Stack で縦並び */}
                     <Stack gap="sm">
-                        <TextInput
+                        <Input.Wrapper
                             label={messages.create.field.url.title}
                             description={isCanVerify ? messages.create.field.url.descriptionForOwner : messages.create.field.url.description}
-                            placeholder={messages.create.field.url.placeholder}
-                            value={url}
-                            onChange={handleUrlChange}
-                            leftSection={isCanVerify && <BadgeCheck size={16} />}
-                            withAsterisk
                             error={urlError}
-                            autoFocus={aturi == null}
-                            disabled={!activeDid || isSubmit}
-                            styles={{ input: { fontSize: 16 } }}
-                        />
-
-                        <Group justify="center">
-                            <Button
-                                leftSection={<PanelsTopLeft size={16} />}
-                                variant="default"
-                                onClick={handleGetOgp}
-                                loading={isFetchOGP}
-                                style={{ width: "auto" }}
-                                disabled={
-                                    !url.startsWith('https://') &&
-                                    !schema == null
-                                }
+                            withAsterisk
+                        >
+                            <Flex
+                                mt={6}
+                                gap="xs"
+                                direction={{ base: 'column', sm: 'row' }}
+                                align={{ base: 'stretch', sm: 'center' }}
                             >
-                                {messages.create.button.ogp}
-                            </Button>
-                        </Group>
+                                <TextInput
+                                    aria-label={messages.create.field.url.title}
+                                    placeholder={messages.create.field.url.placeholder}
+                                    value={url}
+                                    onChange={handleUrlChange}
+                                    leftSection={isCanVerify && <BadgeCheck size={16} />}
+                                    autoFocus={aturi == null}
+                                    disabled={!activeDid || isSubmit}
+                                    styles={{ root: { flex: 1 }, input: { fontSize: 16 } }}
+                                />
+                                <Button
+                                    leftSection={pageInfoFetchStatus === 'success' ? <RefreshCw size={16} /> : <Sparkles size={16} />}
+                                    variant="default"
+                                    onClick={handleGetOgp}
+                                    loading={isFetchOGP}
+                                    disabled={!canFetchPageInfo}
+                                >
+                                    {isFetchOGP
+                                        ? messages.create.button.ogpFetching
+                                        : pageInfoFetchStatus === 'success'
+                                            ? messages.create.button.ogpAgain
+                                            : messages.create.button.ogp}
+                                </Button>
+                            </Flex>
+
+                            <Group gap={5} mt={5} c={pageInfoFetchStatus === 'error' ? 'red' : pageInfoFetchStatus === 'success' ? 'teal' : 'dimmed'}>
+                                {pageInfoFetchStatus === 'success' && <Check size={14} />}
+                                {pageInfoFetchStatus === 'error' && <X size={14} />}
+                                <Text size="xs">
+                                    {pageInfoFetchStatus === 'success'
+                                        ? messages.create.inform.pageInfoFetched
+                                        : pageInfoFetchStatus === 'error'
+                                            ? messages.create.error.cannotgetogp
+                                            : messages.create.inform.pageInfoDescription}
+                                </Text>
+                            </Group>
+
+                        </Input.Wrapper>
 
                         <TagsInput
                             data={[]}

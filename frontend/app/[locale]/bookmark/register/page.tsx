@@ -158,12 +158,16 @@ export default function RegistBookmarkPage() {
                         // Wait for activeDid to hydrate from session
                         return;
                     }
-                    let privateItem = usePrivateBookmark.getState().bookmarks.find(
-                        (b) => b.uri === aturi || b.rkey === targetRkey
-                    );
+                    const privateStore = usePrivateBookmark.getState();
+                    let privateItem = privateStore.loadedForDid === activeDid
+                        ? privateStore.bookmarks.find((b) => b.uri === aturi || b.rkey === targetRkey)
+                        : undefined;
 
                     if (!privateItem && targetRkey) {
                         const fetchRes = await getPrivateBookmarkRecord(activeDid, targetRkey);
+                        if (useXrpcAgentStore.getState().activeDid !== activeDid) {
+                            return;
+                        }
                         if (fetchRes.bookmark) {
                             privateItem = fetchRes.bookmark;
                         }
@@ -505,6 +509,10 @@ export default function RegistBookmarkPage() {
             }, rkey || undefined);
 
             if (privateResult.success && privateResult.uri && privateResult.rkey) {
+                if (useXrpcAgentStore.getState().activeDid !== activeDid) {
+                    setIsSubmit(false);
+                    return;
+                }
                 const store = usePrivateBookmark.getState();
                 const existing = store.bookmarks.find(b => b.rkey === privateResult.rkey);
                 if (existing) {

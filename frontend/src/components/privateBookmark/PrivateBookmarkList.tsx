@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   ActionIcon,
   Alert,
@@ -67,6 +67,13 @@ export function PrivateBookmarkList() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [isInitializing, setIsInitializing] = useState(false);
   const [deletingItem, setDeletingItem] = useState<PrivateBookmarkItem | null>(null);
+  const requestGenerationRef = useRef(0);
+
+  const isCurrentOwner = Boolean(activeDid && loadedForDid === activeDid);
+  const visibleBookmarks = isCurrentOwner ? bookmarks : [];
+  const visibleCapabilityStatus = isCurrentOwner ? capabilityStatus : 'idle';
+  const visibleStatusMessage = isCurrentOwner ? statusMessage : null;
+  const visibleError = isCurrentOwner ? error : null;
 
   useEffect(() => {
     const savedMode = localStorage.getItem('rito_bookmark_view_mode') as 'grid' | 'list' | null;
@@ -82,25 +89,41 @@ export function PrivateBookmarkList() {
 
   // Reset store when activeDid changes
   useEffect(() => {
-    if (activeDid && loadedForDid !== activeDid) {
+    requestGenerationRef.current += 1;
+    if (!activeDid) {
+      reset();
+      setDeletingItem(null);
+      return;
+    }
+    if (usePrivateBookmark.getState().loadedForDid !== activeDid) {
       reset();
       setLoadedForDid(activeDid);
+      setDeletingItem(null);
     }
-  }, [activeDid, loadedForDid, reset, setLoadedForDid]);
+  }, [activeDid, reset, setLoadedForDid]);
 
   // Check capability and fetch bookmarks on mount or activeDid
   const fetchBookmarks = useCallback(async () => {
     if (!activeDid) return;
+    const requestDid = activeDid;
+    const requestGeneration = ++requestGenerationRef.current;
+    const isCurrentRequest = () =>
+      requestGenerationRef.current === requestGeneration &&
+      useXrpcAgentStore.getState().activeDid === requestDid &&
+      usePrivateBookmark.getState().loadedForDid === requestDid;
+
     setLoading(true);
     setError(null);
 
     try {
-      const capResult = await checkSpaceCapability(activeDid);
+      const capResult = await checkSpaceCapability(requestDid);
+      if (!isCurrentRequest()) return;
       setCapabilityStatus(capResult.status, capResult.message);
 
       if (capResult.status === 'ready') {
         const { bookmarks: initialBookmarks, cursor: nextCursor, error: fetchErr } =
-          await listPrivateBookmarks(activeDid, null);
+          await listPrivateBookmarks(requestDid, null);
+        if (!isCurrentRequest()) return;
         if (fetchErr) {
           setError(fetchErr);
         } else {
@@ -108,9 +131,13 @@ export function PrivateBookmarkList() {
         }
       }
     } catch (err: any) {
-      setError(err?.message || 'Failed to initialize private bookmarks');
+      if (isCurrentRequest()) {
+        setError(err?.message || 'Failed to initialize private bookmarks');
+      }
     } finally {
-      setLoading(false);
+      if (isCurrentRequest()) {
+        setLoading(false);
+      }
     }
   }, [activeDid, setBookmarks, setCapabilityStatus, setError, setLoading]);
 
@@ -147,11 +174,16 @@ export function PrivateBookmarkList() {
 
   // Handle pagination
   const handleLoadMore = async () => {
-    if (!activeDid || !cursor || isLoadingMore) return;
+    if (!activeDid || !isCurrentOwner || !cursor || isLoadingMore) return;
+    const requestDid = activeDid;
     setLoadingMore(true);
     try {
       const { bookmarks: moreBookmarks, cursor: nextCursor, error: fetchErr } =
-        await listPrivateBookmarks(activeDid, cursor);
+        await listPrivateBookmarks(requestDid, cursor);
+      if (
+        useXrpcAgentStore.getState().activeDid !== requestDid ||
+        usePrivateBookmark.getState().loadedForDid !== requestDid
+      ) return;
       if (fetchErr) {
         setError(fetchErr);
       } else {
@@ -165,9 +197,15 @@ export function PrivateBookmarkList() {
   // Handle delete
   const handleConfirmDelete = async () => {
     if (!activeDid || !deletingItem) return;
-    const { success, error: delErr } = await deletePrivateBookmarkRecord(activeDid, deletingItem.rkey);
+    const requestDid = activeDid;
+    const deletingRkey = deletingItem.rkey;
+    const { success, error: delErr } = await deletePrivateBookmarkRecord(requestDid, deletingRkey);
+    if (
+      useXrpcAgentStore.getState().activeDid !== requestDid ||
+      usePrivateBookmark.getState().loadedForDid !== requestDid
+    ) return;
     if (success) {
-      removeBookmark(deletingItem.rkey);
+      removeBookmark(deletingRkey);
       notifications.show({
         title: messages.privateBookmark?.inform?.deletedTitle || '削除しました',
         message: messages.privateBookmark?.inform?.deleted || 'プライベートブックマークを削除しました。',
@@ -197,20 +235,20 @@ export function PrivateBookmarkList() {
 
   // Aggregated tags from in-memory bookmarks
   const { allTags, tagCounts } = useMemo(() => {
-    if (!Array.isArray(bookmarks)) return { allTags: [], tagCounts: {} };
+    if (!Array.isArray(visibleBookmarks)) return { allTags: [], tagCounts: {} };
     const counts: Record<string, number> = {};
-    bookmarks.forEach((b) => {
+    visibleBookmarks.forEach((b) => {
       b.tags.forEach((tag) => {
         counts[tag] = (counts[tag] || 0) + 1;
       });
     });
     return { allTags: Object.keys(counts), tagCounts: counts };
-  }, [bookmarks]);
+  }, [visibleBookmarks]);
 
   // In-memory filtered bookmarks
   const filteredBookmarks = useMemo(() => {
-    if (!Array.isArray(bookmarks)) return [];
-    return bookmarks.filter((b) => {
+    if (!Array.isArray(visibleBookmarks)) return [];
+    return visibleBookmarks.filter((b) => {
       const hasTags = tags.length === 0 || tags.every((tag) => b.tags.includes(tag));
       const matchesQuery =
         query.trim() === '' ||
@@ -221,99 +259,100 @@ export function PrivateBookmarkList() {
         );
       return hasTags && matchesQuery;
     });
-  }, [bookmarks, tags, query]);
+  }, [visibleBookmarks, tags, query]);
 
   return (
     <Stack gap="md">
+      <Group justify="space-between" align="flex-end">
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
+          <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <TagsInput
+              label={messages.search?.field?.tag?.title || 'タグ'}
+              placeholder={messages.search?.field?.tag?.placeholder || 'タグで絞り込み'}
+              value={tags}
+              onChange={(newTags) => setTags(newTags.map((tag) => tag.replace(/#/g, '')))}
+              styles={{ input: { fontSize: 16 } }}
+              clearable
+            />
+            <TagSuggestion
+              tags={allTags}
+              selectedTags={tags}
+              setTags={setTags}
+              tagCounts={tagCounts}
+            />
+          </Box>
+          <TextInput
+            label={messages.mybookmark?.field?.search?.title || '単語検索'}
+            placeholder={messages.mybookmark?.field?.search?.placeholder || 'ブックマークを検索'}
+            value={query}
+            onChange={(e) => setQuery(e.currentTarget.value)}
+            styles={{ input: { fontSize: 16 } }}
+          />
+        </SimpleGrid>
+
+        <Group gap={6} mb={4}>
+          <Tooltip label={messages.mybookmark?.viewMode?.refresh || "再読み込み"}>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              loading={isLoading}
+              disabled={!isCurrentOwner}
+              onClick={fetchBookmarks}
+              aria-label="Refresh private bookmarks"
+            >
+              <RefreshCw size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={messages.mybookmark?.viewMode?.grid || "グリッド表示"}>
+            <ActionIcon
+              variant={viewMode === 'grid' ? 'filled' : 'light'}
+              color="indigo"
+              size="lg"
+              onClick={() => handleViewModeChange('grid')}
+              aria-label="Grid view"
+            >
+              <LayoutGrid size={18} />
+            </ActionIcon>
+          </Tooltip>
+          <Tooltip label={messages.mybookmark?.viewMode?.list || "リスト表示"}>
+            <ActionIcon
+              variant={viewMode === 'list' ? 'filled' : 'light'}
+              color="indigo"
+              size="lg"
+              onClick={() => handleViewModeChange('list')}
+              aria-label="List view"
+            >
+              <List size={18} />
+            </ActionIcon>
+          </Tooltip>
+        </Group>
+      </Group>
+
       {/* Capability / Initialization Banner */}
       <PdsCapabilityBanner
-        status={capabilityStatus}
-        statusMessage={statusMessage}
+        status={visibleCapabilityStatus}
+        statusMessage={visibleStatusMessage}
         onInitializeSpace={handleInitializeSpace}
         onAuthorize={handleAuthorize}
         isInitializing={isInitializing}
       />
 
-      {error && (
+      {visibleError && (
         <Alert variant="light" color="red" title={messages.settings?.inform?.error || "エラーが発生しました"} icon={<Info size={18} />}>
-          {error}
+          {visibleError}
         </Alert>
       )}
 
-      {capabilityStatus === 'ready' && (
+      {visibleCapabilityStatus === 'ready' && (
         <>
-          <Group justify="space-between" align="flex-end">
-            <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
-              <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <TagsInput
-                  label={messages.search?.field?.tag?.title || 'タグ'}
-                  placeholder={messages.search?.field?.tag?.placeholder || 'タグで絞り込み'}
-                  value={tags}
-                  onChange={(newTags) => setTags(newTags.map((tag) => tag.replace(/#/g, '')))}
-                  styles={{ input: { fontSize: 16 } }}
-                  clearable
-                />
-                <TagSuggestion
-                  tags={allTags}
-                  selectedTags={tags}
-                  setTags={setTags}
-                  tagCounts={tagCounts}
-                />
-              </Box>
-              <TextInput
-                label={messages.mybookmark?.field?.search?.title || '単語検索'}
-                placeholder={messages.mybookmark?.field?.search?.placeholder || 'ブックマークを検索'}
-                value={query}
-                onChange={(e) => setQuery(e.currentTarget.value)}
-                styles={{ input: { fontSize: 16 } }}
-              />
-            </SimpleGrid>
-
-            <Group gap={6} mb={4}>
-              <Tooltip label={messages.mybookmark?.viewMode?.refresh || "再読み込み"}>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  loading={isLoading}
-                  onClick={fetchBookmarks}
-                  aria-label="Refresh private bookmarks"
-                >
-                  <RefreshCw size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={messages.mybookmark?.viewMode?.grid || "グリッド表示"}>
-                <ActionIcon
-                  variant={viewMode === 'grid' ? 'filled' : 'light'}
-                  color="indigo"
-                  size="lg"
-                  onClick={() => handleViewModeChange('grid')}
-                  aria-label="Grid view"
-                >
-                  <LayoutGrid size={18} />
-                </ActionIcon>
-              </Tooltip>
-              <Tooltip label={messages.mybookmark?.viewMode?.list || "リスト表示"}>
-                <ActionIcon
-                  variant={viewMode === 'list' ? 'filled' : 'light'}
-                  color="indigo"
-                  size="lg"
-                  onClick={() => handleViewModeChange('list')}
-                  aria-label="List view"
-                >
-                  <List size={18} />
-                </ActionIcon>
-              </Tooltip>
-            </Group>
-          </Group>
-
           {isLoading && (
             <Center my="xl">
               <Loader color="indigo" size="md" />
             </Center>
           )}
 
-          {!isLoading && bookmarks.length === 0 && (
+          {!isLoading && visibleBookmarks.length === 0 && (
             <Alert
               my="sm"
               variant="light"
@@ -360,6 +399,7 @@ export function PrivateBookmarkList() {
                               <Trash2 size={14} />
                             </ActionIcon>
                           }
+                          isPrivate
                         />
                       </div>
                     );
@@ -398,6 +438,7 @@ export function PrivateBookmarkList() {
                             <Trash2 size={14} />
                           </ActionIcon>
                         }
+                        isPrivate
                       />
                     );
                   })}

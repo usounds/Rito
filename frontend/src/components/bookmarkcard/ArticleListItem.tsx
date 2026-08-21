@@ -38,6 +38,7 @@ type ArticleListItemProps = {
     priority?: boolean;
     badge?: React.ReactNode;
     actionSection?: React.ReactNode;
+    isPrivate?: boolean;
 };
 
 export function ArticleListItem({
@@ -54,7 +55,8 @@ export function ArticleListItem({
     bookmarkCount,
     priority = false,
     badge,
-    actionSection
+    actionSection,
+    isPrivate = false,
 }: ArticleListItemProps) {
     const messages = useMessages();
     const locale = useLocale();
@@ -140,7 +142,7 @@ export function ArticleListItem({
                             </Group>
 
                             <Link
-                                href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                href={isPrivate ? (localUrl || '') : `/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
                                 className={classes.title}
                             >
                                 {title}
@@ -166,7 +168,7 @@ export function ArticleListItem({
                                 <TagBadge tags={tags} locale={locale} />
                                 <Group gap={6} ml="auto" align="center">
                                     <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
-                                    <EditMenu subject={url} title={title} tags={tags} image={imgSrc || ''} description={comment} />
+                                    <EditMenu subject={url} title={title} tags={tags} image={imgSrc || ''} description={comment} isPrivate={isPrivate} />
                                 </Group>
                             </div>
                         </div>

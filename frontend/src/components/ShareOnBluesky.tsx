@@ -19,12 +19,22 @@ type ShareOnBlueskyProps = {
     originalUrl?: string; // Original URL of the article
     image?: string;       // OGP Image URL
     description?: string; // OGP Description
+    forceOriginalLink?: boolean;
 };
 const MAX_TOTAL_LENGTH = 300;
 
+export function getRitoReferenceUrl(
+    subject: string,
+    useOriginalLink: boolean,
+    forceOriginalLink: boolean,
+): string | undefined {
+    if (forceOriginalLink) return undefined;
+    return useOriginalLink ? subject : undefined;
+}
 
 
-export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, tags, onClose, originalUrl, image, description }) => {
+
+export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, tags, onClose, originalUrl, image, description, forceOriginalLink = false }) => {
     const messages = useMessages();
     const postMessages = [
         messages.share.posta,
@@ -43,6 +53,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
     const [loading, setLoading] = useState(false);
     const isUseOriginalLink = usePreferenceStore(state => state.isUseOriginalLink);
     const setIsUseOriginalLink = usePreferenceStore(state => state.setIsUseOriginalLink);
+    const useOriginalLink = forceOriginalLink || isUseOriginalLink;
     const tagsLength = useMemo(() => {
         return tagsLocal.reduce((sum, tag) => sum + 1 + tag.length + 1, 0); // # + tag + 半角スペース
     }, [tagsLocal]);
@@ -63,7 +74,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                 shareComment,
                 tagsObj,
                 messages,
-                isUseOriginalLink ? subject : undefined
+                getRitoReferenceUrl(subject, useOriginalLink, forceOriginalLink)
             ) as AppBskyFeedPost.Main;
 
             let ogpMessage = messages.share.ogpdecription
@@ -74,7 +85,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
             let embedDesc = ogpMessage || '';
             let embedThumbBlob: AppBskyEmbedExternal.Main['external']['thumb'] = undefined;
 
-            if (isUseOriginalLink) {
+            if (useOriginalLink) {
                 if (originalUrl) {
                     embedUri = originalUrl as unknown as ResourceUri;
                     const host = new URL(originalUrl).hostname;
@@ -205,7 +216,7 @@ export const ShareOnBluesky: React.FC<ShareOnBlueskyProps> = ({ subject, title, 
                 disabled={loading}
                 styles={{ input: { fontSize: 16 } }}
             />
-            {originalUrl && (
+            {originalUrl && !forceOriginalLink && (
                 <Switch
                     label={messages.create.field.useOriginalLink.title}
                     description={messages.create.field.useOriginalLink.description}

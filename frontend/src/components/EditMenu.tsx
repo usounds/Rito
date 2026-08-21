@@ -18,9 +18,10 @@ type Props = {
     tags?: string[];
     image?: string;
     description?: string;
+    isPrivate?: boolean;
 };
 
-export default function EditMenu({ subject, title, tags, image, description }: Props) {
+export default function EditMenu({ subject, title, tags, image, description, isPrivate = false }: Props) {
     const [deleteBookmark, setDeleteBookmark] = useState(false);
     const [shareOnBluesky, setShareOnBluesky] = useState(false);
     const myBookmark = useMyBookmark(state => state.myBookmark);
@@ -112,13 +113,14 @@ export default function EditMenu({ subject, title, tags, image, description }: P
                 closeOnClickOutside={false}
             >
                 <ShareOnBluesky
-                    subject={`${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(subject)}`}
+                    subject={isPrivate ? subject : `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/details?uri=${encodeURIComponent(subject)}`}
                     title={title}
                     tags={tags}
                     onClose={() => setShareOnBluesky(false)}
                     originalUrl={subject}
                     image={image}
                     description={description}
+                    forceOriginalLink={isPrivate}
                 />
             </Modal>
 

@@ -14,6 +14,7 @@ vi.mock('@atcute/client', () => {
 });
 
 import { useXrpcAgentStore } from '../XrpcAgent';
+import { usePrivateBookmark } from '../PrivateBookmark';
 
 describe('Store: XrpcAgent', () => {
     beforeEach(() => {
@@ -24,6 +25,7 @@ describe('Store: XrpcAgent', () => {
             userProf: null,
             isLoginProcess: false,
         });
+        usePrivateBookmark.getState().reset();
     });
 
     it('初期状態が正しい', () => {
@@ -61,8 +63,21 @@ describe('Store: XrpcAgent', () => {
 
     it('nullでクリアできる', () => {
         useXrpcAgentStore.getState().setActiveDid('did:plc:testuser');
+        usePrivateBookmark.getState().setLoadedForDid('did:plc:testuser');
+        usePrivateBookmark.getState().setBookmarks([
+            {
+                uri: 'at://private-bookmark',
+                rkey: '1',
+                subject: 'https://example.com/private',
+                comments: [{ lang: 'ja', title: 'private' }],
+                tags: [],
+                createdAt: '2026-08-22T00:00:00.000Z',
+            },
+        ], null, false);
         useXrpcAgentStore.getState().setActiveDid(null);
         expect(useXrpcAgentStore.getState().activeDid).toBeNull();
+        expect(usePrivateBookmark.getState().bookmarks).toEqual([]);
+        expect(usePrivateBookmark.getState().loadedForDid).toBeNull();
     });
 
     it('publicAgentが初期化されている', () => {

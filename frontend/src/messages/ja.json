@@ -54,7 +54,7 @@
 		"title": "リト",
 		"description": "利用者と開発者を繋ぐソーシャルブックマーク"
 	},
-	"button": {
+			"button": {
 		"search": "検索する",
 		"discover": "見つける",
 		"start": "始める"
@@ -263,7 +263,9 @@
 			"regist": "登録",
 			"delete": "削除",
 			"close": "戻る",
-			"ogp": "タイトルを取得"
+				"ogp": "ページ情報を取得",
+				"ogpFetching": "取得しています",
+				"ogpAgain": "再取得"
 		},
 		"tab": {
 			"en": "英語",
@@ -277,8 +279,10 @@
 			"bookmark": "リトにブックマークを登録しました",
 			"ogp": "{0} さんや他の人のブックマークを見る",
 			"needlogin": "ブックマークを登録するにはログインが必要です",
-			"referInRito": "リトで参照する",
-			"originalSource": "引用元"
+				"referInRito": "リトで参照する",
+				"originalSource": "引用元",
+				"pageInfoDescription": "URLからタイトル・説明・画像を取得します",
+				"pageInfoFetched": "ページ情報を取得しました"
 		},
 		"error": {
 			"invalidurl": "URLの形式が不正です",
@@ -446,24 +450,38 @@
 		"section": {
 			"privateBookmark": {
 				"title": "プライベートブックマーク(α)",
-				"description": "全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）",
+				"description": "全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（atproto spaces対応）",
 				"descriptionUnsupported": "あなたのアカウントが属するPDSは、atproto spacesに未対応です。",
 				"status": {
 					"checking": "PDSの対応状況を確認中...",
 					"ready": "有効（Space作成済み）",
 					"readyDesc": "PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。",
 					"needs_space": "未作成（有効化が必要）",
-					"needs_spaceDesc": "お使いのPDSで非公開ブックマーク用Spaceを初期化して有効化します。",
 					"needs_auth": "OAuth認可が必要",
 					"needs_authDesc": "プライベートブックマーク機能を使用するにはOAuth権限の追加認可が必要です。",
 					"unsupported": "PDS未対応",
-					"unsupportedDesc": "プライベートブックマーク機能は、ATProto Spaces（提案仕様0016）に対応したPDSでのみご利用いただけます。"
+					"unsupportedDesc": "プライベートブックマーク機能は、atproto spaces（提案仕様0016）に対応したPDSでのみご利用いただけます。"
 				},
 				"button": {
-					"enable": "プライベートブックマークを有効化（Spaceを作成）",
+					"enable": "有効化",
 					"authorize": "非公開機能を認可する",
-					"enabled": "有効化済み"
-				}
+					"enabled": "有効化済み",
+					"leave": "プライベートブックマークを退会"
+				},
+				"deleteSpaceTitle": "Spaceの削除",
+				"deleteSpaceDesc": "専用Spaceを削除して、アルファ版の利用を終了します。",
+				"deleteModal": {
+					"title": "プライベートブックマークを退会",
+					"warning": "この操作は元に戻せません。",
+					"description": "専用Spaceを削除します。保存済みのプライベートブックマークは利用できなくなります。",
+					"cancel": "キャンセル",
+					"confirm": "Spaceを削除して退会"
+				},
+				"deleteSuccessTitle": "退会しました",
+				"deleteSuccess": "プライベートブックマーク用Spaceを削除しました。",
+				"deleteFailedTitle": "Space削除エラー",
+				"deleteFailed": "Spaceの削除に失敗しました。",
+				"accountChanged": "アカウントが切り替わったため、Spaceの削除を中止しました。"
 			},
 			"enableAutoGenerateBookmark": {
 				"title": "自動収集(β)",

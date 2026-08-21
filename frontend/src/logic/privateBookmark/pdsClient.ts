@@ -49,7 +49,7 @@ export async function checkSpaceCapability(did: string): Promise<SpaceCapability
       errMsg.includes('scopemissingerror') ||
       errMsg.includes('bsky_appview')
     ) {
-      return { status: 'unsupported', spaceUri, message: data.message || 'PDS does not support ATProto Spaces' };
+      return { status: 'unsupported', spaceUri, message: data.message || 'PDS does not support atproto spaces' };
     }
 
     const isSpaceNotFound =
@@ -168,6 +168,42 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
     return { success: false, error: data.message || `Failed to create space (${res.status})` };
   } catch (err: any) {
     return { success: false, error: err?.message || 'Network error initializing space' };
+  }
+}
+
+/**
+ * Delete the current user's private bookmark space from their PDS.
+ */
+export async function deletePrivateBookmarkSpace(did: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    const csrfToken = await getCsrfToken();
+    const res = await fetch('/xrpc/com.atproto.simplespace.deleteSpace', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+        'X-CSRF-Token': csrfToken,
+      },
+      body: JSON.stringify({
+        space: getSpaceUri(did),
+      }),
+    });
+
+    if (res.ok) {
+      return { success: true };
+    }
+
+    const data = await res.json().catch(() => ({}));
+    if (data.error === 'SpaceNotFound' || data.error === 'SpaceDeleted') {
+      return { success: true };
+    }
+
+    return { success: false, error: data.message || `Failed to delete space (${res.status})` };
+  } catch (err: unknown) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Network error deleting space',
+    };
   }
 }
 

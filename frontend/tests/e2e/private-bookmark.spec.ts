@@ -124,4 +124,28 @@ test.describe('Private Bookmark (Space) E2E', () => {
     const confirmButton = page.getByRole('dialog').getByRole('button', { name: '削除', exact: true });
     await confirmButton.click();
   });
+
+  test('should delete the private bookmark space after explicit confirmation', async ({ page }) => {
+    await page.goto('/ja/settings');
+
+    const leaveButton = page.getByRole('button', { name: 'プライベートブックマークを退会', exact: true });
+    await expect(leaveButton).toBeVisible({ timeout: 10000 });
+    await leaveButton.click();
+
+    const dialog = page.getByRole('dialog', { name: 'プライベートブックマークを退会' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText('この操作は元に戻せません。')).toBeVisible();
+    await expect(dialog.getByText('保存済みのプライベートブックマークは利用できなくなります。', { exact: false })).toBeVisible();
+
+    const deleteRequestPromise = page.waitForRequest('**/xrpc/com.atproto.simplespace.deleteSpace');
+    await dialog.getByRole('button', { name: 'Spaceを削除して退会', exact: true }).click();
+    const deleteRequest = await deleteRequestPromise;
+
+    expect(deleteRequest.postDataJSON()).toEqual({
+      space: 'at://did:plc:testuser/space/blue.rito.space.bookmark/self',
+    });
+    await expect(page.getByText('未作成（有効化が必要）')).toBeVisible();
+    await expect(page.getByRole('button', { name: '有効化', exact: true })).toBeVisible();
+    await expect(dialog).toBeHidden();
+  });
 });

@@ -18,13 +18,17 @@ test.describe('Bookmark Operations', () => {
     const urlInput = page.getByLabel('URL', { exact: false });
     await urlInput.fill('https://rito.blue');
 
-    // 2. 「タイトルを取得」をクリック
-    const getOgpButton = page.getByRole('button', { name: 'タイトルを取得' });
+    // 2. URL欄に隣接した「ページ情報を取得」をクリック
+    const getOgpButton = page.getByRole('button', { name: 'ページ情報を取得' });
+    await expect(getOgpButton).toBeVisible();
     await getOgpButton.click();
 
-    // タイトルが取得されて入力欄が埋まるのを待機（実在のURLから取得するため少し長めに待機）
+    // 取得完了状態と既存タイトル欄への反映を確認
+    await expect(page.getByText('ページ情報を取得しました')).toBeVisible();
+    await expect(page.getByRole('button', { name: '再取得' })).toBeVisible();
+    await expect(page.getByText('取得したページの説明')).toHaveCount(0);
     const titleInput = page.getByLabel('タイトル', { exact: false }).first();
-    await expect(titleInput).not.toHaveValue('', { timeout: 15000 });
+    await expect(titleInput).toHaveValue('取得したページタイトル');
 
     // 3. コメントを入力
     const commentInput = page.getByLabel('コメント', { exact: false }).first();

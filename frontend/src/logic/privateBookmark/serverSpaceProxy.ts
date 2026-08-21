@@ -109,6 +109,15 @@ function validatePrivateBookmarkProcedure(
     return null;
   }
 
+  if (method === "com.atproto.simplespace.deleteSpace") {
+    if (!hasOnlyKeys(input, ["space"])) {
+      return "Unexpected private bookmark space field";
+    }
+    return input.space === getExpectedSpaceUri(did)
+      ? null
+      : "Invalid private bookmark space";
+  }
+
   if (method === "com.atproto.space.createRecord" || method === "com.atproto.space.putRecord") {
     if (!hasOnlyKeys(input, ["space", "repo", "collection", "rkey", "record"])) {
       return "Unexpected private bookmark record field";

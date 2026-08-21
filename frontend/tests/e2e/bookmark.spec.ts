@@ -40,9 +40,8 @@ test.describe('Bookmark Operations', () => {
     await expect(submitButton).toBeEnabled({ timeout: 20000 });
     await submitButton.click();
 
-    // 5. 成功通知（ja.json: create.inform.success）が表示されるか確認
-    // タイムアウトを長めに取り、遷移や処理の遅延を許容する
-    await expect(page.getByText('登録しました')).toBeVisible({ timeout: 20000 });
+    // 5. 登録完了後にマイブックマークへ遷移することを確認
+    await expect(page).toHaveURL(/.*\/my\/bookmark.*/, { timeout: 20000 });
   });
 
   test('should validate empty registration', async ({ page }) => {
@@ -80,13 +79,20 @@ test.describe('Bookmark Operations', () => {
     await expect(page.getByText('テストタイトル1').first()).toBeVisible({ timeout: 10000 });
   });
 
-  test('should show bookmark action menu', async ({ page }) => {
+  test('should show bookmark action menu', async ({ page, isMobile }) => {
     // ログイン済みの状態でマイブックマークページへ
     await page.goto('/ja/my/bookmark');
 
     // 三点リーダーボタン（aria-label="Settings"）をクリック
-    const menuButton = page.locator('.mantine-Card-root').filter({ hasText: 'テストタイトル1' }).getByRole('button', { name: 'Settings' }).first();
-    await menuButton.click();
+    const card = page.locator('.mantine-Card-root').filter({ hasText: 'テストタイトル1' }).first();
+    await expect(card).toBeVisible({ timeout: 10000 });
+    const menuButton = card.getByRole('button', { name: 'Settings' }).first();
+    await menuButton.scrollIntoViewIfNeeded();
+    if (isMobile) {
+      await menuButton.tap();
+    } else {
+      await menuButton.click();
+    }
 
     // メニュー項目が表示されるか確認
     await expect(page.getByText('ブックマークメニュー')).toBeVisible();
@@ -96,14 +102,25 @@ test.describe('Bookmark Operations', () => {
     await expect(page).toHaveURL(/.*\/bookmark\/register\?aturi=.*/);
 
     // 戻って「削除」を確認
-    await page.goBack();
-    await menuButton.click();
+    await page.goto('/ja/my/bookmark');
+    await expect(card).toBeVisible({ timeout: 10000 });
+    if (isMobile) {
+      await menuButton.tap();
+    } else {
+      await menuButton.click();
+    }
     await page.getByRole('menuitem', { name: '削除', exact: true }).click();
     await expect(page.getByRole('dialog').getByText('ブックマークの削除')).toBeVisible();
 
     // モーダルを閉じて「シェア」を確認
     await page.keyboard.press('Escape');
-    await menuButton.click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+
+    if (isMobile) {
+      await menuButton.tap();
+    } else {
+      await menuButton.click();
+    }
     await page.getByRole('menuitem', { name: 'Blueskyでシェア', exact: true }).click();
     await expect(page.getByRole('dialog').getByText('Blueskyで共有')).toBeVisible();
   });

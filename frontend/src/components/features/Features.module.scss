@@ -272,13 +272,22 @@ $mantine-breakpoint-xl: 88em;
   border: 1px solid var(--glass-border);
   border-radius: 22px;
   box-shadow: var(--glass-shadow);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   overflow: hidden;
   padding: clamp(24px, 4vw, 38px);
   position: relative;
 }
 
-.detailItem :global(.mantine-Text-root),
-.detailItem :global(.mantine-List-root) {
+.cardAction {
+  margin-top: auto;
+  padding-top: var(--mantine-spacing-md);
+  text-decoration: none;
+  display: block;
+}
+
+.detailItem :global(.mantine-Text-root) {
   color: light-dark(var(--mantine-color-gray-7), var(--mantine-color-dark-2));
 }
 
@@ -306,6 +315,17 @@ $mantine-breakpoint-xl: 88em;
 
 .categoryCard::after {
   background: radial-gradient(circle, rgba(139, 92, 246, 0.12), transparent 68%);
+  content: '';
+  height: 280px;
+  pointer-events: none;
+  position: absolute;
+  right: -130px;
+  top: -130px;
+  width: 280px;
+}
+
+.privateCard::after {
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.14), transparent 68%);
   content: '';
   height: 280px;
   pointer-events: none;

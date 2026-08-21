@@ -4,11 +4,14 @@ import { Article } from '@/components/bookmarkcard/Article';
 import { ArticleListItem } from '@/components/bookmarkcard/ArticleListItem';
 import { LoginButtonOrUser } from '@/components/header/LoginButtonOrUser';
 import { useMyBookmark } from "@/state/MyBookmark";
+import { usePrivateBookmark } from "@/state/PrivateBookmark";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip } from '@mantine/core';
+import { Box, SimpleGrid, Stack, Text, TextInput, TagsInput, Alert, Group, ActionIcon, Tooltip, SegmentedControl, Center } from '@mantine/core';
 import { useLocale, useMessages } from 'next-intl';
-import { Info, LayoutGrid, List } from 'lucide-react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { Globe, Info, LayoutGrid, List, Lock } from 'lucide-react';
 import { TagSuggestion } from "@/components/TagSuggest";
+import { PrivateBookmarkList } from "@/components/privateBookmark/PrivateBookmarkList";
 import classes from '../../bookmark/search/latestbookmark/LatestBookmark.module.scss';
 
 export function MyBookmark() {
@@ -16,11 +19,36 @@ export function MyBookmark() {
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const messages = useMessages();
     const locale = useLocale();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const pathname = usePathname();
+
+    const isPrivateParam = searchParams ? (searchParams.get("isPrivate") === "true" || searchParams.get("tab") === "private") : false;
 
     // --- フック ---
+    const [currentTab, setCurrentTab] = useState<'public' | 'private'>(isPrivateParam ? 'private' : 'public');
     const [tags, setTags] = useState<string[]>([]);
     const [query, setQuery] = useState<string>("");
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
+    useEffect(() => {
+        setCurrentTab(isPrivateParam ? 'private' : 'public');
+    }, [isPrivateParam]);
+
+    const handleTabChange = (val: 'public' | 'private') => {
+        setCurrentTab(val);
+        const params = new URLSearchParams(searchParams ? searchParams.toString() : '');
+        if (val === 'private') {
+            params.set('isPrivate', 'true');
+            params.delete('tab');
+        } else {
+            params.delete('isPrivate');
+            params.delete('tab');
+        }
+        const queryStr = params.toString();
+        const targetPath = queryStr ? `${pathname}?${queryStr}` : pathname;
+        router.replace(targetPath, { scroll: false });
+    };
 
     useEffect(() => {
         const savedMode = localStorage.getItem('rito_bookmark_view_mode') as 'grid' | 'list' | null;
@@ -60,26 +88,58 @@ export function MyBookmark() {
         });
     }, [myBookmark, tags, query]);
 
-    // --- JSX はフックの後で早期 return ---
-    if (!activeDid) {
-        return (
-            <Box
-                style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    gap: '1rem',
-                }}
-            >
-                <Text>{messages.mybookmark.login}</Text>
-                <LoginButtonOrUser />
-            </Box>
-        );
-    }
+    const capabilityStatus = usePrivateBookmark(state => state.capabilityStatus);
+    const setCapabilityStatus = usePrivateBookmark(state => state.setCapabilityStatus);
+
+    useEffect(() => {
+        if (activeDid && capabilityStatus === 'idle') {
+            import('@/logic/privateBookmark/pdsClient').then(({ checkSpaceCapability }) => {
+                checkSpaceCapability(activeDid).then(res => {
+                    setCapabilityStatus(res.status, res.message);
+                }).catch(() => {
+                    setCapabilityStatus('unsupported');
+                });
+            });
+        }
+    }, [activeDid, capabilityStatus, setCapabilityStatus]);
 
     return (
-        <Stack gap="md">
+        <Stack gap="lg">
+            {capabilityStatus === 'ready' && (
+                <Group justify="flex-start">
+                    <SegmentedControl
+                        value={currentTab}
+                        onChange={(val) => handleTabChange(val as 'public' | 'private')}
+                        radius="xl"
+                        size="sm"
+                        data={[
+                            {
+                                value: 'public',
+                                label: (
+                                    <Center style={{ gap: 6, padding: '2px 8px' }}>
+                                        <Globe size={15} />
+                                        <span style={{ fontWeight: 500 }}>公開</span>
+                                    </Center>
+                                ),
+                            },
+                            {
+                                value: 'private',
+                                label: (
+                                    <Center style={{ gap: 6, padding: '2px 8px' }}>
+                                        <Lock size={15} />
+                                        <span style={{ fontWeight: 500 }}>自分のみ</span>
+                                    </Center>
+                                ),
+                            },
+                        ]}
+                    />
+                </Group>
+            )}
+
+            {currentTab === 'private' ? (
+                <PrivateBookmarkList />
+            ) : (
+                <Stack gap="md">
             <Group justify="space-between" align="flex-end">
                 <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md" style={{ flex: 1 }}>
                     <Box style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -133,11 +193,23 @@ export function MyBookmark() {
                 </Group>
             </Group>
 
-            {myBookmark.length === 0 &&
+            {!activeDid ? (
+                <Box
+                    style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        gap: '1rem',
+                        padding: '3rem 0',
+                    }}
+                >
+                    <Text>{messages.mybookmark.login}</Text>
+                    <LoginButtonOrUser />
+                </Box>
+            ) : myBookmark.length === 0 ? (
                 <Alert my="sm" variant="light" color="blue" title={messages.mybookmark.empty} icon={<Info size={18} />} />
-            }
-
-            {viewMode === 'grid' ? (
+            ) : viewMode === 'grid' ? (
                 <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
                     {filteredBookmarks.map((b, index) => {
                         const selectedComment = b.comments.find(c => c.lang === locale) || b.comments[0];
@@ -181,6 +253,8 @@ export function MyBookmark() {
                             />
                         );
                     })}
+                </Stack>
+            )}
                 </Stack>
             )}
         </Stack>

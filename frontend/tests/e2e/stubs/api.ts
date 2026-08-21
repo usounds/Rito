@@ -1,19 +1,28 @@
 import { Page } from '@playwright/test';
 
 export async function setupApiStubs(page: Page) {
-  // アニメーションを無効化し、通知を非表示にするCSSを注入
-  await page.addStyleTag({
-    content: `
+  // アニメーションを無効化し、通知・Affixを非表示にするCSSを永続注入
+  await page.addInitScript(() => {
+    const css = `
       *, *::before, *::after {
         transition-property: none !important;
         transform: none !important;
         animation: none !important;
         transition-duration: 0s !important;
       }
-      .mantine-Notifications-root {
+      .mantine-Notifications-root,
+      .mantine-Affix-root {
         display: none !important;
       }
-    `,
+    `;
+    const style = document.createElement('style');
+    style.innerHTML = css;
+    if (document.head) {
+      document.head.appendChild(style);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.head.appendChild(style);
+    });
   });
 
   // Mock /api/status

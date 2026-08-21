@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { routing } from "@/i18n/routing";
 import { Container } from "@mantine/core";
@@ -27,8 +28,10 @@ export default async function HomePage({
 
   return (
     <Container size="md" mx="auto" my="sx">
-        <Breadcrumbs items={[{ label:t("header.bookmark") }]} />
-      <MyBookmark />
+      <Breadcrumbs items={[{ label: t("header.bookmark") }]} />
+      <Suspense fallback={null}>
+        <MyBookmark />
+      </Suspense>
     </Container>
   );
 }

@@ -418,7 +418,7 @@ export function Auto() {
             <Title order={4} mt="md">{messages.settings.section.privateBookmark?.title || 'プライベートブックマーク(α)'}</Title>
             <Text size="xs" c="dimmed">
                 {spaceStatus === 'unsupported'
-                    ? (messages.settings.section.privateBookmark?.descriptionUnsupported || 'あなたのアカウントが属するPDSは、atproto spaceに未対応です。')
+                    ? (messages.settings.section.privateBookmark?.descriptionUnsupported || 'あなたのアカウントが属するPDSは、atproto spacesに未対応です。')
                     : (messages.settings.section.privateBookmark?.description || '全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）')}
             </Text>
 

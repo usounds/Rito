@@ -430,7 +430,7 @@
 			"privateBookmark": {
 				"title": "プライベートブックマーク(α)",
 				"description": "全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）",
-				"descriptionUnsupported": "あなたのアカウントが属するPDSは、atproto spaceに未対応です。",
+				"descriptionUnsupported": "あなたのアカウントが属するPDSは、atproto spacesに未対応です。",
 				"status": {
 					"ready": "有効（Space作成済み）",
 					"readyDesc": "PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。",

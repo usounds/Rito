@@ -82,7 +82,7 @@ describe('API: /api/oauth/authorize-private', () => {
       'did:plc:valid',
       expect.objectContaining({
         prompt: 'consent',
-        scope: expect.stringContaining('space:blue.rito.space.bookmark'),
+        scope: expect.stringContaining('include:blue.rito.permissionSet'),
       })
     );
   });

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
       const tokenInfo = await oauthSession.getTokenInfo();
       scope = tokenInfo.scope || "";
       const scopes = scope.split(" ");
-      hasSpaceScope = scopes.some((s) => s.startsWith(PRIVATE_BOOKMARK_SCOPE) || s.startsWith("space:"));
+      hasSpaceScope = scopes.some((s) => s.includes("blue.rito.permissionSet") || s.startsWith(PRIVATE_BOOKMARK_SCOPE) || s.startsWith("space:"));
     } catch {
       // Failed to restore token info, fallback to session info only
     }

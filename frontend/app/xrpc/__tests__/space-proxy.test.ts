@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NextRequest } from 'next/server';
 
-const { mockCall, mockRestore } = vi.hoisted(() => ({
-  mockCall: vi.fn(),
+const { mockFetch, mockRestore } = vi.hoisted(() => ({
+  mockFetch: vi.fn(),
   mockRestore: vi.fn(),
 }));
 
@@ -16,12 +16,6 @@ vi.mock('@/logic/HandleOauthClientNode', () => ({
   }),
 }));
 
-vi.mock('@atproto/api', () => ({
-  Agent: class {
-    call = mockCall;
-  },
-}));
-
 vi.stubEnv('NEXT_PUBLIC_URL', 'http://localhost:3000');
 
 import { GET as getSpaceGET } from '@app/xrpc/com.atproto.space.getSpace/route';
@@ -33,7 +27,9 @@ describe('xRPC: Space Proxy Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockRestore.mockResolvedValue({
-      getTokenInfo: vi.fn().mockResolvedValue({ scope: 'atproto' }),
+      serverMetadata: { issuer: 'https://pds.example.com' },
+      fetchHandler: mockFetch,
+      fetch: mockFetch,
     });
   });
 
@@ -47,10 +43,12 @@ describe('xRPC: Space Proxy Routes', () => {
     });
 
     it('returns 200 with Cache-Control no-store on successful PDS call', async () => {
-      mockCall.mockResolvedValueOnce({
-        success: true,
-        data: { uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self' },
-      });
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       const req = new NextRequest('http://localhost/xrpc/com.atproto.space.getSpace?space=at://did:plc:valid/space/blue.rito.space.bookmark/self', {
         headers: { referer: 'http://localhost:3000/my/bookmark' },
@@ -63,18 +61,19 @@ describe('xRPC: Space Proxy Routes', () => {
       expect(res.status).toBe(200);
       expect(res.headers.get('Cache-Control')).toContain('no-store');
       expect(data.uri).toBe('at://did:plc:valid/space/blue.rito.space.bookmark/self');
-      expect(mockCall).toHaveBeenCalledWith(
-        'com.atproto.space.getSpace',
-        expect.objectContaining({ space: 'at://did:plc:valid/space/blue.rito.space.bookmark/self' })
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/xrpc/com.atproto.space.getSpace?space='),
+        expect.objectContaining({ method: 'GET' })
       );
     });
 
     it('returns 404 when space is not found', async () => {
-      mockCall.mockRejectedValueOnce({
-        status: 404,
-        error: 'SpaceNotFound',
-        message: 'Space does not exist',
-      });
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ error: 'SpaceNotFound', message: 'Space does not exist' }), {
+          status: 404,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       const req = new NextRequest('http://localhost/xrpc/com.atproto.space.getSpace?space=at://did:plc:valid/space/blue.rito.space.bookmark/self', {
         headers: { referer: 'http://localhost:3000/my/bookmark' },
@@ -128,10 +127,14 @@ describe('xRPC: Space Proxy Routes', () => {
     });
 
     it('proxies createRecord procedure to PDS with valid CSRF token and body', async () => {
-      mockCall.mockResolvedValueOnce({
-        success: true,
-        data: { uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self/did:plc:valid/blue.rito.private.feed.bookmark/123' },
-      });
+      mockFetch.mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            uri: 'at://did:plc:valid/space/blue.rito.space.bookmark/self/did:plc:valid/blue.rito.private.feed.bookmark/123',
+          }),
+          { status: 200, headers: { 'Content-Type': 'application/json' } }
+        )
+      );
 
       const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createRecord', {
         method: 'POST',
@@ -154,20 +157,21 @@ describe('xRPC: Space Proxy Routes', () => {
 
       expect(res.status).toBe(200);
       expect(data.uri).toContain('blue.rito.private.feed.bookmark');
-      expect(mockCall).toHaveBeenCalledWith(
-        'com.atproto.space.createRecord',
-        undefined,
-        expect.objectContaining({ collection: 'blue.rito.private.feed.bookmark' })
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/xrpc/com.atproto.space.createRecord'),
+        expect.objectContaining({ method: 'POST' })
       );
     });
   });
 
   describe('com.atproto.space.deleteRecord', () => {
     it('proxies deleteRecord procedure to PDS with valid CSRF', async () => {
-      mockCall.mockResolvedValueOnce({
-        success: true,
-        data: {},
-      });
+      mockFetch.mockResolvedValueOnce(
+        new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
 
       const req = new NextRequest('http://localhost/xrpc/com.atproto.space.deleteRecord', {
         method: 'POST',
@@ -187,10 +191,9 @@ describe('xRPC: Space Proxy Routes', () => {
 
       const res = await deleteRecordPOST(req);
       expect(res.status).toBe(200);
-      expect(mockCall).toHaveBeenCalledWith(
-        'com.atproto.space.deleteRecord',
-        undefined,
-        expect.objectContaining({ rkey: '123' })
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringContaining('/xrpc/com.atproto.space.deleteRecord'),
+        expect.objectContaining({ method: 'POST' })
       );
     });
   });

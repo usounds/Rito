@@ -36,6 +36,8 @@ type ArticleListItemProps = {
     likeDisabled?: boolean;
     bookmarkCount?: number;
     priority?: boolean;
+    badge?: React.ReactNode;
+    actionSection?: React.ReactNode;
 };
 
 export function ArticleListItem({
@@ -50,7 +52,9 @@ export function ArticleListItem({
     likes,
     likeDisabled = false,
     bookmarkCount,
-    priority = false
+    priority = false,
+    badge,
+    actionSection
 }: ArticleListItemProps) {
     const messages = useMessages();
     const locale = useLocale();
@@ -109,6 +113,7 @@ export function ArticleListItem({
                                     <Globe size={11} />
                                     {domain}
                                 </Link>
+                                {badge}
                                 {handle && (
                                     <Link
                                         href={`/${locale}/profile/${encodeURIComponent(handle)}`}
@@ -124,11 +129,14 @@ export function ArticleListItem({
                                         {bookmarkCount} users
                                     </Badge>
                                 )}
-                                {date && (
-                                    <Text size="xs" c="dimmed" ml="auto">
-                                        <TimeAgo date={date} locale={locale} />
-                                    </Text>
-                                )}
+                                <Group gap={6} ml="auto" align="center">
+                                    {date && (
+                                        <Text size="xs" c="dimmed">
+                                            <TimeAgo date={date} locale={locale} />
+                                        </Text>
+                                    )}
+                                    {actionSection}
+                                </Group>
                             </Group>
 
                             <Link

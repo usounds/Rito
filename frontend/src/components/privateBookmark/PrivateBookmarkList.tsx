@@ -89,10 +89,10 @@ export function PrivateBookmarkList() {
   }, [activeDid, loadedForDid, reset, setLoadedForDid]);
 
   // Check capability and fetch bookmarks on mount or activeDid
-  const checkAndFetch = useCallback(async () => {
+  const fetchBookmarks = useCallback(async () => {
     if (!activeDid) return;
     setLoading(true);
-    setCapabilityStatus('checking');
+    setError(null);
 
     try {
       const capResult = await checkSpaceCapability(activeDid);
@@ -115,10 +115,10 @@ export function PrivateBookmarkList() {
   }, [activeDid, setBookmarks, setCapabilityStatus, setError, setLoading]);
 
   useEffect(() => {
-    if (activeDid && capabilityStatus === 'idle') {
-      checkAndFetch();
+    if (activeDid) {
+      fetchBookmarks();
     }
-  }, [activeDid, capabilityStatus, checkAndFetch]);
+  }, [activeDid, fetchBookmarks]);
 
   // Handle Space creation
   const handleInitializeSpace = async () => {
@@ -132,7 +132,7 @@ export function PrivateBookmarkList() {
           message: 'プライベートブックマーク機能が有効になりました。',
           color: 'green',
         });
-        await checkAndFetch();
+        await fetchBookmarks();
       } else {
         notifications.show({
           title: 'Space作成に失敗しました',
@@ -276,7 +276,7 @@ export function PrivateBookmarkList() {
                   color="gray"
                   size="lg"
                   loading={isLoading}
-                  onClick={checkAndFetch}
+                  onClick={fetchBookmarks}
                   aria-label="Refresh private bookmarks"
                 >
                   <RefreshCw size={18} />
@@ -333,61 +333,8 @@ export function PrivateBookmarkList() {
                     const selectedComment =
                       b.comments.find((c) => c.lang === locale) || b.comments[0];
                     return (
-                      <Box key={b.rkey} style={{ position: 'relative' }}>
-                        <Box style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}>
-                          <Group gap={4}>
-                            <PrivateBadge size="xs" />
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="sm"
-                              onClick={() => setDeletingItem(b)}
-                              aria-label="Delete private bookmark"
-                            >
-                              <Trash2 size={14} />
-                            </ActionIcon>
-                          </Group>
-                        </Box>
-                        <div className={classes.articleItem}>
-                          <Article
-                            url={b.subject}
-                            title={selectedComment?.title ?? ''}
-                            comment={selectedComment?.comment ?? ''}
-                            tags={b.tags}
-                            image={b.ogpImage || null}
-                            date={new Date(b.createdAt)}
-                            moderations={[]}
-                            likes={[]}
-                            likeDisabled={true}
-                            priority={index < 6}
-                          />
-                        </div>
-                      </Box>
-                    );
-                  })}
-                </SimpleGrid>
-              ) : (
-                <Stack gap="xs">
-                  {filteredBookmarks.map((b, index) => {
-                    const selectedComment =
-                      b.comments.find((c) => c.lang === locale) || b.comments[0];
-                    return (
-                      <Box key={b.rkey} style={{ position: 'relative' }}>
-                        <Box style={{ position: 'absolute', top: 8, right: 8, zIndex: 5 }}>
-                          <Group gap={4}>
-                            <PrivateBadge size="xs" />
-                            <ActionIcon
-                              variant="subtle"
-                              color="red"
-                              size="sm"
-                              onClick={() => setDeletingItem(b)}
-                              aria-label="Delete private bookmark"
-                            >
-                              <Trash2 size={14} />
-                            </ActionIcon>
-                          </Group>
-                        </Box>
-                        <ArticleListItem
+                      <div key={b.rkey} className={classes.articleItem}>
+                        <Article
                           url={b.subject}
                           title={selectedComment?.title ?? ''}
                           comment={selectedComment?.comment ?? ''}
@@ -398,8 +345,60 @@ export function PrivateBookmarkList() {
                           likes={[]}
                           likeDisabled={true}
                           priority={index < 6}
+                          badge={<PrivateBadge size="xs" />}
+                          actionSection={
+                            <ActionIcon
+                              variant="subtle"
+                              color="red"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeletingItem(b);
+                              }}
+                              aria-label="Delete private bookmark"
+                            >
+                              <Trash2 size={14} />
+                            </ActionIcon>
+                          }
                         />
-                      </Box>
+                      </div>
+                    );
+                  })}
+                </SimpleGrid>
+              ) : (
+                <Stack gap="xs">
+                  {filteredBookmarks.map((b, index) => {
+                    const selectedComment =
+                      b.comments.find((c) => c.lang === locale) || b.comments[0];
+                    return (
+                      <ArticleListItem
+                        key={b.rkey}
+                        url={b.subject}
+                        title={selectedComment?.title ?? ''}
+                        comment={selectedComment?.comment ?? ''}
+                        tags={b.tags}
+                        image={b.ogpImage || null}
+                        date={new Date(b.createdAt)}
+                        moderations={[]}
+                        likes={[]}
+                        likeDisabled={true}
+                        priority={index < 6}
+                        badge={<PrivateBadge size="xs" />}
+                        actionSection={
+                          <ActionIcon
+                            variant="subtle"
+                            color="red"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setDeletingItem(b);
+                            }}
+                            aria-label="Delete private bookmark"
+                          >
+                            <Trash2 size={14} />
+                          </ActionIcon>
+                        }
+                      />
                     );
                   })}
                 </Stack>

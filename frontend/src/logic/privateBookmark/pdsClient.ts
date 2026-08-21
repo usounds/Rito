@@ -18,23 +18,8 @@ export function getRecordUri(did: string, rkey: string): string {
 export async function checkSpaceCapability(did: string): Promise<SpaceCapabilityResult> {
   const spaceUri = getSpaceUri(did);
   try {
-    // 1. Check if current session already has space: OAuth scope
-    const sessionRes = await fetch('/api/session-info', {
-      headers: { 'Cache-Control': 'no-store' },
-    });
-    if (sessionRes.ok) {
-      const sessionData = await sessionRes.json().catch(() => ({}));
-      if (sessionData.hasSpaceScope === false) {
-        return {
-          status: 'needs_auth',
-          spaceUri,
-          message: 'OAuth scope space:blue.rito.space.bookmark authorization required',
-        };
-      }
-    }
-
-    // 2. Check PDS space endpoint and space existence
-    const res = await fetch(`/xrpc/com.atproto.space.getSpace?space=${encodeURIComponent(spaceUri)}`, {
+    // 1. Check PDS space endpoint and space existence first
+    let res = await fetch(`/xrpc/com.atproto.simplespace.getSpace?space=${encodeURIComponent(spaceUri)}`, {
       method: 'GET',
       headers: {
         'Cache-Control': 'no-store',
@@ -45,24 +30,62 @@ export async function checkSpaceCapability(did: string): Promise<SpaceCapability
       return { status: 'ready', spaceUri };
     }
 
-    if (res.status === 404) {
-      const data = await res.json().catch(() => ({}));
-      if (data.error === 'SpaceNotFound' || data.message?.includes('SpaceNotFound')) {
-        return { status: 'needs_space', spaceUri, message: 'Space is not created yet' };
+    const data = await res.json().catch(() => ({}));
+    const errCode = data.error || '';
+    const errMsg = (data.message || '').toLowerCase();
+
+    // Check if PDS doesn't support Spaces:
+    // - 501 / MethodNotImplemented / PdsNotSupported / socket error
+    // - ScopeMissingError with AppView proxy aud (indicates PDS has no native Space handler and treated it as unknown RPC forwarded to AppView)
+    if (
+      res.status === 501 ||
+      res.status === 502 ||
+      res.status === 503 ||
+      errCode === 'MethodNotImplemented' ||
+      errCode === 'PdsNotSupported' ||
+      errCode === 'ScopeMissingError' ||
+      errMsg.includes('not supported') ||
+      errMsg.includes('not implemented') ||
+      errMsg.includes('scopemissingerror') ||
+      errMsg.includes('bsky_appview')
+    ) {
+      return { status: 'unsupported', spaceUri, message: data.message || 'PDS does not support ATProto Spaces' };
+    }
+
+    const isSpaceNotFound =
+      res.status === 404 ||
+      errCode === 'SpaceNotFound' ||
+      errCode === 'SpaceDeleted' ||
+      errCode === 'NotFound' ||
+      errCode === 'InvalidRequest' ||
+      errMsg.includes('not found') ||
+      errMsg.includes('spacenotfound') ||
+      errMsg.includes('does not exist');
+
+    if (isSpaceNotFound) {
+      return { status: 'needs_space', spaceUri, message: 'Space is not created yet' };
+    }
+
+    // 2. Check if current session already has space OAuth scope
+    const sessionRes = await fetch('/api/session-info', {
+      headers: { 'Cache-Control': 'no-store' },
+    });
+    if (sessionRes.ok) {
+      const sessionData = await sessionRes.json().catch(() => ({}));
+      if (sessionData.hasSpaceScope === false) {
+        return {
+          status: 'needs_auth',
+          spaceUri,
+          message: 'OAuth scope authorization required',
+        };
       }
-      // PDS does not have com.atproto.space.getSpace endpoint
-      return { status: 'unsupported', spaceUri, message: 'PDS does not support Permissioned Data (com.atproto.space)' };
     }
 
-    if (res.status === 401 || res.status === 403) {
-      return { status: 'needs_auth', spaceUri, message: 'OAuth scope space:blue.rito.space.bookmark authorization required' };
+    if (res.status === 401 || res.status === 403 || errCode === 'AuthRequired' || errCode === 'ExpiredToken') {
+      return { status: 'needs_auth', spaceUri, message: 'OAuth scope authorization required' };
     }
 
-    if (res.status === 501 || res.status === 502 || res.status === 503) {
-      return { status: 'unsupported', spaceUri, message: 'Space XRPC methods are not implemented on this PDS' };
-    }
-
-    return { status: 'unsupported', spaceUri, message: `PDS returned unexpected status: ${res.status}` };
+    return { status: 'unsupported', spaceUri, message: data.message || `PDS returned unexpected status: ${res.status}` };
   } catch (err: any) {
     // Network / offline or local dev without space route
     return { status: 'unsupported', spaceUri, message: err?.message || 'Network error checking PDS space capability' };
@@ -124,9 +147,12 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
       body: JSON.stringify({
         type: SPACE_TYPE,
         skey: SPACE_KEY,
-        policy: 'member-list',
-        appAccess: '#open',
-        members: [did],
+        policy: {
+          $type: 'com.atproto.simplespace.defs#memberListPolicy',
+        },
+        appAccess: {
+          $type: 'com.atproto.simplespace.defs#open',
+        },
       }),
     });
 
@@ -205,6 +231,57 @@ export async function listPrivateBookmarks(
 }
 
 /**
+ * Get a single private bookmark record from user PDS space
+ */
+export async function getPrivateBookmarkRecord(
+  did: string,
+  rkey: string
+): Promise<{ bookmark: PrivateBookmarkItem | null; error?: string }> {
+  const spaceUri = getSpaceUri(did);
+  const params = new URLSearchParams({
+    space: spaceUri,
+    collection: COLLECTION,
+    repo: did,
+    rkey,
+  });
+
+  try {
+    const res = await fetch(`/xrpc/com.atproto.space.getRecord?${params.toString()}`, {
+      method: 'GET',
+      headers: {
+        'Cache-Control': 'no-store',
+      },
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      return { bookmark: null, error: errData.message || `Failed to fetch record (${res.status})` };
+    }
+
+    const data = await res.json();
+    const val = data.value || {};
+    const recordRkey = data.uri ? data.uri.split('/').pop() : rkey;
+
+    return {
+      bookmark: {
+        uri: data.uri || getRecordUri(did, recordRkey),
+        cid: data.cid,
+        rkey: recordRkey,
+        subject: val.subject || '',
+        comments: val.comments || [],
+        tags: val.tags || [],
+        ogpTitle: val.ogpTitle,
+        ogpDescription: val.ogpDescription,
+        ogpImage: val.ogpImage,
+        createdAt: val.createdAt || new Date().toISOString(),
+      },
+    };
+  } catch (err: any) {
+    return { bookmark: null, error: err?.message || 'Network error fetching record' };
+  }
+}
+
+/**
  * Create a new private bookmark record
  */
 export async function createPrivateBookmarkRecord(
@@ -222,9 +299,10 @@ export async function createPrivateBookmarkRecord(
 ): Promise<{ success: boolean; uri?: string; rkey?: string; error?: string }> {
   const spaceUri = getSpaceUri(did);
   const targetRkey = rkey || (await import('@atcute/tid')).now();
+  const endpoint = rkey ? '/xrpc/com.atproto.space.putRecord' : '/xrpc/com.atproto.space.createRecord';
   try {
     const csrfToken = await getCsrfToken();
-    const res = await fetch('/xrpc/com.atproto.space.createRecord', {
+    const res = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

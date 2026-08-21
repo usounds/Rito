@@ -426,6 +426,25 @@
 	"settings": {
 		"title": "Settings",
 		"section": {
+			"privateBookmark": {
+				"title": "Private Bookmark (α)",
+				"description": "Save bookmarks privately inside an encrypted Space on your PDS without publishing to the network (ATProto Spaces).",
+				"descriptionUnsupported": "The PDS your account belongs to does not support atproto spaces.",
+				"status": {
+					"ready": "Enabled (Space Created)",
+					"readyDesc": "A dedicated Space is active on your PDS. Private bookmarks are ready to use.",
+					"needs_space": "Not Initialized (Activation Required)",
+					"needs_spaceDesc": "Initialize and create a private bookmark Space on your PDS.",
+					"needs_auth": "OAuth Authorization Required",
+					"unsupported": "PDS Unsupported",
+					"unsupportedDesc": "Private bookmarks are only available on PDS servers supporting ATProto Spaces (Proposal 0016)."
+				},
+				"button": {
+					"enable": "Enable Private Bookmarks (Create Space)",
+					"authorize": "Authorize Private Space",
+					"enabled": "Enabled"
+				}
+			},
 			"enableAutoGenerateBookmark": {
 				"title": "Automatic Collection (β)",
 				"description": "Automatically bookmarks your posts on Bluesky with the #rito.blue tag.",

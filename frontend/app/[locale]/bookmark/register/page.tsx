@@ -23,7 +23,7 @@ import { Authentication } from "@/components/Authentication";
 import { TagSuggestion } from "@/components/TagSuggest";
 import { buildPost } from "@/logic/HandleBluesky";
 import { stripTrackingParams } from "@/logic/stripTrackingParams";
-import { createPrivateBookmarkRecord } from "@/logic/privateBookmark/pdsClient";
+import { createPrivateBookmarkRecord, getPrivateBookmarkRecord } from "@/logic/privateBookmark/pdsClient";
 
 export default function RegistBookmarkPage() {
     const messages = useMessages();
@@ -69,6 +69,20 @@ export default function RegistBookmarkPage() {
     const myBookmark = useMyBookmark(state => state.myBookmark);
     const [myTag, setMyTag] = useState<string[]>([]);
     const tagRanking = useMyBookmark(state => state.tagRanking);
+    const capabilityStatus = usePrivateBookmark(state => state.capabilityStatus);
+    const setCapabilityStatus = usePrivateBookmark(state => state.setCapabilityStatus);
+
+    useEffect(() => {
+        if (activeDid && capabilityStatus === 'idle') {
+            import('@/logic/privateBookmark/pdsClient').then(({ checkSpaceCapability }) => {
+                checkSpaceCapability(activeDid).then(res => {
+                    setCapabilityStatus(res.status, res.message);
+                }).catch(() => {
+                    setCapabilityStatus('unsupported');
+                });
+            });
+        }
+    }, [activeDid, capabilityStatus, setCapabilityStatus]);
 
     useEffect(() => {
         const allMyTags = myBookmark
@@ -77,6 +91,15 @@ export default function RegistBookmarkPage() {
             .filter((t) => t !== "Verified");
         setMyTag(allMyTags);
     }, [myBookmark]);
+
+    const isPrivateParam = searchParams.get("isPrivate") === "true";
+    const isPrivateTarget = isPrivateParam || (aturi ? aturi.includes('/space/') : false);
+
+    useEffect(() => {
+        if (isPrivateTarget) {
+            setIsPrivate(true);
+        }
+    }, [isPrivateTarget]);
 
     useEffect(() => {
         const extractedUrlFromText = textParam ? textParam.match(/https?:\/\/[^\s]+/)?.[0] : undefined;
@@ -123,7 +146,55 @@ export default function RegistBookmarkPage() {
                 return
             }
             try {
-                // ① Zustand から先に初期表示用データを探す
+                // Ensure rkey is parsed safely
+                const targetRkey = aturi.split('/').pop() || null;
+                if (targetRkey) {
+                    setRkey(targetRkey);
+                }
+
+                if (isPrivateTarget) {
+                    setIsPrivate(true);
+                    if (!activeDid) {
+                        // Wait for activeDid to hydrate from session
+                        return;
+                    }
+                    let privateItem = usePrivateBookmark.getState().bookmarks.find(
+                        (b) => b.uri === aturi || b.rkey === targetRkey
+                    );
+
+                    if (!privateItem && targetRkey) {
+                        const fetchRes = await getPrivateBookmarkRecord(activeDid, targetRkey);
+                        if (fetchRes.bookmark) {
+                            privateItem = fetchRes.bookmark;
+                        }
+                    }
+
+                    if (privateItem) {
+                        setUrl(privateItem.subject);
+                        setTags(privateItem.tags?.filter((t) => t !== "Verified") ?? []);
+                        const existingComments = privateItem.comments ?? [];
+                        const commentLangs: Comment[] = (["ja", "en"] as ("ja" | "en")[]).map((lang) => {
+                            const existing = existingComments.find((c) => c.lang === lang);
+                            return existing
+                                ? { lang, title: existing.title || "", comment: existing.comment || "", moderations: [] }
+                                : { lang, title: "", comment: "", moderations: [] };
+                        });
+                        setComments(commentLangs);
+                        const activeLangs = existingComments.map((c) => c.lang);
+                        if (activeLangs.length === 1) {
+                            setActiveTab(activeLangs[0]);
+                        } else {
+                            setActiveTab(locale);
+                        }
+                        if (privateItem.ogpTitle) setOgpTitle(privateItem.ogpTitle);
+                        if (privateItem.ogpDescription) setOgpDescription(privateItem.ogpDescription);
+                        if (privateItem.ogpImage) setOgpImage(privateItem.ogpImage);
+                    }
+                    setIsSettingUp(false);
+                    return;
+                }
+
+                // ① Zustand から先に初期表示用データを探す (公開ブックマーク)
                 const localBookmark = useMyBookmark.getState().myBookmark.find(
                     (b: Bookmark) => b.uri === aturi
                 );
@@ -149,6 +220,11 @@ export default function RegistBookmarkPage() {
                     } else {
                         setActiveTab(locale);
                     }
+                }
+
+                if (aturi.includes('/space/')) {
+                    setIsSettingUp(false);
+                    return;
                 }
 
                 // 念の為サーバーの最新値を
@@ -179,7 +255,7 @@ export default function RegistBookmarkPage() {
                     });
 
                     setComments(loadedComments);
-                    setRkey(parseCanonicalResourceUri(aturi).rkey)
+                    setRkey(targetRkey);
 
                 } else {
                     //setBookmark(null);
@@ -195,7 +271,7 @@ export default function RegistBookmarkPage() {
 
         fetchBookmark();
 
-    }, [subjectParam, titleParam, locale, aturi]);
+    }, [subjectParam, titleParam, locale, aturi, isPrivateTarget, activeDid]);
 
 
     function isValidTangledUrl(url: string, userProfHandle: string): boolean {
@@ -429,17 +505,112 @@ export default function RegistBookmarkPage() {
             }, rkey || undefined);
 
             if (privateResult.success && privateResult.uri && privateResult.rkey) {
-                usePrivateBookmark.getState().addBookmark({
-                    uri: privateResult.uri,
-                    rkey: privateResult.rkey,
-                    subject: url,
-                    comments: filteredComments,
-                    tags,
-                    ogpTitle: ogpTitleLocal || undefined,
-                    ogpDescription: ogpDescriptionLocal || undefined,
-                    ogpImage: ogpImageLocal || undefined,
-                    createdAt: new Date().toISOString(),
-                });
+                const store = usePrivateBookmark.getState();
+                const existing = store.bookmarks.find(b => b.rkey === privateResult.rkey);
+                if (existing) {
+                    store.updateBookmark(privateResult.rkey, {
+                        subject: url,
+                        comments: filteredComments,
+                        tags,
+                        ogpTitle: ogpTitleLocal || undefined,
+                        ogpDescription: ogpDescriptionLocal || undefined,
+                        ogpImage: ogpImageLocal || undefined,
+                    });
+                } else {
+                    store.addBookmark({
+                        uri: privateResult.uri,
+                        rkey: privateResult.rkey,
+                        subject: url,
+                        comments: filteredComments,
+                        tags,
+                        ogpTitle: ogpTitleLocal || undefined,
+                        ogpDescription: ogpDescriptionLocal || undefined,
+                        ogpImage: ogpImageLocal || undefined,
+                        createdAt: new Date().toISOString(),
+                    });
+                }
+
+                if (isPostToBluesky && !rkey) {
+                    try {
+                        let embedThumbBlob: AppBskyEmbedExternal.Main['external']['thumb'] = undefined;
+                        if (ogpImageLocal) {
+                            try {
+                                const blobRes = await fetch(`/api/proxyImage?url=${encodeURIComponent(ogpImageLocal)}`);
+                                if (blobRes.ok) {
+                                    let blobData = await blobRes.blob();
+                                    if (blobData.size > 0) {
+                                        try {
+                                            const { compressImage } = await import('@/logic/ImageCompression');
+                                            blobData = await compressImage(blobData);
+                                        } catch {}
+
+                                        const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
+                                        const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_URL}/xrpc/com.atproto.repo.uploadBlob`, {
+                                            method: 'POST',
+                                            headers: {
+                                                "Content-Type": blobData.type,
+                                                "X-CSRF-Token": csrfToken,
+                                            },
+                                            body: blobData,
+                                        });
+                                        if (uploadRes.ok) {
+                                            const uploadData = await uploadRes.json();
+                                            if (uploadData && uploadData.blob) {
+                                                embedThumbBlob = uploadData.blob as AppBskyEmbedExternal.Main['external']['thumb'];
+                                            }
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                console.error("[DEBUG] Failed to upload blob for private bookmark share", e);
+                            }
+                        }
+
+                        // プライベートブックマーク時は ritoUrl を渡さず「リトで参照」を含めない
+                        const appBskyFeedPost: AppBskyFeedPost.Main = buildPost(
+                            activeComment,
+                            tags,
+                            messages,
+                            undefined
+                        ) as AppBskyFeedPost.Main;
+
+                        // 常にオリジナルのリンク先を使用
+                        let embedHost = url;
+                        try {
+                            embedHost = new URL(url).hostname;
+                        } catch {}
+
+                        appBskyFeedPost.embed = {
+                            $type: 'app.bsky.embed.external',
+                            external: {
+                                uri: url as unknown as ResourceUri,
+                                title: ogpTitleLocal || embedHost,
+                                description: ogpDescriptionLocal || '',
+                                thumb: embedThumbBlob,
+                            },
+                        };
+
+                        const { csrfToken } = await fetch("/api/csrf").then(r => r.json());
+                        await thisClient.post('com.atproto.repo.applyWrites', {
+                            input: {
+                                repo: activeDid as ActorIdentifier,
+                                writes: [
+                                    {
+                                        $type: "com.atproto.repo.applyWrites#create" as const,
+                                        collection: "app.bsky.feed.post" as `${string}.${string}.${string}`,
+                                        rkey: TID.now(),
+                                        value: appBskyFeedPost as unknown as Record<string, unknown>,
+                                    },
+                                ],
+                            },
+                            headers: {
+                                "X-CSRF-Token": csrfToken,
+                            },
+                        });
+                    } catch (postErr) {
+                        console.error("Failed to post private bookmark to Bluesky:", postErr);
+                    }
+                }
 
                 notifications.show({
                     title: '保存完了',
@@ -448,7 +619,16 @@ export default function RegistBookmarkPage() {
                     icon: <Check />,
                 });
 
-                router.push('/my/bookmark');
+                const returnTo = searchParams.get("returnTo");
+                if (returnTo) {
+                    const hasQuery = returnTo.includes('?');
+                    const targetUrl = hasQuery
+                        ? `${returnTo}&isPrivate=true`
+                        : `${returnTo}?isPrivate=true`;
+                    router.push(targetUrl);
+                } else {
+                    router.push(`/${locale}/my/bookmark?isPrivate=true`);
+                }
                 return;
             } else {
                 notifications.show({
@@ -829,36 +1009,37 @@ export default function RegistBookmarkPage() {
                                 <>
                                     {!aturi && (
                                         <Stack gap="xs" mb="sm">
-                                            <Switch
-                                                label={
-                                                    <Group gap={6} align="center">
-                                                        <Lock size={15} />
-                                                        <Text size="sm" fw={500}>自分のみに保存</Text>
-                                                    </Group>
-                                                }
-                                                description="全体や検索には公開せず、ご自身のPDS内にのみ保存します"
-                                                checked={isPrivate}
-                                                color="indigo"
-                                                onChange={(e) => {
-                                                    const checked = e.currentTarget.checked;
-                                                    setIsPrivate(checked);
-                                                    if (checked) {
-                                                        setIsPostToBluesky(false);
+                                            {capabilityStatus === 'ready' && (
+                                                <Switch
+                                                    label={
+                                                        <Group gap={6} align="center">
+                                                            <Lock size={15} />
+                                                            <Text size="sm" fw={500}>自分のみに保存</Text>
+                                                        </Group>
                                                     }
-                                                }}
-                                            />
+                                                    description="全体や検索には公開せず、ご自身のPDS内にのみ保存します"
+                                                    checked={isPrivate}
+                                                    color="indigo"
+                                                    onChange={(e) => {
+                                                        setIsPrivate(e.currentTarget.checked);
+                                                    }}
+                                                />
+                                            )}
                                             <Group gap="md">
                                                 <Switch
                                                     label={messages.create.field.posttobluesky.title}
                                                     description={messages.create.field.posttobluesky.description}
                                                     checked={isPostToBluesky}
-                                                    disabled={isPrivate}
                                                     onChange={(e) => setIsPostToBluesky(e.currentTarget.checked)}
                                                 />
                                                 <Switch
                                                     label={messages.create.field.useOriginalLink.title}
-                                                    description={messages.create.field.useOriginalLink.description}
-                                                    checked={isUseOriginalLink}
+                                                    description={
+                                                        isPrivate
+                                                            ? "プライベートブックマークでは常にオリジナルのリンク先が使用されます"
+                                                            : messages.create.field.useOriginalLink.description
+                                                    }
+                                                    checked={isPrivate || isUseOriginalLink}
                                                     disabled={!isPostToBluesky || isPrivate}
                                                     onChange={(e) => setIsUseOriginalLink(e.currentTarget.checked)}
                                                 />

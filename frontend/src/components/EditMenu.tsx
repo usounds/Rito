@@ -1,3 +1,4 @@
+"use client";
 import { useMyBookmark } from "@/state/MyBookmark";
 import { usePrivateBookmark } from "@/state/PrivateBookmark";
 import { ActionIcon, Menu, Modal } from '@mantine/core';

@@ -613,8 +613,8 @@ export default function RegistBookmarkPage() {
                 }
 
                 notifications.show({
-                    title: '保存完了',
-                    message: '自分のみにブックマークを保存しました。',
+                    title: messages.create?.inform?.privateSuccessTitle || '保存完了',
+                    message: messages.create?.inform?.privateSuccess || '自分のみにブックマークを保存しました。',
                     color: 'indigo',
                     icon: <Check />,
                 });
@@ -632,8 +632,8 @@ export default function RegistBookmarkPage() {
                 return;
             } else {
                 notifications.show({
-                    title: 'エラー',
-                    message: privateResult.error || 'プライベートブックマークの保存に失敗しました。',
+                    title: messages.create?.error?.title || 'エラー',
+                    message: privateResult.error || messages.create?.error?.privateFailed || 'プライベートブックマークの保存に失敗しました。',
                     color: 'red',
                     icon: <X />,
                 });
@@ -1014,10 +1014,10 @@ export default function RegistBookmarkPage() {
                                                     label={
                                                         <Group gap={6} align="center">
                                                             <Lock size={15} />
-                                                            <Text size="sm" fw={500}>自分のみに保存</Text>
+                                                            <Text size="sm" fw={500}>{messages.create?.field?.saveToPrivate?.title || '自分のみに保存'}</Text>
                                                         </Group>
                                                     }
-                                                    description="全体や検索には公開せず、ご自身のPDS内にのみ保存します"
+                                                    description={messages.create?.field?.saveToPrivate?.description || '全体や検索には公開せず、ご自身のPDS内にのみ保存します'}
                                                     checked={isPrivate}
                                                     color="indigo"
                                                     onChange={(e) => {
@@ -1036,7 +1036,7 @@ export default function RegistBookmarkPage() {
                                                     label={messages.create.field.useOriginalLink.title}
                                                     description={
                                                         isPrivate
-                                                            ? "プライベートブックマークでは常にオリジナルのリンク先が使用されます"
+                                                            ? (messages.create?.field?.useOriginalLink?.privateDescription || "プライベートブックマークでは常にオリジナルのリンク先が使用されます")
                                                             : messages.create.field.useOriginalLink.description
                                                     }
                                                     checked={isPrivate || isUseOriginalLink}

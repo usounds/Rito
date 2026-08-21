@@ -152,6 +152,15 @@
 		"latest": "最新のブックマーク",
 		"login": "自分のブックマークを管理するにはログインしてください",
 		"empty": "右下からブックマークを登録してください",
+		"tab": {
+			"public": "公開",
+			"private": "自分のみ"
+		},
+		"viewMode": {
+			"grid": "グリッド表示",
+			"list": "リスト表示",
+			"refresh": "再読み込み"
+		},
 		"field": {
 			"search": {
 				"title": "単語検索",
@@ -240,9 +249,14 @@
 				"title": "Blueskyに投稿する",
 				"description": "ブックマーク登録時にBlueskyにも投稿します"
 			},
+			"saveToPrivate": {
+				"title": "自分のみに保存",
+				"description": "全体や検索には公開せず、ご自身のPDS内にのみ保存します"
+			},
 			"useOriginalLink": {
 				"title": "オリジナルのリンク先を使用する",
-				"description": "OGPカードのリンク先を元のWebサイトにします"
+				"description": "OGPカードのリンク先を元のWebサイトにします",
+				"privateDescription": "プライベートブックマークでは常にオリジナルのリンク先が使用されます"
 			}
 		},
 		"button": {
@@ -258,6 +272,8 @@
 		"inform": {
 			"canverify": "あなたはこのURLの認証コメントを登録できます",
 			"success": "登録しました",
+			"privateSuccessTitle": "保存完了",
+			"privateSuccess": "自分のみにブックマークを保存しました。",
 			"bookmark": "リトにブックマークを登録しました",
 			"ogp": "{0} さんや他の人のブックマークを見る",
 			"needlogin": "ブックマークを登録するにはログインが必要です",
@@ -271,7 +287,8 @@
 			"blockUrl": "このドメインはブックマークできません",
 			"unknownError": "投稿に失敗しました",
 			"duplicate": "同じURLが登録済みです",
-			"cannotgetogp": "サイトからタイトルが取得できませんでした"
+			"cannotgetogp": "サイトからタイトルが取得できませんでした",
+			"privateFailed": "プライベートブックマークの保存に失敗しました。"
 		}
 	},
 	"delete": {
@@ -432,11 +449,13 @@
 				"description": "全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）",
 				"descriptionUnsupported": "あなたのアカウントが属するPDSは、atproto spacesに未対応です。",
 				"status": {
+					"checking": "PDSの対応状況を確認中...",
 					"ready": "有効（Space作成済み）",
 					"readyDesc": "PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。",
 					"needs_space": "未作成（有効化が必要）",
 					"needs_spaceDesc": "お使いのPDSで非公開ブックマーク用Spaceを初期化して有効化します。",
 					"needs_auth": "OAuth認可が必要",
+					"needs_authDesc": "プライベートブックマーク機能を使用するにはOAuth権限の追加認可が必要です。",
 					"unsupported": "PDS未対応",
 					"unsupportedDesc": "プライベートブックマーク機能は、ATProto Spaces（提案仕様0016）に対応したPDSでのみご利用いただけます。"
 				},
@@ -483,6 +502,43 @@
 			"saving": "サーバーに設定を反映中です",
 			"needlogin": "ログインが必要です",
 			"error": "システムエラーが発生しました"
+		}
+	},
+	"privateBookmark": {
+		"badge": "自分のみ",
+		"empty": "非公開のブックマークはありません",
+		"emptyDescription": "右下のブックマーク登録ボタンから「🔒 自分のみ」を選択して登録してください。",
+		"loadMore": "さらに読み込む",
+		"modal": {
+			"deleteTitle": "プライベートブックマークの削除",
+			"deleteMessage": "このプライベートブックマークをPDSから削除しますか？この操作は取り消せません。",
+			"cancel": "キャンセル",
+			"delete": "削除する"
+		},
+		"banner": {
+			"checkingTitle": "PDSの対応状況を確認中",
+			"checkingDesc": "お使いのPDSが非公開データ機能に対応しているか確認しています...",
+			"unsupportedTitle": "PDSが現在非公開機能に未対応です",
+			"unsupportedDesc1": "非公開ブックマークはご自身のPDS内に暗号保護された専用Spaceとして保存されます。",
+			"unsupportedDesc2": "現在、接続先のPDSに com.atproto.space.* 機能がまだ配備されていないため、このアカウントでは自分のみのブックマークをご利用いただけません。",
+			"needsAuthTitle": "追加のOAuth認可が必要です",
+			"needsAuthDesc": "自分のみのブックマークを読み書きするためには、space:blue.rito.space.bookmark スコープの認可が必要です。",
+			"authorizeButton": "非公開機能を認可する",
+			"initTitle": "非公開Spaceの初期化",
+			"initDesc": "PDS上にあなた専用のSpaceを作成して、機能を有効化します。",
+			"initButton": "Spaceを作成して有効化"
+		},
+		"inform": {
+			"spaceCreatedTitle": "Spaceを作成しました",
+			"spaceCreated": "プライベートブックマーク機能が有効になりました。",
+			"spaceFailedTitle": "Space作成に失敗しました",
+			"spaceFailed": "PDSでSpaceの作成に失敗しました。",
+			"deletedTitle": "削除しました",
+			"deleted": "プライベートブックマークを削除しました。",
+			"deleteFailedTitle": "削除に失敗しました",
+			"deleteFailed": "PDSからの削除に失敗しました。",
+			"authFailedTitle": "認可の開始に失敗しました",
+			"authFailed": "OAuth認可画面への遷移に失敗しました。"
 		}
 	},
 	"category": {

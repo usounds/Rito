@@ -57,7 +57,7 @@ export default defineConfig({
   webServer: {
     command: 'pnpm run test:e2e:prepare && pnpm run dev',
     url: 'http://localhost:4600',
-    reuseExistingServer: false,
+    reuseExistingServer: true,
     env: {
       DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:test@localhost:5433/rito_test',
       NODE_ENV: 'test',

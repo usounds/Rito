@@ -1,19 +1,22 @@
 "use client";
 import { Authentication } from "@/components/Authentication";
 import { useXrpcAgentStore } from "@/state/XrpcAgent";
-import { Alert, Avatar, Button, Group, Modal, Paper, Stack, Switch, Text, Title, SegmentedControl } from '@mantine/core';
+import { Alert, Avatar, Badge, Button, Group, Loader, Modal, Paper, Stack, Switch, Text, Title, SegmentedControl } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useLocale, useMessages } from 'next-intl';
 import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { usePreferenceStore } from '@/state/Preference';
-import { Save } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Lock, Save, ShieldAlert, Sparkles } from 'lucide-react';
+import { checkSpaceCapability, initializeSpace, requestPrivateAuthorization } from '@/logic/privateBookmark/pdsClient';
+import { PdsCapabilityStatus } from '@/logic/privateBookmark/types';
 
 export function Auto() {
-    const messages = useMessages();
+    const messages = useMessages() as any;
     const locale = useLocale();
     const [loginOpened, setLoginOpened] = useState(false);
     const isLoginProcess = useXrpcAgentStore(state => state.isLoginProcess);
     const userProf = useXrpcAgentStore(state => state.userProf);
+    const activeDid = useXrpcAgentStore(state => state.activeDid);
     const [isLoading, setIsLoading] = useState(true)
     const [isError, setIsError] = useState(false)
     const [enableAutoGenerateBookmark, setenableAutoGenerateBookmark] = useState(false)
@@ -23,6 +26,11 @@ export function Auto() {
 
     const [localUnblurCategories, setLocalUnblurCategories] = useState<string[]>([]);
     const [isSaving, setIsSaving] = useState(false);
+
+    // Private Bookmark Space capability state
+    const [spaceStatus, setSpaceStatus] = useState<PdsCapabilityStatus>('checking');
+    const [spaceMessage, setSpaceMessage] = useState<string | null>(null);
+    const [isInitializingSpace, setIsInitializingSpace] = useState(false);
 
     const duplicateCheck = useRef(false);
     const hasInitializedLocalModeration = useRef(false);
@@ -287,6 +295,60 @@ export function Auto() {
         }
     }
 
+    const checkSpace = useCallback(async () => {
+        if (!activeDid) return;
+        setSpaceStatus('checking');
+        try {
+            const res = await checkSpaceCapability(activeDid);
+            setSpaceStatus(res.status);
+            setSpaceMessage(res.message || null);
+        } catch {
+            setSpaceStatus('unsupported');
+        }
+    }, [activeDid]);
+
+    useEffect(() => {
+        if (activeDid) {
+            checkSpace();
+        }
+    }, [activeDid, checkSpace]);
+
+    const handleInitializeSpace = async () => {
+        if (!activeDid) return;
+        setIsInitializingSpace(true);
+        try {
+            const result = await initializeSpace(activeDid);
+            if (result.success) {
+                notifications.show({
+                    title: messages.settings.section.privateBookmark?.title || 'プライベートブックマーク(β)',
+                    message: messages.settings.section.privateBookmark?.status?.ready || '有効化されました',
+                    color: 'green',
+                });
+                await checkSpace();
+            } else {
+                notifications.show({
+                    title: 'Space作成エラー',
+                    message: result.error || 'PDSでSpaceの作成に失敗しました。',
+                    color: 'red',
+                });
+            }
+        } finally {
+            setIsInitializingSpace(false);
+        }
+    };
+
+    const handleAuthorize = async () => {
+        try {
+            await requestPrivateAuthorization();
+        } catch (err: any) {
+            notifications.show({
+                title: '認可エラー',
+                message: err?.message || 'OAuth認可の開始に失敗しました。',
+                color: 'red',
+            });
+        }
+    };
+
     return (
         <Stack gap="sm">
             <Title order={4}>{messages.settings.section.user.title}</Title>
@@ -352,6 +414,97 @@ export function Auto() {
                     </Stack>
                 </Paper>
             }
+            {/* プライベートブックマーク(α)設定 */}
+            <Title order={4} mt="md">{messages.settings.section.privateBookmark?.title || 'プライベートブックマーク(α)'}</Title>
+            <Text size="xs" c="dimmed">
+                {spaceStatus === 'unsupported'
+                    ? (messages.settings.section.privateBookmark?.descriptionUnsupported || 'あなたのアカウントが属するPDSは、atproto spaceに未対応です。')
+                    : (messages.settings.section.privateBookmark?.description || '全体に公開せず、ご自身のPDS内に暗号保護された専用Spaceとして非公開ブックマークを保存します（ATProto Spaces対応）')}
+            </Text>
+
+            {userProf != null && spaceStatus !== 'unsupported' && (
+                <Paper withBorder p="md" radius="md" shadow="xs" mb="sm">
+                    <Stack gap="sm">
+                        {spaceStatus === 'checking' && (
+                            <Group gap="sm" align="center">
+                                <Loader size="sm" color="violet" />
+                                <Text size="sm" c="dimmed">PDSの対応状況を確認中...</Text>
+                            </Group>
+                        )}
+
+                        {spaceStatus === 'ready' && (
+                            <Group justify="space-between" align="center" wrap="wrap">
+                                <div>
+                                    <Group gap="xs" align="center">
+                                        <CheckCircle2 size={18} color="var(--mantine-color-green-6)" />
+                                        <Text size="sm" fw={600} c="green">
+                                            {messages.settings.section.privateBookmark?.status?.ready || '有効（Space作成済み）'}
+                                        </Text>
+                                    </Group>
+                                    <Text size="xs" c="dimmed" mt={4}>
+                                        {messages.settings.section.privateBookmark?.status?.readyDesc || 'PDS内に専用Spaceが作成されており、非公開ブックマークをご利用いただけます。'}
+                                    </Text>
+                                </div>
+                                <Button variant="light" color="green" size="xs" disabled leftSection={<CheckCircle2 size={14} />}>
+                                    {messages.settings.section.privateBookmark?.button?.enabled || '有効化済み'}
+                                </Button>
+                            </Group>
+                        )}
+
+                        {spaceStatus === 'needs_space' && (
+                            <Group justify="space-between" align="center" wrap="wrap">
+                                <div>
+                                    <Group gap="xs" align="center">
+                                        <Sparkles size={18} color="var(--mantine-color-indigo-6)" />
+                                        <Text size="sm" fw={600} c="indigo">
+                                            {messages.settings.section.privateBookmark?.status?.needs_space || '未作成（有効化が必要）'}
+                                        </Text>
+                                    </Group>
+                                    <Text size="xs" c="dimmed" mt={4}>
+                                        {messages.settings.section.privateBookmark?.status?.needs_spaceDesc || 'お使いのPDSで非公開ブックマーク用Spaceを初期化して有効化します。'}
+                                    </Text>
+                                </div>
+                                <Button
+                                    variant="filled"
+                                    color="indigo"
+                                    size="xs"
+                                    loading={isInitializingSpace}
+                                    onClick={handleInitializeSpace}
+                                    leftSection={<Sparkles size={14} />}
+                                >
+                                    {messages.settings.section.privateBookmark?.button?.enable || 'プライベートブックマークを有効化（Spaceを作成）'}
+                                </Button>
+                            </Group>
+                        )}
+
+                        {spaceStatus === 'needs_auth' && (
+                            <Group justify="space-between" align="center" wrap="wrap">
+                                <div>
+                                    <Group gap="xs" align="center">
+                                        <ShieldAlert size={18} color="var(--mantine-color-violet-6)" />
+                                        <Text size="sm" fw={600} c="violet">
+                                            {messages.settings.section.privateBookmark?.status?.needs_auth || 'OAuth認可が必要'}
+                                        </Text>
+                                    </Group>
+                                    <Text size="xs" c="dimmed" mt={4}>
+                                        プライベートブックマーク機能を使用するにはOAuth権限の追加認可が必要です。
+                                    </Text>
+                                </div>
+                                <Button
+                                    variant="filled"
+                                    color="violet"
+                                    size="xs"
+                                    onClick={handleAuthorize}
+                                    leftSection={<Lock size={14} />}
+                                >
+                                    {messages.settings.section.privateBookmark?.button?.authorize || '非公開機能を認可する'}
+                                </Button>
+                            </Group>
+                        )}
+                    </Stack>
+                </Paper>
+            )}
+
             <Title order={4}>{messages.settings.section.enableAutoGenerateBookmark.title}</Title>
             <Switch
                 disabled={isLoading || userProf == null || isError}

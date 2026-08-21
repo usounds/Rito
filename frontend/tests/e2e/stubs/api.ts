@@ -130,11 +130,130 @@ export async function mockLogin(page: Page, did: string, handle: string) {
   });
 
   // CSRF
-  await page.route('/api/csrf', async (route) => {
+  await page.route('**/api/csrf', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({ csrfToken: 'mock-csrf' }),
+    });
+  });
+
+  // Session info for private bookmarks
+  await page.route('**/api/session-info', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        hasSession: true,
+        scope: 'atproto blob:*/* space:blue.rito.space.bookmark',
+        hasSpaceScope: true,
+        spaceUri: `at://${did}/space/blue.rito.space.bookmark/self`,
+      }),
+    });
+  });
+
+  // Space Capability & Space Check
+  await page.route(/\/xrpc\/com\.atproto\.(simplespace|space)\.getSpace/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uri: `at://${did}/space/blue.rito.space.bookmark/self`,
+        policy: { $type: 'com.atproto.simplespace.defs#memberListPolicy', members: [did] },
+        appAccess: { $type: 'com.atproto.simplespace.defs#open' },
+      }),
+    });
+  });
+
+  // List Private Records
+  await page.route(/\/xrpc\/com\.atproto\.space\.listRecords/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        records: [
+          {
+            uri: `at://${did}/space/blue.rito.space.bookmark/self/${did}/blue.rito.private.feed.bookmark/testrkey1`,
+            cid: 'bafyreitest1',
+            value: {
+              $type: 'blue.rito.private.feed.bookmark',
+              subject: 'https://secret.example.com',
+              comments: [
+                {
+                  lang: 'ja',
+                  title: 'プライベートテストブックマーク1',
+                  comment: 'これは非公開コメントです。',
+                },
+              ],
+              tags: ['PrivateTag'],
+              ogpTitle: 'プライベートテストブックマーク1',
+              ogpDescription: '非公開のテスト説明です',
+              createdAt: new Date().toISOString(),
+            },
+          },
+        ],
+        cursor: null,
+      }),
+    });
+  });
+
+  // Get Private Record
+  await page.route(/\/xrpc\/com\.atproto\.space\.getRecord/, async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uri: `at://${did}/space/blue.rito.space.bookmark/self/${did}/blue.rito.private.feed.bookmark/testrkey1`,
+        cid: 'bafyreitest1',
+        value: {
+          $type: 'blue.rito.private.feed.bookmark',
+          subject: 'https://secret.example.com',
+          comments: [
+            {
+              lang: 'ja',
+              title: 'プライベートテストブックマーク1',
+              comment: 'これは非公開コメントです。',
+            },
+          ],
+          tags: ['PrivateTag'],
+          ogpTitle: 'プライベートテストブックマーク1',
+          ogpDescription: '非公開のテスト説明です',
+          createdAt: new Date().toISOString(),
+        },
+      }),
+    });
+  });
+
+  // Put Private Record
+  await page.route('**/xrpc/com.atproto.space.putRecord', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uri: `at://${did}/space/blue.rito.space.bookmark/self/${did}/blue.rito.private.feed.bookmark/testrkey1`,
+        cid: 'bafyreiput1',
+      }),
+    });
+  });
+
+  // Create Private Record
+  await page.route('**/xrpc/com.atproto.space.createRecord', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        uri: `at://${did}/space/blue.rito.space.bookmark/self/${did}/blue.rito.private.feed.bookmark/newrkey`,
+        cid: 'bafyreinew1',
+      }),
+    });
+  });
+
+  // Delete Private Record
+  await page.route('**/xrpc/com.atproto.space.deleteRecord', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ success: true }),
     });
   });
 

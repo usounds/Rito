@@ -6,9 +6,8 @@ export const SCOPE = [
     "blob:*/*",
 ];
 
-export const PRIVATE_BOOKMARK_SCOPE = "space:blue.rito.space.bookmark";
+export const PRIVATE_BOOKMARK_SCOPE = "include:blue.rito.permissionSet";
 
 export const ALL_SCOPES = [
     ...SCOPE,
-    PRIVATE_BOOKMARK_SCOPE,
 ];

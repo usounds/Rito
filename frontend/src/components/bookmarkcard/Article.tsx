@@ -36,6 +36,8 @@ type ArticleCardProps = {
     likeDisabled?: boolean;
     bookmarkCount?: number;
     priority?: boolean;
+    badge?: React.ReactNode;
+    actionSection?: React.ReactNode;
 };
 
 export function Article({ 
@@ -50,7 +52,9 @@ export function Article({
     likes, 
     likeDisabled = false, 
     bookmarkCount, 
-    priority = false 
+    priority = false,
+    badge,
+    actionSection
 }: ArticleCardProps) {
     const messages = useMessages();
     const locale = useLocale();
@@ -105,14 +109,17 @@ export function Article({
                         </div>
 
                         <div className={classes.textContent}>
-                            <Link
-                                href={localUrl || ''}
-                                target="_blank"
-                                className={classes.sourceLabel}
-                            >
-                                <Globe size={11} />
-                                {domain}
-                            </Link>
+                            <Group justify="space-between" align="center" mb={2}>
+                                <Link
+                                    href={localUrl || ''}
+                                    target="_blank"
+                                    className={classes.sourceLabel}
+                                >
+                                    <Globe size={11} />
+                                    {domain}
+                                </Link>
+                                {badge}
+                            </Group>
 
                             <div className={classes.title}>
                                 <Link href={`/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
@@ -150,9 +157,10 @@ export function Article({
                 {/* アクション行 */}
                 <div className={classes.footerActions}>
                     <Like subject={url} likedBy={likes || []} actionDisabled={likeDisabled} />
-                    <div style={{ marginLeft: 'auto' }}>
+                    <Group gap={6} ml="auto" align="center">
+                        {actionSection}
                         <EditMenu subject={url} title={title} tags={tags} image={imgSrc} description={comment} />
-                    </div>
+                    </Group>
                 </div>
 
                 {/* メタ情報行 */}

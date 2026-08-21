@@ -116,13 +116,9 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
   try {
     const client = await getOAuthClient();
     const session = await client.restore(did);
-    const agent = new Agent(session);
-    try {
-      agent.configureProxy(null);
-    } catch {}
-    ensureSpaceLexicons(agent);
 
-    let result: any;
+    const pathname = `/xrpc/${options.method}`;
+    const queryUrl = new URL(pathname, "http://localhost");
 
     if (options.type === "query") {
       const searchParams = Object.fromEntries(req.nextUrl.searchParams.entries());
@@ -132,7 +128,28 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
           return NextResponse.json({ error: "InvalidRequest", message: valErr }, { status: 400 });
         }
       }
-      result = await agent.call(options.method, searchParams);
+      for (const [k, v] of Object.entries(searchParams)) {
+        queryUrl.searchParams.append(k, v);
+      }
+    }
+
+    const requestPath = `${queryUrl.pathname}${queryUrl.search}`;
+    const fetchFn =
+      typeof (session as any).fetchHandler === "function"
+        ? (session as any).fetchHandler.bind(session)
+        : typeof (session as any).fetch === "function"
+        ? (session as any).fetch.bind(session)
+        : fetch;
+
+    let fetchRes: Response;
+
+    if (options.type === "query") {
+      fetchRes = await fetchFn(requestPath, {
+        method: "GET",
+        headers: {
+          "Cache-Control": "no-store",
+        },
+      });
     } else {
       let body: any = {};
       try {
@@ -146,10 +163,38 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
           return NextResponse.json({ error: "InvalidRequest", message: valErr }, { status: 400 });
         }
       }
-      result = await agent.call(options.method, undefined, body);
+      fetchRes = await fetchFn(requestPath, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "no-store",
+        },
+        body: JSON.stringify(body),
+      });
     }
 
-    const response = NextResponse.json(result.data, {
+    const responseData = await fetchRes.json().catch(() => ({}));
+
+    if (!fetchRes.ok) {
+      let errorCode = responseData.error || "SpaceError";
+      let message = responseData.message || `PDS returned error (${fetchRes.status})`;
+
+      if (fetchRes.status === 404 || responseData.error === "SpaceNotFound") {
+        errorCode = "SpaceNotFound";
+      }
+
+      return NextResponse.json(
+        { error: errorCode, message },
+        {
+          status: fetchRes.status >= 400 && fetchRes.status < 600 ? fetchRes.status : 500,
+          headers: {
+            "Cache-Control": "private, no-store, max-age=0, must-revalidate",
+          },
+        }
+      );
+    }
+
+    const response = NextResponse.json(responseData, {
       status: 200,
       headers: {
         "Cache-Control": "private, no-store, max-age=0, must-revalidate",
@@ -165,14 +210,27 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
 
     return response;
   } catch (err: any) {
-    const status =
+    let errorCode = err?.error || "SpaceError";
+    let message = err?.message || err?.error || "Space XRPC call failed";
+    let status =
       err?.status ||
       err?.statusCode ||
       (err?.message?.includes("NotFound") || err?.error === "SpaceNotFound" ? 404 : 500);
 
-    const message = err?.message || err?.error || "Space XRPC call failed";
+    const isSocketError =
+      err?.code === "UND_ERR_SOCKET" ||
+      err?.message?.includes("UND_ERR_SOCKET") ||
+      err?.cause?.code === "UND_ERR_SOCKET" ||
+      err?.message?.includes("other side closed");
+
+    if (isSocketError) {
+      errorCode = "PdsNotSupported";
+      message = "PDS closed connection. Proposal 0016 (Space) is not yet supported on this PDS.";
+      status = 501;
+    }
+
     return NextResponse.json(
-      { error: err?.error || "SpaceError", message },
+      { error: errorCode, message },
       {
         status: typeof status === "number" && status >= 400 && status < 600 ? status : 500,
         headers: {

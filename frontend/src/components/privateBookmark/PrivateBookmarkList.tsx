@@ -128,15 +128,15 @@ export function PrivateBookmarkList() {
       const result = await initializeSpace(activeDid);
       if (result.success) {
         notifications.show({
-          title: 'Spaceを作成しました',
-          message: 'プライベートブックマーク機能が有効になりました。',
+          title: messages.privateBookmark?.inform?.spaceCreatedTitle || 'Spaceを作成しました',
+          message: messages.privateBookmark?.inform?.spaceCreated || 'プライベートブックマーク機能が有効になりました。',
           color: 'green',
         });
         await fetchBookmarks();
       } else {
         notifications.show({
-          title: 'Space作成に失敗しました',
-          message: result.error || 'PDSでSpaceの作成に失敗しました。',
+          title: messages.privateBookmark?.inform?.spaceFailedTitle || 'Space作成に失敗しました',
+          message: result.error || messages.privateBookmark?.inform?.spaceFailed || 'PDSでSpaceの作成に失敗しました。',
           color: 'red',
         });
       }
@@ -169,14 +169,14 @@ export function PrivateBookmarkList() {
     if (success) {
       removeBookmark(deletingItem.rkey);
       notifications.show({
-        title: '削除しました',
-        message: 'プライベートブックマークを削除しました。',
+        title: messages.privateBookmark?.inform?.deletedTitle || '削除しました',
+        message: messages.privateBookmark?.inform?.deleted || 'プライベートブックマークを削除しました。',
         color: 'blue',
       });
     } else {
       notifications.show({
-        title: '削除に失敗しました',
-        message: delErr || 'PDSからの削除に失敗しました。',
+        title: messages.privateBookmark?.inform?.deleteFailedTitle || '削除に失敗しました',
+        message: delErr || messages.privateBookmark?.inform?.deleteFailed || 'PDSからの削除に失敗しました。',
         color: 'red',
       });
     }
@@ -188,8 +188,8 @@ export function PrivateBookmarkList() {
       await requestPrivateAuthorization();
     } catch (err: any) {
       notifications.show({
-        title: '認可の開始に失敗しました',
-        message: err?.message || 'OAuth認可画面への遷移に失敗しました。',
+        title: messages.privateBookmark?.inform?.authFailedTitle || '認可の開始に失敗しました',
+        message: err?.message || messages.privateBookmark?.inform?.authFailed || 'OAuth認可画面への遷移に失敗しました。',
         color: 'red',
       });
     }
@@ -235,7 +235,7 @@ export function PrivateBookmarkList() {
       />
 
       {error && (
-        <Alert variant="light" color="red" title="エラーが発生しました" icon={<Info size={18} />}>
+        <Alert variant="light" color="red" title={messages.settings?.inform?.error || "エラーが発生しました"} icon={<Info size={18} />}>
           {error}
         </Alert>
       )}
@@ -270,7 +270,7 @@ export function PrivateBookmarkList() {
             </SimpleGrid>
 
             <Group gap={6} mb={4}>
-              <Tooltip label="再読み込み">
+              <Tooltip label={messages.mybookmark?.viewMode?.refresh || "再読み込み"}>
                 <ActionIcon
                   variant="subtle"
                   color="gray"
@@ -282,7 +282,7 @@ export function PrivateBookmarkList() {
                   <RefreshCw size={18} />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label="グリッド表示">
+              <Tooltip label={messages.mybookmark?.viewMode?.grid || "グリッド表示"}>
                 <ActionIcon
                   variant={viewMode === 'grid' ? 'filled' : 'light'}
                   color="indigo"
@@ -293,7 +293,7 @@ export function PrivateBookmarkList() {
                   <LayoutGrid size={18} />
                 </ActionIcon>
               </Tooltip>
-              <Tooltip label="リスト表示">
+              <Tooltip label={messages.mybookmark?.viewMode?.list || "リスト表示"}>
                 <ActionIcon
                   variant={viewMode === 'list' ? 'filled' : 'light'}
                   color="indigo"
@@ -318,10 +318,10 @@ export function PrivateBookmarkList() {
               my="sm"
               variant="light"
               color="indigo"
-              title="非公開のブックマークはありません"
+              title={messages.privateBookmark?.empty || "非公開のブックマークはありません"}
               icon={<Lock size={18} />}
             >
-              右下のブックマーク登録ボタンから「🔒 自分のみ」を選択して登録してください。
+              {messages.privateBookmark?.emptyDescription || "右下のブックマーク登録ボタンから「🔒 自分のみ」を選択して登録してください。"}
             </Alert>
           )}
 
@@ -412,7 +412,7 @@ export function PrivateBookmarkList() {
                     loading={isLoadingMore}
                     onClick={handleLoadMore}
                   >
-                    さらに読み込む
+                    {messages.privateBookmark?.loadMore || "さらに読み込む"}
                   </Button>
                 </Center>
               )}

@@ -1,7 +1,8 @@
 "use client";
 import { Alert, Button, Group, Loader, Stack, Text } from '@mantine/core';
-import { AlertCircle, CheckCircle2, Lock, ShieldAlert, Sparkles } from 'lucide-react';
+import { AlertCircle, Lock, ShieldAlert, Sparkles } from 'lucide-react';
 import { PdsCapabilityStatus } from '@/logic/privateBookmark/types';
+import { useMessages } from 'next-intl';
 
 interface PdsCapabilityBannerProps {
   status: PdsCapabilityStatus;
@@ -18,6 +19,8 @@ export function PdsCapabilityBanner({
   onAuthorize,
   isInitializing,
 }: PdsCapabilityBannerProps) {
+  const messages = useMessages() as any;
+
   if (status === 'ready' || status === 'idle') {
     return null;
   }
@@ -27,12 +30,12 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="blue"
-        title="PDSの対応状況を確認中"
+        title={messages.privateBookmark?.banner?.checkingTitle || "PDSの対応状況を確認中"}
         icon={<Loader size={18} />}
         my="md"
       >
         <Text size="sm">
-          お使いのPDSが非公開データ機能に対応しているか確認しています...
+          {messages.privateBookmark?.banner?.checkingDesc || "お使いのPDSが非公開データ機能に対応しているか確認しています..."}
         </Text>
       </Alert>
     );
@@ -43,20 +46,20 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="yellow"
-        title="PDSが現在非公開機能に未対応です"
+        title={messages.privateBookmark?.banner?.unsupportedTitle || "PDSが現在非公開機能に未対応です"}
         icon={<AlertCircle size={20} />}
         my="md"
       >
         <Stack gap="xs">
           <Text size="sm">
-            非公開ブックマークはご自身のPDS内に暗号保護された専用Spaceとして保存されます。
+            {messages.privateBookmark?.banner?.unsupportedDesc1 || "非公開ブックマークはご自身のPDS内に暗号保護された専用Spaceとして保存されます。"}
           </Text>
           <Text size="xs" c="dimmed">
-            現在、接続先のPDSに <code>com.atproto.space.*</code> 機能がまだ配備されていないため、このアカウントでは自分のみのブックマークをご利用いただけません。
+            {messages.privateBookmark?.banner?.unsupportedDesc2 || "現在、接続先のPDSに com.atproto.space.* 機能がまだ配備されていないため、このアカウントでは自分のみのブックマークをご利用いただけません。"}
           </Text>
           {statusMessage && (
             <Text size="xs" c="dimmed">
-              詳細: {statusMessage}
+              {statusMessage}
             </Text>
           )}
         </Stack>
@@ -69,13 +72,13 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="violet"
-        title="追加のOAuth認可が必要です"
+        title={messages.privateBookmark?.banner?.needsAuthTitle || "追加のOAuth認可が必要です"}
         icon={<ShieldAlert size={20} />}
         my="md"
       >
         <Stack gap="sm">
           <Text size="sm">
-            自分のみのブックマークを読み書きするためには、<code>space:blue.rito.space.bookmark</code> スコープの認可が必要です。
+            {messages.privateBookmark?.banner?.needsAuthDesc || "自分のみのブックマークを読み書きするためには、space:blue.rito.space.bookmark スコープの認可が必要です。"}
           </Text>
           <Group>
             <Button
@@ -85,7 +88,7 @@ export function PdsCapabilityBanner({
               leftSection={<Lock size={14} />}
               onClick={onAuthorize}
             >
-              非公開機能を認可する
+              {messages.privateBookmark?.banner?.authorizeButton || "非公開機能を認可する"}
             </Button>
           </Group>
         </Stack>
@@ -98,13 +101,13 @@ export function PdsCapabilityBanner({
       <Alert
         variant="light"
         color="indigo"
-        title="非公開Spaceの初期化"
+        title={messages.privateBookmark?.banner?.initTitle || "非公開Spaceの初期化"}
         icon={<Sparkles size={20} />}
         my="md"
       >
         <Stack gap="sm">
           <Text size="sm">
-            PDS上にあなた専用のSpaceを作成して、機能を有効化します。
+            {messages.privateBookmark?.banner?.initDesc || "PDS上にあなた専用のSpaceを作成して、機能を有効化します。"}
           </Text>
           <Group>
             <Button
@@ -114,7 +117,7 @@ export function PdsCapabilityBanner({
               loading={isInitializing}
               onClick={onInitializeSpace}
             >
-              Spaceを作成して有効化
+              {messages.privateBookmark?.banner?.initButton || "Spaceを作成して有効化"}
             </Button>
           </Group>
         </Stack>

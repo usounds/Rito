@@ -118,7 +118,7 @@ export function MyBookmark() {
                                 label: (
                                     <Center style={{ gap: 6, padding: '2px 8px' }}>
                                         <Globe size={15} />
-                                        <span style={{ fontWeight: 500 }}>公開</span>
+                                        <span style={{ fontWeight: 500 }}>{messages.mybookmark?.tab?.public || '公開'}</span>
                                     </Center>
                                 ),
                             },
@@ -127,7 +127,7 @@ export function MyBookmark() {
                                 label: (
                                     <Center style={{ gap: 6, padding: '2px 8px' }}>
                                         <Lock size={15} />
-                                        <span style={{ fontWeight: 500 }}>自分のみ</span>
+                                        <span style={{ fontWeight: 500 }}>{messages.mybookmark?.tab?.private || '自分のみ'}</span>
                                     </Center>
                                 ),
                             },
@@ -168,7 +168,7 @@ export function MyBookmark() {
                 </SimpleGrid>
 
                 <Group gap={4} mb={4}>
-                    <Tooltip label="グリッド表示">
+                    <Tooltip label={messages.mybookmark?.viewMode?.grid || 'グリッド表示'}>
                         <ActionIcon
                             variant={viewMode === 'grid' ? 'filled' : 'light'}
                             color="blue"
@@ -179,7 +179,7 @@ export function MyBookmark() {
                             <LayoutGrid size={18} />
                         </ActionIcon>
                     </Tooltip>
-                    <Tooltip label="リスト表示">
+                    <Tooltip label={messages.mybookmark?.viewMode?.list || 'リスト表示'}>
                         <ActionIcon
                             variant={viewMode === 'list' ? 'filled' : 'light'}
                             color="blue"

@@ -320,15 +320,15 @@ export function Auto() {
             const result = await initializeSpace(activeDid);
             if (result.success) {
                 notifications.show({
-                    title: messages.settings.section.privateBookmark?.title || 'プライベートブックマーク(β)',
-                    message: messages.settings.section.privateBookmark?.status?.ready || '有効化されました',
+                    title: messages.settings?.section?.privateBookmark?.title || 'プライベートブックマーク(α)',
+                    message: messages.settings?.section?.privateBookmark?.status?.ready || '有効化されました',
                     color: 'green',
                 });
                 await checkSpace();
             } else {
                 notifications.show({
-                    title: 'Space作成エラー',
-                    message: result.error || 'PDSでSpaceの作成に失敗しました。',
+                    title: messages.privateBookmark?.inform?.spaceFailedTitle || 'Space作成エラー',
+                    message: result.error || messages.privateBookmark?.inform?.spaceFailed || 'PDSでSpaceの作成に失敗しました。',
                     color: 'red',
                 });
             }
@@ -342,8 +342,8 @@ export function Auto() {
             await requestPrivateAuthorization();
         } catch (err: any) {
             notifications.show({
-                title: '認可エラー',
-                message: err?.message || 'OAuth認可の開始に失敗しました。',
+                title: messages.privateBookmark?.inform?.authFailedTitle || '認可エラー',
+                message: err?.message || messages.privateBookmark?.inform?.authFailed || 'OAuth認可の開始に失敗しました。',
                 color: 'red',
             });
         }
@@ -428,7 +428,7 @@ export function Auto() {
                         {spaceStatus === 'checking' && (
                             <Group gap="sm" align="center">
                                 <Loader size="sm" color="violet" />
-                                <Text size="sm" c="dimmed">PDSの対応状況を確認中...</Text>
+                                <Text size="sm" c="dimmed">{messages.settings?.section?.privateBookmark?.status?.checking || (locale === 'ja' ? 'PDSの対応状況を確認中...' : 'Checking PDS capability...')}</Text>
                             </Group>
                         )}
 
@@ -487,7 +487,7 @@ export function Auto() {
                                         </Text>
                                     </Group>
                                     <Text size="xs" c="dimmed" mt={4}>
-                                        プライベートブックマーク機能を使用するにはOAuth権限の追加認可が必要です。
+                                        {messages.settings?.section?.privateBookmark?.status?.needs_authDesc || 'プライベートブックマーク機能を使用するにはOAuth権限の追加認可が必要です。'}
                                     </Text>
                                 </div>
                                 <Button

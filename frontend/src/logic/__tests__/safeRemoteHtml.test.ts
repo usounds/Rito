@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createPinnedLookup, fetchSafeRemoteHtml, isPublicIpAddress } from '@/logic/safeRemoteHtml';
+import {
+  createPinnedRequestOptions,
+  fetchSafeRemoteHtml,
+  isPublicIpAddress,
+} from '@/logic/safeRemoteHtml';
 
 describe('safeRemoteHtml', () => {
   it.each([
@@ -13,6 +17,7 @@ describe('safeRemoteHtml', () => {
     'fd00::1',
     'fe80::1',
     '::ffff:127.0.0.1',
+    '::ffff:7f00:1',
   ])('内部・予約IP %s を拒否する', (address) => {
     expect(isPublicIpAddress(address)).toBe(false);
   });
@@ -24,46 +29,43 @@ describe('safeRemoteHtml', () => {
     },
   );
 
-  it.each(['http://127.0.0.1/private', 'http://[::1]/private', 'ftp://example.com/file'])(
+  it.each([
+    'http://127.0.0.1/private',
+    'http://[::1]/private',
+    'http://[::ffff:7f00:1]/private',
+    'ftp://example.com/file',
+  ])(
     '危険な取得先 %s を接続前に拒否する',
     async (url) => {
       await expect(fetchSafeRemoteHtml(url)).rejects.toMatchObject({ status: expect.any(Number) });
     },
   );
 
-  it('Node.jsのall lookupでは固定IPを配列形式で返す', async () => {
+  it('検証済みIPへ直接接続し、元ホスト名をHostとTLS SNIに限定する', () => {
     const pinned = { address: '1.1.1.1', family: 4 as const };
-    const lookup = createPinnedLookup(pinned);
+    const options = createPinnedRequestOptions(
+      new URL('https://example.com:8443/path?q=value'),
+      pinned,
+    );
 
-    await new Promise<void>((resolve, reject) => {
-      lookup('example.com', { all: true }, (error, address, family) => {
-        try {
-          expect(error).toBeNull();
-          expect(address).toEqual([pinned]);
-          expect(family).toBeUndefined();
-          resolve();
-        } catch (assertionError) {
-          reject(assertionError);
-        }
-      });
+    expect(options).toMatchObject({
+      hostname: pinned.address,
+      family: pinned.family,
+      port: '8443',
+      path: '/path?q=value',
+      method: 'GET',
+      servername: 'example.com',
+      headers: expect.objectContaining({ host: 'example.com:8443' }),
     });
   });
 
-  it('単一lookupでは固定IPとfamilyを従来形式で返す', async () => {
-    const pinned = { address: '1.1.1.1', family: 4 as const };
-    const lookup = createPinnedLookup(pinned);
-
-    await new Promise<void>((resolve, reject) => {
-      lookup('example.com', { all: false }, (error, address, family) => {
-        try {
-          expect(error).toBeNull();
-          expect(address).toBe(pinned.address);
-          expect(family).toBe(pinned.family);
-          resolve();
-        } catch (assertionError) {
-          reject(assertionError);
-        }
-      });
+  it('IPリテラルへのHTTPS接続ではSNIへIPを設定しない', () => {
+    const options = createPinnedRequestOptions(new URL('https://1.1.1.1/'), {
+      address: '1.1.1.1',
+      family: 4,
     });
+
+    expect(options.hostname).toBe('1.1.1.1');
+    expect(options.servername).toBeUndefined();
   });
 });

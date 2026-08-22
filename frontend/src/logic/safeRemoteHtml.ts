@@ -3,7 +3,6 @@ import type { LookupAddress } from 'node:dns';
 import http from 'node:http';
 import https from 'node:https';
 import net from 'node:net';
-import type { LookupFunction } from 'node:net';
 
 const MAX_URL_LENGTH = 2048;
 const MAX_REDIRECTS = 3;
@@ -58,8 +57,9 @@ function isBlockedIpv6(address: string): boolean {
     return true;
   }
 
-  const ipv4Mapped = normalized.match(/::ffff:(\d+\.\d+\.\d+\.\d+)$/)?.[1];
-  return ipv4Mapped ? isBlockedIpv4(ipv4Mapped) : false;
+  // Reject the entire IPv4-mapped range, including hexadecimal forms such as
+  // ::ffff:7f00:1, so private IPv4 destinations cannot bypass textual checks.
+  return normalized.startsWith('::ffff:');
 }
 
 export function isPublicIpAddress(address: string): boolean {
@@ -67,16 +67,6 @@ export function isPublicIpAddress(address: string): boolean {
   if (family === 4) return !isBlockedIpv4(address);
   if (family === 6) return !isBlockedIpv6(address);
   return false;
-}
-
-export function createPinnedLookup(pinned: LookupAddress): LookupFunction {
-  return (_hostname, options, callback) => {
-    if (options.all) {
-      callback(null, [pinned]);
-      return;
-    }
-    callback(null, pinned.address, pinned.family);
-  };
 }
 
 function parseRemoteUrl(rawUrl: string): URL {
@@ -125,6 +115,31 @@ async function resolvePublicAddress(url: URL): Promise<{ address: string; family
   return { address: selected.address, family: selected.family as 4 | 6 };
 }
 
+export function createPinnedRequestOptions(
+  url: URL,
+  pinned: { address: string; family: 4 | 6 },
+): https.RequestOptions {
+  const originalHostname = url.hostname.startsWith('[') && url.hostname.endsWith(']')
+    ? url.hostname.slice(1, -1)
+    : url.hostname;
+
+  return {
+    hostname: pinned.address,
+    family: pinned.family,
+    port: url.port || undefined,
+    path: `${url.pathname}${url.search}`,
+    method: 'GET',
+    headers: {
+      accept: 'text/html,application/xhtml+xml;q=0.9',
+      host: url.host,
+      'user-agent': 'Rito OGP Fetcher/1.0',
+    },
+    ...(url.protocol === 'https:' && net.isIP(originalHostname) === 0
+      ? { servername: originalHostname }
+      : {}),
+  };
+}
+
 function requestHtml(url: URL, pinned: { address: string; family: 4 | 6 }): Promise<{
   statusCode: number;
   headers: http.IncomingHttpHeaders;
@@ -133,15 +148,7 @@ function requestHtml(url: URL, pinned: { address: string; family: 4 | 6 }): Prom
   return new Promise((resolve, reject) => {
     const transport = url.protocol === 'https:' ? https : http;
     const req = transport.request(
-      url,
-      {
-        method: 'GET',
-        headers: {
-          accept: 'text/html,application/xhtml+xml;q=0.9',
-          'user-agent': 'Rito OGP Fetcher/1.0',
-        },
-        lookup: createPinnedLookup(pinned),
-      },
+      createPinnedRequestOptions(url, pinned),
       (res) => {
         const declaredLength = Number(res.headers['content-length'] || 0);
         if (declaredLength > MAX_HTML_BYTES) {

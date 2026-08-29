@@ -360,6 +360,7 @@ export function LoginButtonOrUser({ closeDrawer }: LoginButtonOrUserProps) {
                 <Transition transition="slide-up" mounted={isRegist}>
                     {(transitionStyles) => (
                         <Button
+                            color="blue.8"
                             leftSection={<BookmarkPlus size={16} />}
                             style={transitionStyles}
                             onClick={() => router.push(`/${locale}/bookmark/register`)}

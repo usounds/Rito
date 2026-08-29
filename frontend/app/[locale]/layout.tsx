@@ -31,7 +31,22 @@ const outfit = Outfit({
 
 const theme = createTheme({
   fontFamily: `var(--font-outfit), var(--mantine-font-family)`,
+  autoContrast: true,
+  luminanceThreshold: 0.3,
   components: {
+    Button: {
+      styles: {
+        root: {
+          '&[data-variant="light"]': {
+            color: 'light-dark(var(--mantine-color-blue-9), var(--mantine-color-blue-2))',
+            fontWeight: 600,
+          },
+          '&[data-variant="filled"]:not([data-color])': {
+            backgroundColor: 'light-dark(var(--mantine-color-blue-7), var(--mantine-color-blue-8))',
+          },
+        },
+      },
+    },
     Modal: {
       styles: {
         content: {

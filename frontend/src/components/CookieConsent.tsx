@@ -76,9 +76,9 @@ export function CookieConsent({ locale }: CookieConsentProps) {
               <Link
                 href={`/${locale}/privacy`}
                 style={{
-                  color: '#228be6',
+                  color: 'light-dark(#1864ab, #74c0fc)',
                   textDecoration: 'underline',
-                  fontWeight: 500,
+                  fontWeight: 600,
                   marginLeft: 4,
                 }}
               >
@@ -92,7 +92,8 @@ export function CookieConsent({ locale }: CookieConsentProps) {
                 color="gray"
                 onClick={() => handleConsent(false)}
                 style={{
-                  color: 'light-dark(var(--mantine-color-gray-6), var(--mantine-color-dark-3))',
+                  color: 'light-dark(var(--mantine-color-gray-8), var(--mantine-color-dark-0))',
+                  fontWeight: 500,
                 }}
               >
                 {t('decline')}
@@ -101,7 +102,9 @@ export function CookieConsent({ locale }: CookieConsentProps) {
                 size="xs"
                 onClick={() => handleConsent(true)}
                 style={{
-                  backgroundColor: '#228be6',
+                  backgroundColor: 'var(--mantine-color-blue-8)',
+                  color: '#ffffff',
+                  fontWeight: 600,
                 }}
               >
                 {t('accept')}

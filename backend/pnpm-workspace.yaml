@@ -4,7 +4,9 @@ allowBuilds:
   '@prisma/engines': true
   core-js: true
   esbuild: true
+  msgpackr-extract: false
   prisma: true
+  workerd: false
 
 # Avoid versions published within the last 24 hours to reduce supply-chain risk.
 minimumReleaseAge: 1440

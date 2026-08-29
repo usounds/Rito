@@ -5,6 +5,16 @@ import { routing } from '@/i18n/routing';
 export function proxy(req: NextRequest) {
   const pathname = req.nextUrl.pathname;
 
+  // 静的メタデータや特定ルートならそのまま
+  if (
+    pathname === '/manifest.webmanifest' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    pathname === '/favicon.ico'
+  ) {
+    return;
+  }
+
   // すでに言語付きのパスならそのまま
   if (routing.locales.some((locale) => pathname.startsWith(`/${locale}`))) {
     return;
@@ -24,6 +34,6 @@ export function proxy(req: NextRequest) {
 export const config = {
   matcher: [
     // 言語プレフィックスを自動付与する対象のパス
-    '/((?!api|xrpc|.well-known|trpc|_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|.*\\.png|.*\\.jpg|.*\\.svg|callback).*)',
+    '/((?!api|xrpc|.well-known|trpc|_next/static|_next/image|favicon.ico|sitemap\\.xml|robots\\.txt|manifest\\.webmanifest|.*\\.webmanifest|.*\\.png|.*\\.jpg|.*\\.svg|.*\\.ico|callback).*)',
   ],
 };

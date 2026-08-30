@@ -38,16 +38,18 @@ export async function loadCursor(epochUsToDateTime: (cursor: string | number) =>
             where: { service: 'rito' }
         });
         if (indexRecord && indexRecord.index) {
-            logger.info(`Cursor from DB: ${indexRecord.index} (${epochUsToDateTime(indexRecord.index)})`);
-            return indexRecord.index;
+            const rawIndex = indexRecord.index;
+            const cursorVal = rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
+            logger.info(`Cursor from DB: ${cursorVal} (${epochUsToDateTime(cursorVal)})`);
+            return cursorVal;
         } else {
-            const nowUs = Date.now().toString();
+            const nowUs = (Date.now() * 1000).toString();
             logger.info(`No DB cursor found, using current time: ${nowUs} (${epochUsToDateTime(nowUs)})`);
             return nowUs;
         }
     } catch (err) {
         logger.error(`Failed to load cursor from DB: ${err}`);
-        return Date.now().toString();
+        return (Date.now() * 1000).toString();
     }
 }
 

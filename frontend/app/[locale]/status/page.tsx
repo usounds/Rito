@@ -77,11 +77,32 @@ export default async function StatusPage({ params }: StatusProps) {
     if (!record) {
         comment = t('status.inform.delay');
     } else {
-        // record.index はマイクロ秒単位
-        const indexNum = BigInt(record.index);
-        const indexDate = new Date(Number(indexNum) / 1000); // µs → ms
+        let indexDate: Date;
+        const rawIndex = record.index;
+
+        if (rawIndex.includes(':')) {
+            const timePart = rawIndex.split(':')[1];
+            if (timePart.includes('-') || timePart.includes('T')) {
+                indexDate = new Date(timePart);
+            } else {
+                const timeUs = Number(timePart);
+                indexDate = new Date(timeUs >= 1e14 ? timeUs / 1000 : timeUs);
+            }
+        } else {
+            const indexNum = Number(rawIndex);
+            if (indexNum >= 1e14) {
+                indexDate = new Date(indexNum / 1000);
+            } else {
+                indexDate = new Date();
+            }
+        }
+
+        if (isNaN(indexDate.getTime())) {
+            indexDate = new Date();
+        }
+
         const now = new Date();
-        const diffMs = now.getTime() - indexDate.getTime();
+        const diffMs = Math.max(0, now.getTime() - indexDate.getTime());
         const fiveMinutes = 5 * 60 * 1000;
 
         if (diffMs > fiveMinutes) {

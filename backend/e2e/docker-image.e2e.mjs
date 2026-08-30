@@ -19,7 +19,16 @@ const databaseUser = 'rito_e2e';
 const databasePassword = 'rito_e2e_password';
 const testDid = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz';
 const memoryLimitBytes = 384 * 1024 * 1024;
-const minimumIndexFunctionCoverage = 95;
+const minimumBackendFunctionCoverage = 95;
+const coverageScriptSuffixes = [
+  '/dist/index.js',
+  '/dist/handlers/bookmark.js',
+  '/dist/handlers/like.js',
+  '/dist/handlers/post.js',
+  '/dist/handlers/resolver.js',
+  '/dist/runtime/queues.js',
+  '/dist/services/contentAnalysis.js',
+];
 const coverageDir = mkdtempSync(path.join(os.tmpdir(), 'rito-backend-e2e-coverage-'));
 
 function runCommand(command, args, options = {}) {
@@ -80,51 +89,54 @@ function removeResources() {
   runCommand('docker', ['network', 'rm', network], { allowFailure: true });
 }
 
-function readFunctionCoverage(directory, scriptSuffix, expectedSourceLength) {
+function readFunctionCoverage(directory, expectedSourceLengths) {
   const scripts = [];
   const matchingScripts = [];
 
   for (const filename of readdirSync(directory).filter((name) => name.endsWith('.json'))) {
     const coverage = JSON.parse(readFileSync(path.join(directory, filename), 'utf8'));
     for (const script of coverage.result ?? []) {
-      if (!script.url.endsWith(scriptSuffix)) continue;
+      const scriptSuffix = coverageScriptSuffixes.find((suffix) => script.url.endsWith(suffix));
+      if (!scriptSuffix) continue;
       matchingScripts.push({
         scriptId: script.scriptId,
+        scriptSuffix,
         functionCount: script.functions.length,
         maxOffset: Math.max(0, ...script.functions.flatMap((entry) => entry.ranges.map((range) => range.endOffset))),
       });
-      scripts.push(script);
+      scripts.push({ script, scriptSuffix });
     }
   }
 
-  const applicationScripts = scripts.filter((script) => {
+  const applicationScripts = scripts.filter(({ script, scriptSuffix }) => {
     const maxOffset = Math.max(0, ...script.functions.flatMap((entry) => entry.ranges.map((range) => range.endOffset)));
-    return maxOffset === expectedSourceLength;
+    return maxOffset === expectedSourceLengths[scriptSuffix];
   });
   const functions = new Map();
-  for (const script of applicationScripts) {
+  for (const { script, scriptSuffix } of applicationScripts) {
     for (const entry of script.functions) {
         const rootRange = entry.ranges[0];
         if (!rootRange) continue;
-        const key = `${rootRange.startOffset}:${rootRange.endOffset}`;
+        const key = `${scriptSuffix}:${rootRange.startOffset}:${rootRange.endOffset}`;
         const previous = functions.get(key);
         functions.set(key, {
           covered: (previous?.covered ?? false) || rootRange.count > 0,
           name: entry.functionName || '<anonymous>',
+          scriptSuffix,
           startOffset: rootRange.startOffset,
         });
     }
   }
 
   if (functions.size === 0) {
-    throw new Error(`No V8 function coverage matched ${scriptSuffix} (${expectedSourceLength} UTF-16 code units)`);
+    throw new Error(`No V8 function coverage matched backend application modules`);
   }
 
   const covered = [...functions.values()].filter((entry) => entry.covered).length;
   if (process.env.BACKEND_E2E_REPORT_UNCOVERED === '1') {
     const uncoveredFunctions = [...functions.values()]
       .filter((entry) => !entry.covered)
-      .map(({ name, startOffset }) => ({ name, startOffset }));
+      .map(({ name, scriptSuffix, startOffset }) => ({ name, scriptSuffix, startOffset }));
     console.error(JSON.stringify({ matchingScripts, uncoveredFunctions }, null, 2));
   }
   return {
@@ -167,12 +179,12 @@ try {
     docker('build', '-t', image, '.');
   }
 
-  const indexSourceLength = Number(docker(
+  const expectedSourceLengths = JSON.parse(docker(
     'run', '--rm', image, 'node', '-e',
-    "process.stdout.write(String(require('node:fs').readFileSync('/app/dist/index.js', 'utf8').length))",
+    `const fs=require('node:fs');const suffixes=${JSON.stringify(coverageScriptSuffixes)};process.stdout.write(JSON.stringify(Object.fromEntries(suffixes.map(suffix=>[suffix,fs.readFileSync('/app'+suffix,'utf8').length]))))`,
   ).stdout);
-  if (!Number.isInteger(indexSourceLength) || indexSourceLength <= 0) {
-    throw new Error(`Unable to read dist/index.js length from ${image}`);
+  if (coverageScriptSuffixes.some((suffix) => !Number.isInteger(expectedSourceLengths[suffix]) || expectedSourceLengths[suffix] <= 0)) {
+    throw new Error(`Unable to read backend application source lengths from ${image}`);
   }
 
   docker('network', 'create', network);
@@ -341,9 +353,9 @@ try {
   }
 
   docker('stop', '--time', '10', backend);
-  const indexFunctionCoverage = readFunctionCoverage(coverageDir, '/dist/index.js', indexSourceLength);
-  if (indexFunctionCoverage.percent < minimumIndexFunctionCoverage) {
-    throw new Error(`Index function coverage ${indexFunctionCoverage.percent}% is below ${minimumIndexFunctionCoverage}%`);
+  const backendFunctionCoverage = readFunctionCoverage(coverageDir, expectedSourceLengths);
+  if (backendFunctionCoverage.percent < minimumBackendFunctionCoverage) {
+    throw new Error(`Backend function coverage ${backendFunctionCoverage.percent}% is below ${minimumBackendFunctionCoverage}%`);
   }
 
   console.log(JSON.stringify({
@@ -360,7 +372,7 @@ try {
     databaseCounts,
     memoryMiB: Math.round((memoryBytes / 1024 / 1024) * 10) / 10,
     queueSaturationDetected: false,
-    indexFunctionCoverage,
+    backendFunctionCoverage,
   }, null, 2));
 } catch (error) {
   const backendLogs = runCommand('docker', ['logs', backend], { allowFailure: true });

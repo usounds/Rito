@@ -16,10 +16,8 @@ import {
     deriveBookmarkRkeyFromPost,
     isRitoPostCandidate,
     parseDomainFromUrl,
-    DidDocument,
-    BookmarkRecord,
-    CommentLocale,
 } from '../utils.js';
+import type { BookmarkRecord, CommentLocale, DidDocument } from '../types.js';
 
 describe('epochUsToDateTime', () => {
     it('should convert epoch microseconds to ISO datetime string', () => {

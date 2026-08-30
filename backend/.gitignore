@@ -4,6 +4,10 @@ node_modules
 prisma.config.ts
 
 scripts/
+!scripts/
+scripts/*
+!scripts/dev-db.sh
+!scripts/dev-docker.sh
 missing_items/
 .cache/
 coverage/

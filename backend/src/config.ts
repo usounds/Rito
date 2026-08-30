@@ -1,6 +1,6 @@
 import 'dotenv/config';
 
-export const JETSREAM_URL = process.env.JETSREAM_URL ?? 'wss://jetstream2.us-west.bsky.network/subscribe';
+export const JETSREAM_URL = process.env.JETSREAM_URL ?? process.env.JETSTREAM_URL ?? 'wss://jetstream.us-west.bsky.network';
 export const BOOKMARK = 'blue.rito.feed.bookmark'
 export const LIKE = 'blue.rito.feed.like'
 export const SERVICE = 'blue.rito.service.schema'

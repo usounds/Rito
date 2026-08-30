@@ -1,7 +1,32 @@
-import { CommitCreateEvent, CommitDeleteEvent, CommitUpdateEvent, Jetstream } from '@skyware/jetstream';
+import { Jetstream, type CursorStore } from '@bsky/jetstream';
 import { prisma } from './db.js';
-import WebSocket from 'ws';
 import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, SERVICE, POST_COLLECTION, LIKE } from './config.js';
+
+export interface JetstreamCommitEvent<R = unknown> {
+  did: string;
+  seq: number;
+  time: string;
+  kind: 'commit';
+  commit: {
+    operation: 'create' | 'update' | 'delete';
+    collection: string;
+    rkey: string;
+    rev: string;
+    cid?: string;
+    record?: R;
+  };
+}
+
+export type CommitCreateEvent<R = unknown> = JetstreamCommitEvent<R> & {
+  commit: { operation: 'create'; cid: string; record: R };
+};
+export type CommitUpdateEvent<R = unknown> = JetstreamCommitEvent<R> & {
+  commit: { operation: 'update'; cid: string; record: R };
+};
+export type CommitDeleteEvent = JetstreamCommitEvent<never> & {
+  commit: { operation: 'delete' };
+};
+export type CommitPutEvent<R = unknown> = CommitCreateEvent<R> | CommitUpdateEvent<R>;
 import { BlueRitoFeedBookmark } from './lexicons/index.js';
 import logger from './logger.js';
 import OpenAI from "openai";
@@ -205,7 +230,7 @@ async function classifyCategory(title: string, description: string, comment: str
 
 //const prisma = new PrismaClient();
 let cursor = "0";
-let prev_time_us = "0";
+let prev_cursor = "0";
 let cursorUpdateInterval: NodeJS.Timeout;
 
 (prisma as any).$on('error', (e: any) => {
@@ -213,8 +238,12 @@ let cursorUpdateInterval: NodeJS.Timeout;
   process.exit(1); // DB接続が切れたらプロセス終了
 });
 
-function epochUsToDateTime(cursor: string | number): string {
-  return new Date(Number(cursor) / 1000).toISOString();
+function formatCursor(cursorVal: string | number): string {
+  const num = Number(cursorVal);
+  if (num >= 1e15) {
+    return new Date(num / 1000).toISOString();
+  }
+  return `seq:${cursorVal}`;
 }
 
 // JetstreamIndex から初期カーソル取得
@@ -224,22 +253,23 @@ async function loadCursor(): Promise<string> {
       where: { service: 'rito' }
     });
     if (indexRecord && indexRecord.index) {
-      logger.info(`Cursor from DB: ${indexRecord.index} (${epochUsToDateTime(indexRecord.index)})`);
+      logger.info(`Cursor from DB: ${indexRecord.index} (${formatCursor(indexRecord.index)})`);
       return indexRecord.index;
     } else {
-      const nowUs = Date.now().toString();
-      logger.info(`No DB cursor found, using current time: ${nowUs} (${epochUsToDateTime(nowUs)})`);
+      const nowUs = (Date.now() * 1000).toString();
+      logger.info(`No DB cursor found, using current time: ${nowUs} (${formatCursor(nowUs)})`);
       return nowUs;
     }
   } catch (err) {
     logger.error(`Failed to load cursor from DB: ${err}`);
-    return Date.now().toString();
+    return (Date.now() * 1000).toString();
   }
 }
 
 // 初期化
 async function init() {
   cursor = await loadCursor();
+  prev_cursor = cursor;
 
   // リカバリ: 未分類のブックマークを再キューイング
   const unclassifiedBookmarks = await prisma.bookmark.findMany({
@@ -303,51 +333,6 @@ async function init() {
     });
   }
 
-  const jetstream = new Jetstream({
-    wantedCollections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
-    endpoint: JETSREAM_URL,
-    cursor: Number(cursor),
-    ws: WebSocket,
-  });
-
-  jetstream.on('open', () => {
-    logger.info(`Jetstream open: ${JETSREAM_URL}`);
-
-    if (cursorUpdateInterval) {
-      clearInterval(cursorUpdateInterval);
-    }
-
-    cursorUpdateInterval = setInterval(() => {
-      if (!jetstream.cursor) return;
-
-      const currentCursor = jetstream.cursor.toString();
-
-      // 前回と違うなら DB 更新
-      if (prev_time_us !== currentCursor) {
-        // DB 更新はキュー経由で
-        queue.add(async () => {
-          try {
-            await prisma.jetstreamIndex.upsert({
-              where: { service: 'rito' },
-              update: { index: currentCursor },
-              create: { service: 'rito', index: currentCursor },
-            });
-
-            logger.info(`Cursor updated to: ${currentCursor} (${epochUsToDateTime(currentCursor)})`);
-          } catch (err) {
-            logger.error(`Failed to upsert cursor in DB: ${err}`);
-          }
-        });
-      } else {
-        // 前回と同じならプロセス終了（再起動を促す）
-        logger.error(`前回からtime_usが変動していませんので、再起動のためにプロセスを終了します: ${currentCursor}`);
-        process.exit(1);
-      }
-
-      prev_time_us = currentCursor;
-    }, CURSOR_UPDATE_INTERVAL);
-  });
-
 
   function isValidTangledUrl(url: string, userProfHandle: string): boolean {
     try {
@@ -373,12 +358,12 @@ async function init() {
     }
   }
 
-  async function upsertBookmark(event: CommitCreateEvent<typeof BOOKMARK> | CommitUpdateEvent<typeof BOOKMARK>) {
+  async function upsertBookmark(event: CommitPutEvent<BookmarkRecord>) {
     //console.log("upsertBookmark")
 
     const record = event.commit.record as BookmarkRecord;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-    cursor = event.time_us.toString();
+    cursor = event.seq.toString();
 
     let handle = 'no handle';
     let isVerify = false;
@@ -642,11 +627,12 @@ async function init() {
 
 
   async function upsertPost(
-    event: CommitCreateEvent<typeof POST_COLLECTION> | CommitUpdateEvent<typeof POST_COLLECTION>
+    event: CommitPutEvent<unknown>
   ) {
     const record = event.commit.record;
     if (!isPostRecord(record)) return;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    cursor = event.seq.toString();
 
     try {
       // facets と embed からリンク抽出
@@ -863,7 +849,7 @@ async function init() {
 
 
   async function upsertResolver(
-    event: CommitCreateEvent<typeof SERVICE> | CommitUpdateEvent<typeof SERVICE>
+    event: CommitPutEvent<BlueRitoServiceSchema.Main>
   ) {
     const record = event.commit.record as BlueRitoServiceSchema.Main;
     const nsid = event.commit.rkey;
@@ -871,6 +857,7 @@ async function init() {
     const schema = record.schema || '';
     let verified = false;
     let handle = '';
+    cursor = event.seq.toString();
 
     if (!nsid || !did) {
       logger.warn(`Missing nsid or did in resolver event: ${JSON.stringify(record)}`);
@@ -947,8 +934,9 @@ async function init() {
     }
   }
 
-  async function deleteBookmark(event: CommitDeleteEvent<typeof BOOKMARK>) {
+  async function deleteBookmark(event: CommitDeleteEvent) {
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    cursor = event.seq.toString();
     try {
       await dbLimit(() =>
         prisma.bookmark.deleteMany({
@@ -961,8 +949,9 @@ async function init() {
     }
   }
 
-  async function deleteLike(event: CommitDeleteEvent<typeof LIKE>) {
+  async function deleteLike(event: CommitDeleteEvent) {
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
+    cursor = event.seq.toString();
     try {
       await prisma.like.deleteMany({
         where: { aturi: aturi },
@@ -973,11 +962,12 @@ async function init() {
     }
   }
 
-  async function upsertLike(event: CommitCreateEvent<typeof LIKE> | CommitUpdateEvent<typeof LIKE>) {
+  async function upsertLike(event: CommitPutEvent<BlueRitoFeedLike.Main>) {
     const record = event.commit.record as BlueRitoFeedLike.Main;
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
     const subject = typeof record.subject === 'string' ? record.subject : (record.subject as any).uri;
     const did = event.did;
+    cursor = event.seq.toString();
 
     try {
       await prisma.like.upsert({
@@ -1001,9 +991,10 @@ async function init() {
   }
 
 
-  async function deleteResolver(event: CommitDeleteEvent<typeof SERVICE>) {
+  async function deleteResolver(event: CommitDeleteEvent) {
     const nsid = event.commit.rkey;
     const did = event.did;
+    cursor = event.seq.toString();
 
     try {
       await prisma.resolver.deleteMany({
@@ -1015,8 +1006,8 @@ async function init() {
     }
   }
 
-  async function deletePost(event: CommitDeleteEvent<typeof POST_COLLECTION>) {
-    cursor = event.time_us.toString();
+  async function deletePost(event: CommitDeleteEvent) {
+    cursor = event.seq.toString();
     const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
 
     try {
@@ -1035,44 +1026,116 @@ async function init() {
     }
   }
 
-  // イベント登録
-  // BOOKMARK
-  jetstream.onCreate(BOOKMARK, event => enqueueTask('main', queue, () => upsertBookmark(event)));
-  jetstream.onUpdate(BOOKMARK, event => enqueueTask('main', queue, () => upsertBookmark(event)));
-  jetstream.onDelete(BOOKMARK, event => enqueueTask('main', queue, () => deleteBookmark(event)));
-
-  // POST_COLLECTION
   const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
   const isForceEnabled = process.env.ENABLE_POST_COLLECTION === 'true';
 
   if (!isLocal || isForceEnabled) {
-    jetstream.onCreate(POST_COLLECTION, event => {
-      if (!isRitoPostCandidate(event.commit.record)) return;
-      enqueueTask('post', postQueue, () => upsertPost(event));
-    });
-    jetstream.onUpdate(POST_COLLECTION, event => {
-      if (!isRitoPostCandidate(event.commit.record)) return;
-      enqueueTask('post', postQueue, () => upsertPost(event));
-    });
-    jetstream.onDelete(POST_COLLECTION, event =>
-      enqueueTask('post', postQueue, () => deletePost(event))
-    );
-
     logger.info(`POST_COLLECTION handlers are ENABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled})`);
   } else {
     logger.info(`POST_COLLECTION handlers are DISABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled}). Set ENABLE_POST_COLLECTION=true to force enable.`);
   }
 
-  // SERVICE
-  jetstream.onCreate(SERVICE, event => enqueueTask('main', queue, () => upsertResolver(event)));
-  jetstream.onUpdate(SERVICE, event => enqueueTask('main', queue, () => upsertResolver(event)));
-  jetstream.onDelete(SERVICE, event => enqueueTask('main', queue, () => deleteResolver(event)));
+  const cursorStore: CursorStore = {
+    async load(): Promise<number | undefined> {
+      if (!cursor) return undefined;
+      const num = Number(cursor);
+      return !isNaN(num) && num > 0 ? num : undefined;
+    },
+    async save(seq: number): Promise<void> {
+      cursor = seq.toString();
+    },
+  };
 
-  jetstream.onCreate(LIKE, event => enqueueTask('main', queue, () => upsertLike(event)));
-  jetstream.onUpdate(LIKE, event => enqueueTask('main', queue, () => upsertLike(event)));
-  jetstream.onDelete(LIKE, event => enqueueTask('main', queue, () => deleteLike(event)));
+  const jetstream = new Jetstream({
+    service: JETSREAM_URL,
+  });
 
-  jetstream.start();
+  logger.info(`Jetstream v2 connecting to: ${JETSREAM_URL}`);
+
+  if (cursorUpdateInterval) {
+    clearInterval(cursorUpdateInterval);
+  }
+
+  cursorUpdateInterval = setInterval(() => {
+    if (!cursor) return;
+
+    const currentCursor = cursor.toString();
+
+    // 前回と違うなら DB 更新
+    if (prev_cursor !== currentCursor) {
+      // DB 更新はキュー経由で
+      queue.add(async () => {
+        try {
+          await prisma.jetstreamIndex.upsert({
+            where: { service: 'rito' },
+            update: { index: currentCursor },
+            create: { service: 'rito', index: currentCursor },
+          });
+
+          logger.info(`Cursor updated to: ${currentCursor} (${formatCursor(currentCursor)})`);
+        } catch (err) {
+          logger.error(`Failed to upsert cursor in DB: ${err}`);
+        }
+      });
+    } else {
+      // 前回と同じならプロセス終了（再起動を促す）
+      logger.error(`前回からcursorが変動していませんので、再起動のためにプロセスを終了します: ${currentCursor}`);
+      process.exit(1);
+    }
+
+    prev_cursor = currentCursor;
+  }, CURSOR_UPDATE_INTERVAL);
+
+  try {
+    for await (const event of jetstream.live({
+      collections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
+      kinds: ['commit'],
+      cursor: cursorStore,
+      onError: (err) => {
+        logger.error(`Jetstream error: ${err instanceof Error ? err.message : String(err)}`);
+      },
+    })) {
+      if (event.kind !== 'commit') continue;
+      await cursorStore.save(event.seq);
+
+      const commit = event.commit;
+      const collection = commit.collection;
+      const operation = commit.operation;
+
+      if (collection === BOOKMARK) {
+        if (operation === 'create' || operation === 'update') {
+          enqueueTask('main', queue, () => upsertBookmark(event as CommitPutEvent<BookmarkRecord>));
+        } else if (operation === 'delete') {
+          enqueueTask('main', queue, () => deleteBookmark(event as CommitDeleteEvent));
+        }
+      } else if (collection === POST_COLLECTION) {
+        if (!isLocal || isForceEnabled) {
+          if (operation === 'create' || operation === 'update') {
+            if (isRitoPostCandidate(commit.record)) {
+              enqueueTask('post', postQueue, () => upsertPost(event as CommitPutEvent<unknown>));
+            }
+          } else if (operation === 'delete') {
+            enqueueTask('post', postQueue, () => deletePost(event as CommitDeleteEvent));
+          }
+        }
+      } else if (collection === SERVICE) {
+        if (operation === 'create' || operation === 'update') {
+          enqueueTask('main', queue, () => upsertResolver(event as CommitPutEvent<BlueRitoServiceSchema.Main>));
+        } else if (operation === 'delete') {
+          enqueueTask('main', queue, () => deleteResolver(event as CommitDeleteEvent));
+        }
+      } else if (collection === LIKE) {
+        if (operation === 'create' || operation === 'update') {
+          enqueueTask('main', queue, () => upsertLike(event as CommitPutEvent<BlueRitoFeedLike.Main>));
+        } else if (operation === 'delete') {
+          enqueueTask('main', queue, () => deleteLike(event as CommitDeleteEvent));
+        }
+      }
+    }
+  } catch (streamError) {
+    logger.error(`Jetstream live stream ended: ${streamError instanceof Error ? streamError.message : String(streamError)}`);
+    process.exit(1);
+  }
 }
 
 init();

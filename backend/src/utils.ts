@@ -3,54 +3,7 @@
  * These are extracted from index.ts for better testability.
  */
 
-// Type definitions for API responses
-export interface DidDocument {
-    alsoKnownAs?: string[];
-}
-
-export interface DomainCheckResult {
-    result: boolean;
-}
-
-export interface OgpResult {
-    result: {
-        ogTitle?: string;
-        ogDescription?: string;
-        ogImage?: { url: string }[];
-    };
-}
-
-export interface DnsAnswer {
-    data: string;
-}
-
-export interface DnsResponse {
-    Answer?: DnsAnswer[];
-}
-
-export interface PostToBookmarkRecord {
-    sub: string;
-    lang?: string;
-}
-
-// Comment locale type
-export interface CommentLocale {
-    lang: string;
-    title?: string;
-    comment?: string;
-}
-
-// Bookmark record type (the inner object, not the full record schema)
-export interface BookmarkRecord {
-    $type: 'blue.rito.feed.bookmark';
-    subject: string;
-    createdAt?: string;
-    comments?: CommentLocale[];
-    ogpTitle?: string;
-    ogpDescription?: string;
-    ogpImage?: string;
-    tags?: string[];
-}
+import type { DidDocument } from './types.js';
 
 /**
  * Convert epoch microseconds to ISO datetime string

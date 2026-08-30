@@ -1,52 +1,13 @@
 import { describe, it, expect } from 'vitest';
-
-// Type definitions for testing - mirroring those in index.ts
-
-interface DidDocument {
-    alsoKnownAs?: string[];
-}
-
-interface DomainCheckResult {
-    result: boolean;
-}
-
-interface OgpResult {
-    result: {
-        ogTitle?: string;
-        ogDescription?: string;
-        ogImage?: { url: string }[];
-    };
-}
-
-interface DnsAnswer {
-    data: string;
-}
-
-interface DnsResponse {
-    Answer?: DnsAnswer[];
-}
-
-interface PostToBookmarkRecord {
-    sub: string;
-    lang?: string;
-}
-
-interface CommentLocale {
-    lang: string;
-    title?: string;
-    comment?: string;
-}
-
-interface BookmarkRecord {
-    $type: 'blue.rito.feed.bookmark';
-    subject: string;
-    createdAt?: string;
-    comments?: CommentLocale[];
-    ogpTitle?: string;
-    ogpDescription?: string;
-    ogpImage?: string;
-    tags?: string[];
-}
+import type {
+    BookmarkRecord,
+    CommentLocale,
+    DidDocument,
+    DnsResponse,
+    DomainCheckResult,
+    OgpResult,
+    PostToBookmarkRecord,
+} from '../types.js';
 
 describe('Type Definitions', () => {
     describe('DidDocument', () => {

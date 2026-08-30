@@ -47,6 +47,49 @@ describe('API: /api/status', () => {
         expect(data.comment).toContain('experiencing delays');
     });
 
+    it('v2形式 (seq:time_us) で正常時は遅延なしのコメントを返す', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.jetstreamIndex.findUnique).mockResolvedValueOnce({
+            service: 'rito',
+            index: `24664288881:${Date.now() * 1000}`,
+        } as any);
+
+        const response = await GET();
+        const data = await response.json();
+
+        expect(data.diffMinutes).toBe(0);
+        expect(data.comment).toContain('normally');
+    });
+
+    it('v2形式 (seq:time_us) で5分以上の遅延がある場合は遅延コメントを返す', async () => {
+        const delayTime = Date.now() - (10 * 60 * 1000); // 10分前
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.jetstreamIndex.findUnique).mockResolvedValueOnce({
+            service: 'rito',
+            index: `24664288881:${delayTime * 1000}`,
+        } as any);
+
+        const response = await GET();
+        const data = await response.json();
+
+        expect(data.diffMinutes).toBeGreaterThanOrEqual(10);
+        expect(data.comment).toContain('experiencing delays');
+    });
+
+    it('v2単一seq形式の場合は誤検知せず正常コメントを返す', async () => {
+        const { prisma } = await import('@/logic/HandlePrismaClient');
+        vi.mocked(prisma.jetstreamIndex.findUnique).mockResolvedValueOnce({
+            service: 'rito',
+            index: '24664288881',
+        } as any);
+
+        const response = await GET();
+        const data = await response.json();
+
+        expect(data.diffMinutes).toBe(0);
+        expect(data.comment).toContain('normally');
+    });
+
     it('レコードがない場合は遅延コメントを返す', async () => {
         const { prisma } = await import('@/logic/HandlePrismaClient');
         vi.mocked(prisma.jetstreamIndex.findUnique).mockResolvedValueOnce(null);

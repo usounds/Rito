@@ -50,7 +50,8 @@ function createDbService(prisma: typeof mockPrisma) {
                     where: { service: 'rito' }
                 });
                 if (indexRecord && indexRecord.index) {
-                    return indexRecord.index;
+                    const rawIndex = indexRecord.index;
+                    return rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
                 } else {
                     return Date.now().toString();
                 }
@@ -267,6 +268,15 @@ describe('Database Service', () => {
             expect(mockPrisma.jetstreamIndex.findUnique).toHaveBeenCalledWith({
                 where: { service: 'rito' }
             });
+        });
+
+        it('should return seq part from compound cursor (seq:time_us)', async () => {
+            const epochUsToDateTime = (c: string | number) => new Date(Number(c) / 1000).toISOString();
+            mockPrisma.jetstreamIndex.findUnique.mockResolvedValue({ index: '24664288881:1704067200000000' });
+
+            const result = await dbService.loadCursor(epochUsToDateTime);
+
+            expect(result).toBe('24664288881');
         });
 
         it('should return current time when no cursor found', async () => {

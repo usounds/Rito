@@ -19,7 +19,7 @@ const databaseUser = 'rito_e2e';
 const databasePassword = 'rito_e2e_password';
 const testDid = 'did:plc:ewvi7nxzyoun6zhxrhs64oiz';
 const memoryLimitBytes = 384 * 1024 * 1024;
-const minimumIndexFunctionCoverage = 90;
+const minimumIndexFunctionCoverage = 95;
 const coverageDir = mkdtempSync(path.join(os.tmpdir(), 'rito-backend-e2e-coverage-'));
 
 function runCommand(command, args, options = {}) {
@@ -244,7 +244,7 @@ try {
     '--add-host', 'e2e.invalid:127.0.0.1',
     '-e', `DATABASE_URL=${containerDatabaseUrl}`,
     '-e', `JETSREAM_URL=ws://${mock}:8080/subscribe`,
-    '-e', 'CURSOR_UPDATE_INTERVAL=600000',
+    '-e', 'CURSOR_UPDATE_INTERVAL=5000',
     '-e', 'OPENAI_API_KEY=e2e-not-used',
     '-e', `OPENAI_BASE_URL=http://${mock}:8081/v1`,
     '-e', 'E2E_OAUTH_MOCK_PORT=8082',
@@ -268,9 +268,12 @@ try {
       && logs.includes(`Post to bookmark created: at://${testDid}/app.bsky.feed.post/candidate-post`)
       && logs.includes(`Deleted like: at://${testDid}/blue.rito.feed.like/like-lifecycle`)
       && logs.includes(`Deleted resolver: blue.rito.e2e -> ${testDid}`)
-      && logs.includes(`Async analysis complete for ${bookmarkUri}: technology and Moderation: null`);
+      && logs.includes(`Verified via DNS TXT: _lexicon.rito.blue -> ${testDid}`)
+      && logs.includes(`Upserted resolver: blue.rito.e2e -> ${testDid}`)
+      && logs.includes(`Async analysis complete for ${bookmarkUri}: technology and Moderation: null`)
+      && logs.includes('Jetstream error: record validation failed for app.bsky.feed.post')
+      && logs.includes('Cursor updated to:');
   }, 'create, update, and delete event processing');
-  await delay(3_000);
 
   const inspection = JSON.parse(docker('inspect', backend).stdout)[0];
   if (!inspection.State.Running) {
@@ -302,6 +305,7 @@ try {
   if (!mockLogs.includes('"unrelatedCount":20000')
     || !mockLogs.includes('"filteredBranchCount":4')
     || !mockLogs.includes('"malformedFacetCount":3')
+    || !mockLogs.includes('"malformedRecordCount":1')
     || !mockLogs.includes('"relevantPostCount":2')
     || !mockLogs.includes('"lifecycleEventCount":10')) {
     throw new Error(`Mock Jetstream did not send the expected events:\n${mockLogs}`);
@@ -348,6 +352,7 @@ try {
     unrelatedPostsFiltered: 20_000,
     filteredPostBranches: 4,
     malformedFacetsFiltered: 3,
+    malformedRecordsRejected: 1,
     relevantPostsQueued: 2,
     lifecycleEventsProcessed: 10,
     oauthPutRecordsVerified: putRecords.length,

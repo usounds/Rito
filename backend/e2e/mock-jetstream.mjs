@@ -53,16 +53,22 @@ const apiServer = http.createServer(async (request, response) => {
 });
 
 function commitEvent({ index, collection, operation = 'create', record, rkey = `e2e-${index}` }) {
+  const isDelete = operation === 'delete';
   return {
-    did: testDid,
-    time_us: Date.now() * 1000 + index,
-    kind: 'commit',
-    commit: {
+    $type: 'message',
+    payload: {
+      $type: 'network.bsky.jetstream.subscribeEvents#commit',
+      did: testDid,
+      seq: index + 1,
+      time: new Date(Date.now() + index).toISOString(),
       rev: `3e2e${index}`,
       operation,
       collection,
       rkey,
-      ...(record === undefined ? {} : { record }),
+      ...(isDelete ? {} : {
+        cid: `bafyreie2e${index}`,
+        record: record ?? {},
+      }),
     },
   };
 }
@@ -144,6 +150,11 @@ server.on('connection', (socket) => {
     record: { ...candidateRecord, facets: [{ features: [null] }] },
     rkey: 'filtered-null-feature',
   });
+  send({
+    collection: 'app.bsky.feed.post',
+    record: { text: 'malformed record without a type' },
+    rkey: 'malformed-missing-type',
+  });
 
   send({
     collection: 'app.bsky.feed.post',
@@ -202,6 +213,7 @@ server.on('connection', (socket) => {
     unrelatedCount,
     filteredBranchCount: 4,
     malformedFacetCount: 3,
+    malformedRecordCount: 1,
     relevantPostCount: 2,
     lifecycleEventCount: 10,
   }));

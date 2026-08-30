@@ -2,6 +2,19 @@
 const v8 = require('node:v8');
 const http = require('node:http');
 
+const originalFetch = globalThis.fetch;
+globalThis.fetch = async (input, init) => {
+  const url = typeof input === 'string' || input instanceof URL ? String(input) : input.url;
+  if (url.startsWith('https://dns.google/resolve?')) {
+    return new Response(JSON.stringify({
+      Answer: [{ data: '"did:plc:ewvi7nxzyoun6zhxrhs64oiz"' }],
+    }), {
+      headers: { 'content-type': 'application/json' },
+    });
+  }
+  return originalFetch(input, init);
+};
+
 const oauthMockPort = Number(process.env.E2E_OAUTH_MOCK_PORT ?? 0);
 if (oauthMockPort > 0) {
   const issuer = `http://localhost:${oauthMockPort}`;
@@ -56,4 +69,3 @@ process.once('SIGTERM', () => {
   v8.takeCoverage();
   process.exit(0);
 });
-

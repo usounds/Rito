@@ -9,15 +9,14 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import * as pg from "pg";
 import pLimit from "p-limit";
 import logger from './logger.js';
+import { shouldUseDatabaseSsl } from './databaseSsl.js';
 
 // Export the PLimit instance for external use
 export const dbLimit = pLimit(5);
 
-// Internal networks (localhost, Docker service names without dots) don't need SSL
-const isInternalNetwork = !process.env.DATABASE_URL?.match(/@[\w-]+\.[\w.-]+[:/]/);
 const pool = new pg.Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: isInternalNetwork ? false : { rejectUnauthorized: false }
+    ssl: shouldUseDatabaseSsl(process.env.DATABASE_URL) ? { rejectUnauthorized: false } : false
 });
 const adapter = new PrismaPg(pool);
 

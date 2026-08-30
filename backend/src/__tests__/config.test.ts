@@ -34,8 +34,9 @@ describe('config', () => {
 
     it('should use default JETSTREAM_URL when env is not set', async () => {
         delete process.env.JETSREAM_URL;
+        delete process.env.JETSTREAM_URL;
         const { JETSREAM_URL } = await import('../config.js');
-        expect(JETSREAM_URL).toBe('wss://jetstream2.us-west.bsky.network/subscribe');
+        expect(JETSREAM_URL).toBe('wss://jetstream.us-west.bsky.network');
     });
 
     it('should use default CURSOR_UPDATE_INTERVAL when env is not set', async () => {

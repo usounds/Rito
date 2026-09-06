@@ -5,8 +5,8 @@ RUN apk update && apk upgrade --no-cache
 # 作業ディレクトリ
 WORKDIR /app
 
-# pnpm インストール
-RUN npm install -g pnpm
+# pnpm 有効化 (packageManager に定義されたバージョンを使用)
+RUN corepack enable pnpm
 
 # 依存関係だけ先にコピーしてインストール
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./

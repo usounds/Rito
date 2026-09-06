@@ -22,6 +22,7 @@ import { isRitoPostCandidate } from './utils.js';
 
 let cursor = '0';
 let previousCursor = '0';
+let latestEventTimeUs = (Date.now() * 1000).toString();
 let cursorUpdateInterval: NodeJS.Timeout;
 
 (prisma as any).$on('error', (error: any) => {
@@ -39,8 +40,10 @@ async function loadCursor(): Promise<string> {
   try {
     const record = await prisma.jetstreamIndex.findUnique({ where: { service: 'rito' } });
     if (record?.index) {
-      logger.info(`Cursor from DB: ${record.index} (${formatCursor(record.index)})`);
-      return record.index;
+      const rawIndex = record.index;
+      const cursorVal = rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
+      logger.info(`Cursor from DB: ${cursorVal} (raw: ${rawIndex})`);
+      return cursorVal;
     }
     const now = (Date.now() * 1000).toString();
     logger.info(`No DB cursor found, using current time: ${now} (${formatCursor(now)})`);
@@ -55,21 +58,23 @@ function startCursorPersistence(): void {
   if (cursorUpdateInterval) clearInterval(cursorUpdateInterval);
 
   cursorUpdateInterval = setInterval(() => {
-    if (!cursor) return;
+    if (!cursor || cursor === '0') return;
     const currentCursor = cursor;
     if (previousCursor === currentCursor) {
       logger.error(`前回からcursorが変動していませんので、再起動のためにプロセスを終了します: ${currentCursor}`);
       process.exit(1);
     }
 
+    const indexToSave = `${currentCursor}:${latestEventTimeUs}`;
+
     void mainQueue.add(async () => {
       try {
         await prisma.jetstreamIndex.upsert({
           where: { service: 'rito' },
-          update: { index: currentCursor },
-          create: { service: 'rito', index: currentCursor },
+          update: { index: indexToSave },
+          create: { service: 'rito', index: indexToSave },
         });
-        logger.info(`Cursor updated to: ${currentCursor} (${formatCursor(currentCursor)})`);
+        logger.info(`Cursor updated to: ${indexToSave} (${formatCursor(currentCursor)})`);
       } catch (error) {
         logger.error(`Failed to upsert cursor in DB: ${error}`);
       }
@@ -161,6 +166,9 @@ async function init(): Promise<void> {
       },
     })) {
       await cursorStore.save(event.seq);
+      if (event.time) {
+        latestEventTimeUs = (new Date(event.time).getTime() * 1000).toString();
+      }
       if (event.kind !== 'commit') continue;
       await routeEvent(event, postCollectionEnabled);
     }

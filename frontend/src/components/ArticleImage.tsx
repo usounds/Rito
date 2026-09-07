@@ -7,7 +7,10 @@ interface ArticleImageProps {
   url: string;
   alt?: string;
   priority?: boolean;
+  sizes?: string;
 }
+
+const defaultSizes = "(max-width: 48em) 110px, (max-width: 62em) 45vw, 320px";
 
 // 通常画像
 const normalizeUrl = (url?: string | null) => {
@@ -36,7 +39,13 @@ const extractNicoId = (url: string): string | null => {
   return match ? match[1] : null;
 };
 
-const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Image", priority = false }) => {
+const ArticleImage: React.FC<ArticleImageProps> = ({
+  src,
+  url,
+  alt = "Article Image",
+  priority = false,
+  sizes = defaultSizes,
+}) => {
   const computedColorScheme = useComputedColorScheme("light");
   const [mounted, setMounted] = useState(false);
   const [unoptimized, setUnoptimized] = useState(false);
@@ -129,7 +138,7 @@ const ArticleImage: React.FC<ArticleImageProps> = ({ src, url, alt = "Article Im
       src={currentSrc}
       alt={alt}
       fill
-      sizes="(max-width: 48em) 90vw, (max-width: 62em) 45vw, 320px"
+      sizes={sizes}
       style={{ objectFit: "cover" }}
       priority={priority}
       fetchPriority={priority ? "high" : undefined}

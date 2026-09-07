@@ -47,7 +47,7 @@ vi.mock('@/components/Like', () => ({
 }));
 
 vi.mock('@/components/ArticleImage', () => ({
-    default: () => null,
+    default: ({ sizes }: { sizes?: string }) => <span data-testid="article-image" data-sizes={sizes} />,
 }));
 
 vi.mock('lucide-react', () => ({
@@ -73,5 +73,6 @@ describe('ArticleListItem', () => {
             '/ja/bookmark/details?uri=https%3A%2F%2Fexample.com%2Farticle',
         );
         expect(link).toHaveAttribute('data-prefetch', 'false');
+        expect(screen.getByTestId('article-image')).toHaveAttribute('data-sizes', '100px');
     });
 });

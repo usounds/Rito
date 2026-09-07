@@ -101,7 +101,7 @@ export function ArticleListItem({
                     <div className={classes.contentRow}>
                         <div className={classes.imageWrapper}>
                             <Link href={localUrl || ''} target="_blank">
-                                <ArticleImage url={url} src={imgSrc} priority={priority} />
+                                <ArticleImage url={url} src={imgSrc} priority={priority} sizes="100px" />
                             </Link>
                         </div>
 

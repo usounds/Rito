@@ -143,6 +143,7 @@ export function ArticleListItem({
 
                             <Link
                                 href={isPrivate ? (localUrl || '') : `/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                prefetch={false}
                                 className={classes.title}
                             >
                                 {title}

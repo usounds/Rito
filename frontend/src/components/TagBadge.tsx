@@ -51,6 +51,7 @@ export const TagBadge: React.FC<TagBadgeProps> = ({ tags, locale }) => {
         >
           <Link
             href={`/${locale}/bookmark/search?tag=${encodeURIComponent(tag || '')}`}
+            prefetch={false}
             style={{ textDecoration: 'none', color: 'inherit', display: 'inline-flex', alignItems: 'center', height: '100%', padding: '0 8px' }}
           >
             <span

@@ -125,6 +125,7 @@ export function Article({
 
                             <div className={classes.title}>
                                 <Link href={isPrivate ? (localUrl || '') : `/${locale}/bookmark/details?uri=${encodeURIComponent(url)}`}
+                                    prefetch={false}
                                     style={{ display: 'block', textDecoration: 'none', color: 'inherit', wordBreak: 'break-all', overflowWrap: 'anywhere', minHeight: '24px' }}>
                                     {title}
                                 </Link>

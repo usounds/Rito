@@ -4,8 +4,8 @@ import { TagBadge } from '../TagBadge';
 
 // Mock next/link
 vi.mock('next/link', () => ({
-    default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-        <a href={href}>{children}</a>
+    default: ({ children, href, prefetch }: { children: React.ReactNode; href: string; prefetch?: boolean }) => (
+        <a href={href} data-prefetch={String(prefetch)}>{children}</a>
     ),
 }));
 
@@ -59,6 +59,7 @@ describe('TagBadge', () => {
         await waitFor(() => {
             const link = screen.getByRole('link');
             expect(link).toHaveAttribute('href', '/en/bookmark/search?tag=mytag');
+            expect(link).toHaveAttribute('data-prefetch', 'false');
         });
     });
 });

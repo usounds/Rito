@@ -14,8 +14,8 @@ vi.mock('../bookmarkcard/Article.module.scss', () => ({
 
 // Mock dependencies
 vi.mock('next/link', () => ({
-    default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-        <a href={href}>{children}</a>
+    default: ({ children, href, prefetch }: { children: React.ReactNode; href: string; prefetch?: boolean }) => (
+        <a href={href} data-prefetch={String(prefetch)}>{children}</a>
     ),
 }));
 
@@ -106,6 +106,11 @@ describe('Article', () => {
     it('記事カードを表示する', () => {
         render(<Article {...defaultProps} />);
         expect(screen.getByText('テスト記事')).toBeInTheDocument();
+    });
+
+    it('記事詳細ページを先読みしない', () => {
+        render(<Article {...defaultProps} />);
+        expect(screen.getByText('テスト記事').closest('a')).toHaveAttribute('data-prefetch', 'false');
     });
 
     it('ハンドルを表示する', () => {

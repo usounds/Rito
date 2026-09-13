@@ -33,8 +33,9 @@ export async function GET(req: NextRequest) {
     // parseCallback により、パラメータの抽出と atpstate の照合を同時に行う
     // expectedAtpState が undefined の場合、ライブラリの仕様によっては検証をスキップして続行してしまう可能性があるため、
     // 明示的にチェックを行う
-    const { handle, customParams } = atp.parseCallback(callbackUrl, expectedAtpState);
-    const returnTo = customParams.returnTo || "/";
+    const callbackResult = atp.parseCallback(callbackUrl, expectedAtpState);
+    const handle = callbackResult.username ?? (callbackResult as { handle?: string | null }).handle;
+    const returnTo = callbackResult.customParams.returnTo || "/";
 
     if (!handle) {
       return NextResponse.redirect(getRedirectUrl(returnTo));

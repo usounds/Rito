@@ -17,6 +17,7 @@ minimumReleaseAge: 1440
 
 minimumReleaseAgeExclude:
   - '@atcute/bluesky@4.0.6'
+  - '@atpassport/client@0.2.1'
 
 overrides:
   postcss: ">=8.5.26"

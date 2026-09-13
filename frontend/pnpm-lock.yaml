@@ -161,8 +161,8 @@ importers:
         specifier: ^1.1.4
         version: 1.1.4
       '@atpassport/client':
-        specifier: ^0.1.35
-        version: 0.1.35(react@19.2.8)
+        specifier: 0.2.1
+        version: 0.2.1(react@19.2.8)
       '@atproto/api':
         specifier: ^0.20.42
         version: 0.20.42
@@ -466,8 +466,8 @@ packages:
   '@atcute/varint@2.0.2':
     resolution: {integrity: sha512-/+hS1juMgnmf6eL6lICUkTw7wcGTo3I+Q0L1PI521mUz77rGSC6nXAUNKtvm2wYJpuWdEGq+GILGoYkOArn0TQ==}
 
-  '@atpassport/client@0.1.35':
-    resolution: {integrity: sha512-B3WGJNsq2ZxwPlVaL4p+iO1vl3x1CHk6don2PBRimb+WSYcVYud3trWse3q6rKOjlruEtrsLAQlWK5dx9FA0wA==}
+  '@atpassport/client@0.2.1':
+    resolution: {integrity: sha512-vF7Org8fe388LdkJRvoleuJmdNkX37Z34wVlt/fIdW3+KYlFa+dwb0NVUDQ78u6T2B6naLKCZmLvXNVJwkvwmQ==}
     peerDependencies:
       react: '>=18.0.0'
     peerDependenciesMeta:
@@ -5082,7 +5082,7 @@ snapshots:
 
   '@atcute/varint@2.0.2': {}
 
-  '@atpassport/client@0.1.35(react@19.2.8)':
+  '@atpassport/client@0.2.1(react@19.2.8)':
     optionalDependencies:
       react: 19.2.8
 

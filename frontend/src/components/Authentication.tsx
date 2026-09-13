@@ -16,14 +16,15 @@ import { useForm } from '@mantine/form';
 import { notifications } from '@mantine/notifications';
 import { X, Bookmark } from 'lucide-react';
 import { useMessages } from 'next-intl';
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from 'next/link';
 import { FaBluesky } from "react-icons/fa6";
 import { useTopLoader } from 'nextjs-toploader';
-import { AtPassportIcon, AtPassportUI } from '@atpassport/client/ui';
+import { AtPassportIcon, AtPassportUI } from '@atpassport/client';
 import { getAtPassport } from '@/logic/HandleAtPassport';
 
 export function Authentication({ lang = 'ja' }: { lang?: string }) {
+  const inputRef = useRef<HTMLInputElement>(null);
   const [isBlueskyLoading, setIsBlueskyLoading] = useState<boolean>(false);
   const [isAtPassportLoading, setIsAtPassportLoading] = useState<boolean>(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
@@ -200,32 +201,51 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
   async function performAtPassportLogin() {
     setIsAtPassportLoading(true);
 
-    notifications.show({
-      id: 'atpassport-login-process',
-      title: AtPassportUI[lang === 'ja' ? 'ja' : 'en'].title,
-      message: messages.login.redirect,
-      loading: true,
-      autoClose: false
-    });
-
     try {
       const atp = getAtPassport({ lang: lang as 'ja' | 'en' });
 
-      // AtPassport へのリダイレクト URL を生成
-      // ここでは mode: 'bypass' を使用せず、ハンドル取得・解決を AtPassport に委ねる
-      // また、戻り先の URL をカスタムパラメータとして渡す
-      const { url, atpstate } = atp.generateAuthUrl({ returnTo: window.location.href });
+      const fallback = async () => {
+        notifications.show({
+          id: 'atpassport-login-process',
+          title: AtPassportUI[lang === 'ja' ? 'ja' : 'en'].title,
+          message: messages.login.redirect,
+          loading: true,
+          autoClose: false
+        });
 
-      // CSRF 対策として atpstate をクッキーに保存 (10分間)
-      const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
-      const cookieValue = `atpstate=${encodeURIComponent(atpstate)}; path=/; max-age=600; SameSite=Lax${secure}`;
-      document.cookie = cookieValue;
+        // AtPassport へのリダイレクト URL を生成
+        // ここでは mode: 'bypass' を使用せず、ハンドル取得・解決を AtPassport に委ねる
+        // また、戻り先の URL をカスタムパラメータとして渡す
+        const { url, atpstate } = atp.generateAuthUrl({ returnTo: window.location.href });
 
-      console.log('AtPassport Cookie saved:', cookieValue);
-      console.log('Current document.cookie:', document.cookie);
+        // CSRF 対策として atpstate をクッキーに保存 (10分間)
+        const secure = process.env.NODE_ENV === "production" ? "; Secure" : "";
+        const cookieValue = `atpstate=${encodeURIComponent(atpstate)}; path=/; max-age=600; SameSite=Lax${secure}`;
+        document.cookie = cookieValue;
 
-      window.location.href = url;
+        console.log('AtPassport Cookie saved:', cookieValue);
+        console.log('Current document.cookie:', document.cookie);
 
+        window.location.href = url;
+        // リダイレクトまで待機
+        await new Promise(() => {});
+        return null;
+      };
+
+      const assistResult = await atp.requestHandleAssist({
+        targetInput: inputRef.current ?? undefined,
+        fallback,
+      });
+
+      const targetHandle = assistResult?.username || (assistResult as any)?.handle;
+      if (targetHandle) {
+        const cleanHandle = targetHandle.replace(/^@/, '');
+        form.setFieldValue("handle", cleanHandle);
+        form.clearFieldError("handle");
+        setHandle(cleanHandle);
+        setSuggestions([]);
+        await performLogin({ handle: cleanHandle });
+      }
     } catch (e) {
       notifications.update({
         id: 'atpassport-login-process',
@@ -237,6 +257,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
         icon: <X />
       });
       loader.done();
+    } finally {
       setIsAtPassportLoading(false);
     }
   }
@@ -319,6 +340,7 @@ export function Authentication({ lang = 'ja' }: { lang?: string }) {
 
           <Stack gap="md">
             <Autocomplete
+              ref={inputRef}
               label={messages.login.field.handle.title}
               placeholder={messages.login.field.handle.placeholder}
               value={form.values.handle}

@@ -34,7 +34,7 @@
     "@atcute/client": "^5.1.1",
     "@atcute/lexicons": "^2.1.0",
     "@atcute/tid": "^1.1.4",
-    "@atpassport/client": "^0.1.35",
+    "@atpassport/client": "0.2.1",
     "@atproto/api": "^0.20.42",
     "@atproto/jwk-jose": "^0.2.4",
     "@atproto/oauth-client-node": "^0.5.4",

@@ -1,5 +1,5 @@
 import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { deletePrivateBookmarkSpace } from '../pdsClient';
+import { checkSpaceCapability, initializeSpace, deletePrivateBookmarkSpace } from '../pdsClient';
 
 const fetchMock = vi.fn();
 
@@ -61,5 +61,70 @@ describe('deletePrivateBookmarkSpace', () => {
       success: false,
       error: 'The caller is not the space owner',
     });
+  });
+});
+
+
+describe('spaces alpha compatibility', () => {
+  const did = 'did:plc:testuser';
+  const uri = `at://${did}/space/blue.rito.space.bookmark/self`;
+  const policy = { $type: 'com.atproto.simplespace.defs#memberListPolicy' };
+  const configuration = { uri, readPolicy: policy, writePolicy: policy, appAccess: { $type: 'com.atproto.simplespace.defs#open' } };
+  const respond = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
+  beforeEach(() => {
+    fetchMock.mockReset();
+    vi.stubGlobal('fetch', fetchMock);
+  });
+  afterAll(() => vi.unstubAllGlobals());
+
+  it('creates with split policies and verifies access before reporting success', async () => {
+    fetchMock.mockResolvedValueOnce(respond({ csrfToken: 'csrf' }))
+      .mockResolvedValueOnce(respond({ uri }))
+      .mockResolvedValueOnce(respond(configuration))
+      .mockResolvedValueOnce(respond({ members: [{ did, read: true, write: true }] }))
+      .mockResolvedValueOnce(respond({ records: [] }));
+    expect((await initializeSpace(did)).success).toBe(true);
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
+      spaceType: 'blue.rito.space.bookmark', skey: 'self',
+      readPolicy: policy, writePolicy: policy, appAccess: configuration.appAccess,
+    });
+  });
+
+  it.each([
+    [404, 'SpaceNotFound', 'needs_space'],
+    [404, 'XRPCNotSupported', 'unsupported'],
+    [400, 'InvalidRequest', 'error'],
+    [403, 'ScopeMissingError', 'needs_auth'],
+    [502, 'UpstreamError', 'error'],
+    [503, 'Unavailable', 'error'],
+  ])('classifies %s %s as %s', async (httpStatus, error, status) => {
+    fetchMock.mockResolvedValueOnce(respond({ error }, httpStatus));
+    expect((await checkSpaceCapability(did)).status).toBe(status);
+  });
+
+  it('rejects public read access', async () => {
+    fetchMock.mockResolvedValueOnce(respond({ ...configuration, readPolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }));
+    expect((await checkSpaceCapability(did)).status).toBe('error');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('checks later member pages and rejects another member', async () => {
+    fetchMock.mockResolvedValueOnce(respond(configuration))
+      .mockResolvedValueOnce(respond({ members: [{ did, read: true, write: true }], cursor: 'next' }))
+      .mockResolvedValueOnce(respond({ members: [{ did: 'did:plc:other', read: true, write: false }] }));
+    expect((await checkSpaceCapability(did)).status).toBe('error');
+    expect(fetchMock.mock.calls[2][0]).toContain('cursor=next');
+  });
+
+  it('verifies an already existing space instead of trusting the conflict', async () => {
+    fetchMock.mockResolvedValueOnce(respond({ csrfToken: 'csrf' }))
+      .mockResolvedValueOnce(respond({ error: 'SpaceAlreadyExists' }, 400))
+      .mockResolvedValueOnce(respond({ ...configuration, writePolicy: {} }));
+    expect((await initializeSpace(did)).success).toBe(false);
+  });
+
+  it('reports an offline PDS as an error', async () => {
+    fetchMock.mockRejectedValueOnce(new Error('offline'));
+    expect((await checkSpaceCapability(did)).status).toBe('error');
   });
 });

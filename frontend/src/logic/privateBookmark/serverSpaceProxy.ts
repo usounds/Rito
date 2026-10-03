@@ -52,6 +52,17 @@ function validatePrivateBookmarkQuery(
     return null;
   }
 
+  if (method === "com.atproto.simplespace.listMembers") {
+    if (!hasOnlyKeys(params, ["space", "limit", "cursor"]) || params.space !== expectedSpace) {
+      return "Invalid private bookmark space";
+    }
+    const limit = Number(params.limit || "100");
+    if (!Number.isInteger(limit) || limit < 1 || limit > 1000 || (params.cursor?.length || 0) > 2048) {
+      return "Invalid private bookmark member query";
+    }
+    return null;
+  }
+
   if (method === "com.atproto.space.listRecords") {
     if (!hasOnlyKeys(params, ["space", "repo", "collection", "limit", "cursor"])) {
       return "Unexpected private bookmark query parameter";
@@ -90,16 +101,17 @@ function validatePrivateBookmarkProcedure(
   if (!isRecord(input)) return "Invalid request body";
 
   if (method === "com.atproto.simplespace.createSpace") {
-    if (!hasOnlyKeys(input, ["type", "skey", "policy", "appAccess"])) {
+    if (!hasOnlyKeys(input, ["spaceType", "skey", "readPolicy", "writePolicy", "appAccess"])) {
       return "Unexpected private bookmark space setting";
     }
-    if (input.type !== SPACE_TYPE || input.skey !== SPACE_KEY) {
+    if (input.spaceType !== SPACE_TYPE || input.skey !== SPACE_KEY) {
       return "Invalid private bookmark space setting";
     }
     if (
-      !isRecord(input.policy) ||
-      !hasOnlyKeys(input.policy, ["$type"]) ||
-      getString(input.policy.$type) !== "com.atproto.simplespace.defs#memberListPolicy" ||
+      ![input.readPolicy, input.writePolicy].every((policy) =>
+        isRecord(policy) && hasOnlyKeys(policy, ["$type"]) &&
+        getString(policy.$type) === "com.atproto.simplespace.defs#memberListPolicy"
+      ) ||
       !isRecord(input.appAccess) ||
       !hasOnlyKeys(input.appAccess, ["$type"]) ||
       getString(input.appAccess.$type) !== "com.atproto.simplespace.defs#open"
@@ -251,7 +263,7 @@ export async function proxySpaceXrpc(req: NextRequest, options: ProxyXrpcOptions
       let errorCode = responseData.error || "SpaceError";
       let message = responseData.message || `PDS returned error (${fetchRes.status})`;
 
-      if (fetchRes.status === 404 || responseData.error === "SpaceNotFound") {
+      if (responseData.error === "SpaceNotFound") {
         errorCode = "SpaceNotFound";
       }
 

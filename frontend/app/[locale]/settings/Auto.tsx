@@ -306,7 +306,7 @@ export function Auto() {
             setSpaceStatus(res.status);
             setSpaceMessage(res.message || null);
         } catch {
-            setSpaceStatus('unsupported');
+            setSpaceStatus('error');
         }
     }, [activeDid]);
 
@@ -477,6 +477,14 @@ export function Auto() {
             {userProf != null && spaceStatus !== 'unsupported' && (
                 <Paper withBorder p="md" radius="md" shadow="xs" mb="sm">
                     <Stack gap="sm">
+                        {spaceStatus === 'error' && (
+                            <Stack gap="xs">
+                                <Text size="sm" c="red">{messages.privateBookmark.banner.errorDesc}</Text>
+                                <Button variant="light" size="xs" onClick={checkSpace}>
+                                    {locale === 'ja' ? '再確認' : 'Check again'}
+                                </Button>
+                            </Stack>
+                        )}
                         {spaceStatus === 'checking' && (
                             <Group gap="sm" align="center">
                                 <Loader size="sm" color="violet" />

@@ -41,6 +41,14 @@ export function PdsCapabilityBanner({
     );
   }
 
+  if (status === 'error') {
+    return (
+      <Alert color="red" title={messages.privateBookmark.banner.errorTitle} icon={<AlertCircle size={20} />} my="md">
+        <Text size="sm">{messages.privateBookmark.banner.errorDesc}</Text>
+      </Alert>
+    );
+  }
+
   if (status === 'unsupported') {
     return (
       <Alert

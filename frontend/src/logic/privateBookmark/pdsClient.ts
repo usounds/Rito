@@ -18,77 +18,50 @@ export function getRecordUri(did: string, rkey: string): string {
 export async function checkSpaceCapability(did: string): Promise<SpaceCapabilityResult> {
   const spaceUri = getSpaceUri(did);
   try {
-    // 1. Check PDS space endpoint and space existence first
-    let res = await fetch(`/xrpc/com.atproto.simplespace.getSpace?space=${encodeURIComponent(spaceUri)}`, {
-      method: 'GET',
-      headers: {
-        'Cache-Control': 'no-store',
-      },
-    });
-
-    if (res.ok) {
-      return { status: 'ready', spaceUri };
-    }
-
-    const data = await res.json().catch(() => ({}));
-    const errCode = data.error || '';
-    const errMsg = (data.message || '').toLowerCase();
-
-    // Check if PDS doesn't support Spaces:
-    // - 501 / MethodNotImplemented / PdsNotSupported / socket error
-    // - ScopeMissingError with AppView proxy aud (indicates PDS has no native Space handler and treated it as unknown RPC forwarded to AppView)
-    if (
-      res.status === 501 ||
-      res.status === 502 ||
-      res.status === 503 ||
-      errCode === 'MethodNotImplemented' ||
-      errCode === 'PdsNotSupported' ||
-      errCode === 'ScopeMissingError' ||
-      errMsg.includes('not supported') ||
-      errMsg.includes('not implemented') ||
-      errMsg.includes('scopemissingerror') ||
-      errMsg.includes('bsky_appview')
-    ) {
-      return { status: 'unsupported', spaceUri, message: data.message || 'PDS does not support atproto spaces' };
-    }
-
-    const isSpaceNotFound =
-      res.status === 404 ||
-      errCode === 'SpaceNotFound' ||
-      errCode === 'SpaceDeleted' ||
-      errCode === 'NotFound' ||
-      errCode === 'InvalidRequest' ||
-      errMsg.includes('not found') ||
-      errMsg.includes('spacenotfound') ||
-      errMsg.includes('does not exist');
-
-    if (isSpaceNotFound) {
-      return { status: 'needs_space', spaceUri, message: 'Space is not created yet' };
-    }
-
-    // 2. Check if current session already has space OAuth scope
-    const sessionRes = await fetch('/api/session-info', {
-      headers: { 'Cache-Control': 'no-store' },
-    });
-    if (sessionRes.ok) {
-      const sessionData = await sessionRes.json().catch(() => ({}));
-      if (sessionData.hasSpaceScope === false) {
-        return {
-          status: 'needs_auth',
-          spaceUri,
-          message: 'OAuth scope authorization required',
-        };
+    const check = async (path: string) => {
+      const res = await fetch(path, { cache: 'no-store', headers: { 'Cache-Control': 'no-store' } });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        const error = data.error;
+        let status: SpaceCapabilityResult['status'] = 'error';
+        if (error === 'SpaceNotFound' || error === 'SpaceDeleted') status = 'needs_space';
+        else if (res.status === 401 || res.status === 403 || error === 'ScopeMissingError' || error === 'AuthRequired' || error === 'ExpiredToken') status = 'needs_auth';
+        else if (res.status === 404 || res.status === 501 || error === 'MethodNotImplemented' || error === 'MethodNotFound' || error === 'XRPCNotSupported' || error === 'PdsNotSupported') status = 'unsupported';
+        return { failure: { status, spaceUri, message: data.message || `PDS returned ${error || res.status}` }, data };
       }
+      return { failure: null, data };
+    };
+    const space = await check(`/xrpc/com.atproto.simplespace.getSpace?space=${encodeURIComponent(spaceUri)}`);
+    if (space.failure) return space.failure;
+    if (space.data.uri !== spaceUri ||
+        space.data.readPolicy?.$type !== 'com.atproto.simplespace.defs#memberListPolicy' ||
+        space.data.writePolicy?.$type !== 'com.atproto.simplespace.defs#memberListPolicy' ||
+        space.data.appAccess?.$type !== 'com.atproto.simplespace.defs#open') {
+      return { status: 'error', spaceUri, message: 'Private bookmark access policy could not be verified' };
     }
-
-    if (res.status === 401 || res.status === 403 || errCode === 'AuthRequired' || errCode === 'ExpiredToken') {
-      return { status: 'needs_auth', spaceUri, message: 'OAuth scope authorization required' };
-    }
-
-    return { status: 'unsupported', spaceUri, message: data.message || `PDS returned unexpected status: ${res.status}` };
-  } catch (err: any) {
-    // Network / offline or local dev without space route
-    return { status: 'unsupported', spaceUri, message: err?.message || 'Network error checking PDS space capability' };
+    // Inspect every member page before enabling the self-only UI.
+    let cursor: string | undefined;
+    const seen = new Set<string>();
+    do {
+      const params = new URLSearchParams({ space: spaceUri, limit: '100' });
+      if (cursor) params.set('cursor', cursor);
+      const page = await check(`/xrpc/com.atproto.simplespace.listMembers?${params}`);
+      if (page.failure) return page.failure;
+      if (!Array.isArray(page.data.members) || page.data.members.some((member: { did?: string; read?: boolean; write?: boolean }) =>
+        member.did !== did || typeof member.read !== 'boolean' || typeof member.write !== 'boolean')) {
+        return { status: 'error', spaceUri, message: 'Private bookmark members could not be verified' };
+      }
+      cursor = page.data.cursor;
+      if (cursor && (typeof cursor !== 'string' || seen.has(cursor))) {
+        return { status: 'error', spaceUri, message: 'Invalid member pagination' };
+      }
+      if (cursor) seen.add(cursor);
+    } while (cursor);
+    const records = await check(`/xrpc/com.atproto.space.listRecords?${new URLSearchParams({ space: spaceUri, repo: did, collection: COLLECTION, limit: '1' })}`);
+    if (records.failure) return records.failure;
+    return { status: 'ready', spaceUri };
+  } catch {
+    return { status: 'error', spaceUri, message: 'Unable to check PDS space capability' };
   }
 }
 
@@ -145,9 +118,12 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
         'X-CSRF-Token': csrfToken,
       },
       body: JSON.stringify({
-        type: SPACE_TYPE,
+        spaceType: SPACE_TYPE,
         skey: SPACE_KEY,
-        policy: {
+        readPolicy: {
+          $type: 'com.atproto.simplespace.defs#memberListPolicy',
+        },
+        writePolicy: {
           $type: 'com.atproto.simplespace.defs#memberListPolicy',
         },
         appAccess: {
@@ -157,12 +133,14 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
     });
 
     if (res.ok) {
-      return { success: true };
+      const capability = await checkSpaceCapability(did);
+      return { success: capability.status === 'ready', error: capability.message };
     }
 
     const data = await res.json().catch(() => ({}));
     if (data.error === 'SpaceAlreadyExists') {
-      return { success: true };
+      const capability = await checkSpaceCapability(did);
+      return { success: capability.status === 'ready', error: capability.message };
     }
 
     return { success: false, error: data.message || `Failed to create space (${res.status})` };

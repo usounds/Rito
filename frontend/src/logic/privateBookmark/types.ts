@@ -20,6 +20,7 @@ export interface PrivateBookmarkItem {
 export type PdsCapabilityStatus =
   | 'idle'
   | 'checking'
+  | 'error'           // Transient failure or unsafe/unverified space configuration
   | 'unsupported'     // PDS does not support com.atproto.space.* XRPC
   | 'needs_auth'      // Needs space:* OAuth scope authorization
   | 'needs_space'     // Space has not been created yet

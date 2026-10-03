@@ -533,6 +533,8 @@
 			"delete": "Delete"
 		},
 		"banner": {
+			"errorTitle": "Unable to verify private bookmarks",
+			"errorDesc": "The PDS connection or Space permissions could not be verified. Please try again later.",
 			"checkingTitle": "Checking PDS capability",
 			"checkingDesc": "Checking if your PDS supports private space features...",
 			"unsupportedTitle": "PDS Currently Unsupported",

@@ -534,6 +534,8 @@
 			"delete": "削除する"
 		},
 		"banner": {
+			"errorTitle": "非公開機能を確認できません",
+			"errorDesc": "PDSへの接続またはSpaceの権限を確認できませんでした。時間をおいて再確認してください。",
 			"checkingTitle": "PDSの対応状況を確認中",
 			"checkingDesc": "お使いのPDSが非公開データ機能に対応しているか確認しています...",
 			"unsupportedTitle": "PDSが現在非公開機能に未対応です",

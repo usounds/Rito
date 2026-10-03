@@ -189,7 +189,7 @@ export async function mockLogin(page: Page, did: string, handle: string) {
       contentType: 'application/json',
       body: JSON.stringify({
         hasSession: true,
-        scope: 'atproto blob:*/* space:blue.rito.space.bookmark',
+        scope: 'atproto blob:*/* include:blue.rito.permissionSet',
         hasSpaceScope: true,
         spaceUri: `at://${did}/space/blue.rito.space.bookmark/self`,
       }),
@@ -203,9 +203,19 @@ export async function mockLogin(page: Page, did: string, handle: string) {
       contentType: 'application/json',
       body: JSON.stringify({
         uri: `at://${did}/space/blue.rito.space.bookmark/self`,
-        policy: { $type: 'com.atproto.simplespace.defs#memberListPolicy', members: [did] },
+        readPolicy: { $type: 'com.atproto.simplespace.defs#memberListPolicy' },
+        writePolicy: { $type: 'com.atproto.simplespace.defs#memberListPolicy' },
         appAccess: { $type: 'com.atproto.simplespace.defs#open' },
       }),
+    });
+  });
+
+  // Owner-only member permissions in the current Spaces alpha format.
+  await page.route('**/xrpc/com.atproto.simplespace.listMembers?**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ members: [{ did, read: true, write: true }] }),
     });
   });
 

@@ -23,11 +23,13 @@ import { POST as createRecordPOST } from '@app/xrpc/com.atproto.space.createReco
 import { GET as listRecordsGET } from '@app/xrpc/com.atproto.space.listRecords/route';
 import { POST as deleteRecordPOST } from '@app/xrpc/com.atproto.space.deleteRecord/route';
 import { POST as createSpacePOST } from '@app/xrpc/com.atproto.simplespace.createSpace/route';
+import { GET as listMembersGET } from '@app/xrpc/com.atproto.simplespace.listMembers/route';
 import { POST as deleteSpacePOST } from '@app/xrpc/com.atproto.simplespace.deleteSpace/route';
 
 describe('xRPC: Space Proxy Routes', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetch.mockReset();
     mockRestore.mockResolvedValue({
       serverMetadata: { issuer: 'https://pds.example.com' },
       fetchHandler: mockFetch,
@@ -248,6 +250,25 @@ describe('xRPC: Space Proxy Routes', () => {
   });
 
   describe('com.atproto.simplespace.createSpace', () => {
+    const policy = { $type: 'com.atproto.simplespace.defs#memberListPolicy' };
+    const validBody = { spaceType: 'blue.rito.space.bookmark', skey: 'self', readPolicy: policy, writePolicy: policy, appAccess: { $type: 'com.atproto.simplespace.defs#open' } };
+    it.each([
+      [validBody, 200],
+      [{ ...validBody, type: validBody.spaceType }, 400],
+      [{ ...validBody, readPolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }, 400],
+      [{ ...validBody, writePolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }, 400],
+    ])('validates the split policy request %#', async (body, status) => {
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ uri: 'space' })));
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.createSpace', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': 'csrf' }, body: JSON.stringify(body),
+      });
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      req.cookies.set('CSRF_TOKEN', 'csrf');
+      expect((await createSpacePOST(req)).status).toBe(status);
+      if (status === 200) expect(mockFetch).toHaveBeenCalledWith('/xrpc/com.atproto.simplespace.createSpace', expect.objectContaining({ body: JSON.stringify(body) }));
+      else expect(mockFetch).not.toHaveBeenCalled();
+    });
+
     it('rejects additional access-policy fields', async () => {
       const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.createSpace', {
         method: 'POST',
@@ -257,9 +278,12 @@ describe('xRPC: Space Proxy Routes', () => {
           'X-CSRF-Token': 'valid-csrf-token',
         },
         body: JSON.stringify({
-          type: 'blue.rito.space.bookmark',
+          spaceType: 'blue.rito.space.bookmark',
           skey: 'self',
-          policy: {
+          writePolicy: {
+            $type: 'com.atproto.simplespace.defs#memberListPolicy',
+          },
+          readPolicy: {
             $type: 'com.atproto.simplespace.defs#memberListPolicy',
             members: ['did:plc:other'],
           },
@@ -273,6 +297,25 @@ describe('xRPC: Space Proxy Routes', () => {
 
       expect(res.status).toBe(400);
       expect(mockFetch).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('member listing and error preservation', () => {
+    it.each(['valid', 'other'])('restricts member inspection to the owner space: %s', async (owner) => {
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ members: [] })));
+      const params = new URLSearchParams({ space: `at://did:plc:${owner}/space/blue.rito.space.bookmark/self`, cursor: 'next', limit: '100' });
+      const req = new NextRequest(`http://localhost/xrpc/com.atproto.simplespace.listMembers?${params}`);
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      const res = await listMembersGET(req);
+      expect(res.status).toBe(owner === 'valid' ? 200 : 400);
+      if (owner === 'valid') expect(res.headers.get('Cache-Control')).toContain('no-store');
+      else expect(mockFetch).not.toHaveBeenCalled();
+    });
+    it('preserves an unknown endpoint 404 instead of reporting a missing space', async () => {
+      mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ error: 'XRPCNotSupported' }), { status: 404 }));
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.getSpace?space=at://did:plc:valid/space/blue.rito.space.bookmark/self');
+      req.cookies.set('USER_DID', 'did:plc:valid.sig');
+      expect(await (await getSpaceGET(req)).json()).toMatchObject({ error: 'XRPCNotSupported' });
     });
   });
 

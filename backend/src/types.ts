@@ -1,7 +1,8 @@
 export interface JetstreamCommitEvent<R = unknown> {
   did: string;
   seq: number;
-  time: string;
+  time?: string;
+  timeUs?: number;
   kind: 'commit';
   commit: {
     operation: 'create' | 'update' | 'delete';

@@ -1,4 +1,4 @@
-import { Jetstream, type CursorStore } from '@bsky/jetstream';
+import { JetstreamV1, type CursorStore } from '@bsky/jetstream';
 import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, LIKE, POST_COLLECTION, SERVICE } from './config.js';
 import { prisma } from './db.js';
 import {
@@ -32,7 +32,7 @@ let cursorUpdateInterval: NodeJS.Timeout;
 
 function formatCursor(value: string | number): string {
   const number = Number(value);
-  if (number >= 1e15) return new Date(number / 1000).toISOString();
+  if (number >= 1e14) return new Date(number / 1000).toISOString();
   return `seq:${value}`;
 }
 
@@ -41,8 +41,27 @@ async function loadCursor(): Promise<string> {
     const record = await prisma.jetstreamIndex.findUnique({ where: { service: 'rito' } });
     if (record?.index) {
       const rawIndex = record.index;
-      const cursorVal = rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
-      logger.info(`Cursor from DB: ${cursorVal} (raw: ${rawIndex})`);
+      let cursorVal: string;
+      if (rawIndex.includes(':')) {
+        const parts = rawIndex.split(':');
+        const timePart = parts[1];
+        if (timePart && Number(timePart) >= 1e14) {
+          cursorVal = timePart;
+        } else {
+          cursorVal = parts[0];
+        }
+      } else {
+        cursorVal = rawIndex;
+      }
+
+      const num = Number(cursorVal);
+      if (Number.isNaN(num) || num < 1e14) {
+        const now = (Date.now() * 1000).toString();
+        logger.warn(`Loaded cursor ${cursorVal} is not a valid microsecond timestamp, fallback to current time: ${now} (${formatCursor(now)})`);
+        return now;
+      }
+
+      logger.info(`Cursor from DB: ${cursorVal} (raw: ${rawIndex}) (${formatCursor(cursorVal)})`);
       return cursorVal;
     }
     const now = (Date.now() * 1000).toString();
@@ -152,25 +171,28 @@ async function init(): Promise<void> {
       cursor = sequence.toString();
     },
   };
-  const jetstream = new Jetstream({ service: JETSREAM_URL });
-  logger.info(`Jetstream v2 connecting to: ${JETSREAM_URL}`);
+  const jetstream = new JetstreamV1({ service: JETSREAM_URL });
+  logger.info(`Jetstream v1 connecting to: ${JETSREAM_URL}`);
   startCursorPersistence();
 
   try {
     for await (const event of jetstream.live({
       collections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
-      kinds: ['commit'],
       cursor: cursorStore,
       onError: (error) => {
         logger.error(`Jetstream error: ${error instanceof Error ? error.message : String(error)}`);
       },
     })) {
       await cursorStore.save(event.seq);
-      if (event.time) {
-        latestEventTimeUs = (new Date(event.time).getTime() * 1000).toString();
+      if ('timeUs' in event && typeof event.timeUs === 'number') {
+        latestEventTimeUs = event.timeUs.toString();
+      } else if ('time' in event && event.time) {
+        latestEventTimeUs = (new Date(event.time as string).getTime() * 1000).toString();
+      } else {
+        latestEventTimeUs = event.seq.toString();
       }
       if (event.kind !== 'commit') continue;
-      await routeEvent(event, postCollectionEnabled);
+      await routeEvent(event as unknown as JetstreamCommitEvent, postCollectionEnabled);
     }
   } catch (error) {
     logger.error(`Jetstream live stream ended: ${error instanceof Error ? error.message : String(error)}`);

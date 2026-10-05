@@ -1,5 +1,13 @@
-import { JetstreamV1, type CursorStore } from '@bsky/jetstream';
-import { BOOKMARK, CURSOR_UPDATE_INTERVAL, JETSREAM_URL, LIKE, POST_COLLECTION, SERVICE } from './config.js';
+import { Jetstream, type CursorStore } from '@bsky/jetstream';
+import {
+  BOOKMARK,
+  CURSOR_UPDATE_INTERVAL,
+  DEFAULT_JETSTREAM_URLS,
+  JETSREAM_URL,
+  LIKE,
+  POST_COLLECTION,
+  SERVICE,
+} from './config.js';
 import { prisma } from './db.js';
 import {
   deleteBookmark,
@@ -23,7 +31,18 @@ import { isRitoPostCandidate } from './utils.js';
 let cursor = '0';
 let previousCursor = '0';
 let latestEventTimeUs = (Date.now() * 1000).toString();
+let lastFrameReceivedAt = Date.now();
+let consecutiveStallCount = 0;
+let currentHostIndex = 0;
+let useTimestampCursor = false;
+let currentAbortController: AbortController | null = null;
 let cursorUpdateInterval: NodeJS.Timeout;
+
+const FALLBACK_HOSTS: string[] = Array.from(
+  new Set([JETSREAM_URL, ...DEFAULT_JETSTREAM_URLS]),
+);
+
+const STALL_TIMEOUT_MS = Math.max(CURSOR_UPDATE_INTERVAL * 1.5, 90000);
 
 (prisma as any).$on('error', (error: any) => {
   logger.error(`Prisma error event: ${error?.message || error}`);
@@ -36,40 +55,63 @@ function formatCursor(value: string | number): string {
   return `seq:${value}`;
 }
 
-async function loadCursor(): Promise<string> {
+interface CursorInfo {
+  cursor: string;
+  timeUs: string;
+}
+
+async function loadCursor(): Promise<CursorInfo> {
   try {
     const record = await prisma.jetstreamIndex.findUnique({ where: { service: 'rito' } });
     if (record?.index) {
       const rawIndex = record.index;
       let cursorVal: string;
+      let timeUsVal: string;
+
       if (rawIndex.includes(':')) {
         const parts = rawIndex.split(':');
-        const timePart = parts[1];
-        if (timePart && Number(timePart) >= 1e14) {
-          cursorVal = timePart;
-        } else {
-          cursorVal = parts[0];
-        }
+        cursorVal = parts[0];
+        timeUsVal = parts[1] || parts[0];
       } else {
         cursorVal = rawIndex;
-      }
-
-      const num = Number(cursorVal);
-      if (Number.isNaN(num) || num < 1e14) {
-        const now = (Date.now() * 1000).toString();
-        logger.warn(`Loaded cursor ${cursorVal} is not a valid microsecond timestamp, fallback to current time: ${now} (${formatCursor(now)})`);
-        return now;
+        timeUsVal = rawIndex;
       }
 
       logger.info(`Cursor from DB: ${cursorVal} (raw: ${rawIndex}) (${formatCursor(cursorVal)})`);
-      return cursorVal;
+      return { cursor: cursorVal, timeUs: timeUsVal };
     }
     const now = (Date.now() * 1000).toString();
     logger.info(`No DB cursor found, using current time: ${now} (${formatCursor(now)})`);
-    return now;
+    return { cursor: now, timeUs: now };
   } catch (error) {
     logger.error(`Failed to load cursor from DB: ${error}`);
-    return (Date.now() * 1000).toString();
+    const now = (Date.now() * 1000).toString();
+    return { cursor: now, timeUs: now };
+  }
+}
+
+function triggerReconnect(reason: string): void {
+  consecutiveStallCount++;
+  logger.warn(
+    `Triggering stream reconnect. Reason: ${reason} (consecutive stalls: ${consecutiveStallCount})`,
+  );
+
+  if (consecutiveStallCount === 1) {
+    useTimestampCursor = true;
+    logger.warn(
+      `[Level 1 Fallback] Switching cursor to microsecond timestamp: ${latestEventTimeUs} (${formatCursor(latestEventTimeUs)}) on host: ${FALLBACK_HOSTS[currentHostIndex]}`,
+    );
+  } else {
+    currentHostIndex = (currentHostIndex + 1) % FALLBACK_HOSTS.length;
+    useTimestampCursor = true;
+    logger.warn(
+      `[Level 2 Fallback] Switching host to: ${FALLBACK_HOSTS[currentHostIndex]} with timestamp: ${latestEventTimeUs} (${formatCursor(latestEventTimeUs)})`,
+    );
+  }
+
+  if (currentAbortController) {
+    currentAbortController.abort();
+    currentAbortController = null;
   }
 }
 
@@ -79,26 +121,40 @@ function startCursorPersistence(): void {
   cursorUpdateInterval = setInterval(() => {
     if (!cursor || cursor === '0') return;
     const currentCursor = cursor;
-    if (previousCursor === currentCursor) {
-      logger.error(`前回からcursorが変動していませんので、再起動のためにプロセスを終了します: ${currentCursor}`);
-      process.exit(1);
+    const now = Date.now();
+    const timeSinceLastFrame = now - lastFrameReceivedAt;
+
+    if (previousCursor !== currentCursor) {
+      const indexToSave = `${currentCursor}:${latestEventTimeUs}`;
+
+      void mainQueue.add(async () => {
+        try {
+          await prisma.jetstreamIndex.upsert({
+            where: { service: 'rito' },
+            update: { index: indexToSave },
+            create: { service: 'rito', index: indexToSave },
+          });
+          logger.info(`Cursor updated to: ${indexToSave} (${formatCursor(currentCursor)})`);
+        } catch (error) {
+          logger.error(`Failed to upsert cursor in DB: ${error}`);
+        }
+      });
+      previousCursor = currentCursor;
+      consecutiveStallCount = 0;
+      return;
     }
 
-    const indexToSave = `${currentCursor}:${latestEventTimeUs}`;
+    if (timeSinceLastFrame < STALL_TIMEOUT_MS) {
+      logger.info(
+        `Cursor unchanged (${currentCursor}), but frames are active (${Math.round(timeSinceLastFrame / 1000)}s since last frame). Continuing stream.`,
+      );
+      return;
+    }
 
-    void mainQueue.add(async () => {
-      try {
-        await prisma.jetstreamIndex.upsert({
-          where: { service: 'rito' },
-          update: { index: indexToSave },
-          create: { service: 'rito', index: indexToSave },
-        });
-        logger.info(`Cursor updated to: ${indexToSave} (${formatCursor(currentCursor)})`);
-      } catch (error) {
-        logger.error(`Failed to upsert cursor in DB: ${error}`);
-      }
-    });
-    previousCursor = currentCursor;
+    logger.warn(
+      `Jetstream stall detected: no frames received for ${Math.round(timeSinceLastFrame / 1000)}s (cursor: ${currentCursor}). Triggering reconnect...`,
+    );
+    triggerReconnect(`Stalled for ${Math.round(timeSinceLastFrame / 1000)}s`);
   }, CURSOR_UPDATE_INTERVAL);
 }
 
@@ -148,9 +204,93 @@ async function routeEvent(
   }
 }
 
+async function startStream(postCollectionEnabled: boolean): Promise<void> {
+  while (true) {
+    const serviceUrl = FALLBACK_HOSTS[currentHostIndex];
+    const jetstream = new Jetstream({ service: serviceUrl });
+    const abortController = new AbortController();
+    currentAbortController = abortController;
+
+    let startCursorVal: number | undefined;
+    if (useTimestampCursor) {
+      const timeNum = Number(latestEventTimeUs);
+      if (!Number.isNaN(timeNum) && timeNum >= 1e14) {
+        startCursorVal = timeNum;
+      }
+    }
+    if (!startCursorVal) {
+      const cursorNum = Number(cursor);
+      if (!Number.isNaN(cursorNum) && cursorNum > 0) {
+        startCursorVal = cursorNum;
+      }
+    }
+
+    const cursorStore: CursorStore = {
+      async load() {
+        return startCursorVal;
+      },
+      async save(sequence) {
+        cursor = sequence.toString();
+        useTimestampCursor = false;
+      },
+    };
+
+    logger.info(
+      `Jetstream v2 connecting to: ${serviceUrl} (startCursor: ${startCursorVal ? formatCursor(startCursorVal) : 'none'})`,
+    );
+
+    try {
+      for await (const event of jetstream.live({
+        collections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
+        kinds: ['commit'],
+        cursor: cursorStore,
+        signal: abortController.signal,
+        onError: (error) => {
+          logger.error(`Jetstream error: ${error instanceof Error ? error.message : String(error)}`);
+        },
+        onInfo: (info) => {
+          logger.info(`Jetstream info advisory: ${JSON.stringify(info)}`);
+          if (info.name === 'OutdatedCursor') {
+            logger.warn(`OutdatedCursor advisory received. Triggering Level 1/2 fallback.`);
+            triggerReconnect('OutdatedCursor advisory');
+          }
+        },
+      })) {
+        lastFrameReceivedAt = Date.now();
+        await cursorStore.save(event.seq);
+
+        if (event.time) {
+          latestEventTimeUs = (new Date(event.time).getTime() * 1000).toString();
+        } else if ('timeUs' in event && typeof (event as any).timeUs === 'number') {
+          latestEventTimeUs = (event as any).timeUs.toString();
+        } else {
+          latestEventTimeUs = event.seq.toString();
+        }
+
+        if (event.kind !== 'commit') continue;
+        await routeEvent(event as unknown as JetstreamCommitEvent, postCollectionEnabled);
+      }
+    } catch (error) {
+      if (abortController.signal.aborted) {
+        logger.info(`Jetstream stream intentionally aborted for reconnect.`);
+      } else {
+        logger.error(
+          `Jetstream live stream ended with error: ${error instanceof Error ? error.message : String(error)}`,
+        );
+        triggerReconnect(`Stream error: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+}
+
 async function init(): Promise<void> {
-  cursor = await loadCursor();
+  const cursorInfo = await loadCursor();
+  cursor = cursorInfo.cursor;
   previousCursor = cursor;
+  latestEventTimeUs = cursorInfo.timeUs;
+  lastFrameReceivedAt = Date.now();
   await queueUnclassifiedBookmarkAnalysis();
 
   const isLocal = process.env.IS_LOCAL === 'true' || process.env.NODE_ENV !== 'production';
@@ -162,42 +302,8 @@ async function init(): Promise<void> {
     logger.info(`POST_COLLECTION handlers are DISABLED (isLocal: ${isLocal}, isForceEnabled: ${isForceEnabled}). Set ENABLE_POST_COLLECTION=true to force enable.`);
   }
 
-  const cursorStore: CursorStore = {
-    async load() {
-      const value = Number(cursor);
-      return Number.isNaN(value) || value <= 0 ? undefined : value;
-    },
-    async save(sequence) {
-      cursor = sequence.toString();
-    },
-  };
-  const jetstream = new JetstreamV1({ service: JETSREAM_URL });
-  logger.info(`Jetstream v1 connecting to: ${JETSREAM_URL}`);
   startCursorPersistence();
-
-  try {
-    for await (const event of jetstream.live({
-      collections: [BOOKMARK, SERVICE, LIKE, POST_COLLECTION],
-      cursor: cursorStore,
-      onError: (error) => {
-        logger.error(`Jetstream error: ${error instanceof Error ? error.message : String(error)}`);
-      },
-    })) {
-      await cursorStore.save(event.seq);
-      if ('timeUs' in event && typeof event.timeUs === 'number') {
-        latestEventTimeUs = event.timeUs.toString();
-      } else if ('time' in event && event.time) {
-        latestEventTimeUs = (new Date(event.time as string).getTime() * 1000).toString();
-      } else {
-        latestEventTimeUs = event.seq.toString();
-      }
-      if (event.kind !== 'commit') continue;
-      await routeEvent(event as unknown as JetstreamCommitEvent, postCollectionEnabled);
-    }
-  } catch (error) {
-    logger.error(`Jetstream live stream ended: ${error instanceof Error ? error.message : String(error)}`);
-    process.exit(1);
-  }
+  await startStream(postCollectionEnabled);
 }
 
 void init();

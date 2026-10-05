@@ -51,19 +51,7 @@ function createDbService(prisma: typeof mockPrisma) {
                 });
                 if (indexRecord && indexRecord.index) {
                     const rawIndex = indexRecord.index;
-                    let cursorVal: string;
-                    if (rawIndex.includes(':')) {
-                        const parts = rawIndex.split(':');
-                        const timePart = parts[1];
-                        if (timePart && Number(timePart) >= 1e14) {
-                            cursorVal = timePart;
-                        } else {
-                            cursorVal = parts[0];
-                        }
-                    } else {
-                        cursorVal = rawIndex;
-                    }
-                    return cursorVal;
+                    return rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
                 } else {
                     return Date.now().toString();
                 }
@@ -282,13 +270,13 @@ describe('Database Service', () => {
             });
         });
 
-        it('should return timestamp part from compound cursor (seq:time_us)', async () => {
+        it('should return seq part from compound cursor (seq:time_us)', async () => {
             const epochUsToDateTime = (c: string | number) => new Date(Number(c) / 1000).toISOString();
             mockPrisma.jetstreamIndex.findUnique.mockResolvedValue({ index: '24664288881:1704067200000000' });
 
             const result = await dbService.loadCursor(epochUsToDateTime);
 
-            expect(result).toBe('1704067200000000');
+            expect(result).toBe('24664288881');
         });
 
         it('should return current time when no cursor found', async () => {

@@ -39,18 +39,7 @@ export async function loadCursor(epochUsToDateTime: (cursor: string | number) =>
         });
         if (indexRecord && indexRecord.index) {
             const rawIndex = indexRecord.index;
-            let cursorVal: string;
-            if (rawIndex.includes(':')) {
-                const parts = rawIndex.split(':');
-                const timePart = parts[1];
-                if (timePart && Number(timePart) >= 1e14) {
-                    cursorVal = timePart;
-                } else {
-                    cursorVal = parts[0];
-                }
-            } else {
-                cursorVal = rawIndex;
-            }
+            const cursorVal = rawIndex.includes(':') ? rawIndex.split(':')[0] : rawIndex;
             logger.info(`Cursor from DB: ${cursorVal} (${epochUsToDateTime(cursorVal)})`);
             return cursorVal;
         } else {

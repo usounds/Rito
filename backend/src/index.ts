@@ -15,7 +15,7 @@ import {
   upsertBookmark,
 } from './handlers/bookmark.js';
 import { deleteLike, upsertLike } from './handlers/like.js';
-import { deletePost, upsertPost } from './handlers/post.js';
+import { upsertPost } from './handlers/post.js';
 import { deleteResolver, upsertResolver } from './handlers/resolver.js';
 import type { BlueRitoFeedLike, BlueRitoServiceSchema } from './lexicons/index.js';
 import logger from './logger.js';
@@ -180,8 +180,6 @@ async function routeEvent(
       if (isRitoPostCandidate(event.commit.record)) {
         enqueueTask('post', postQueue, () => upsertPost(event as CommitPutEvent<unknown>));
       }
-    } else if (operation === 'delete') {
-      enqueueTask('post', postQueue, () => deletePost(event as CommitDeleteEvent));
     }
     return;
   }

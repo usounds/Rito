@@ -219,8 +219,6 @@ try {
      INSERT INTO "Comment" ("bookmark_uri", "lang", "title", "comment") VALUES ('at://${testDid}/blue.rito.feed.bookmark/seeded-bookmark', 'en', 'Seeded E2E', 'Coverage seed');
      INSERT INTO "Tag" ("name") VALUES ('seeded');
      INSERT INTO "BookmarkTag" ("bookmark_uri", "tag_id") SELECT 'at://${testDid}/blue.rito.feed.bookmark/seeded-bookmark', "id" FROM "Tag" WHERE "name" = 'seeded';
-     INSERT INTO "Post" ("uri", "did", "text", "lang") VALUES ('at://${testDid}/app.bsky.feed.post/seeded-post', '${testDid}', 'seeded', ARRAY['en']);
-     INSERT INTO "PostUri" ("postUri", "uri") VALUES ('at://${testDid}/app.bsky.feed.post/seeded-post', 'https://example.com/post');
      INSERT INTO "PostToBookmark" ("sub", "lang") VALUES ('${testDid}', 'en');
      INSERT INTO "NodeOAuthSession" ("key", "session") VALUES ('${testDid}', '${savedOAuthSession}');`,
   );
@@ -271,12 +269,10 @@ try {
   );
 
   const bookmarkUri = `at://${testDid}/blue.rito.feed.bookmark/seeded-bookmark`;
-  const postUri = `at://${testDid}/app.bsky.feed.post/seeded-post`;
   await waitFor(() => {
     const logs = docker('logs', backend).stdout;
     return logs.includes('"event":"mock-oauth-pds-listening"')
       && logs.includes(`Deleted bookmark: ${bookmarkUri}`)
-      && logs.includes(`Deleted post: ${postUri} (1 records)`)
       && logs.includes(`Post to bookmark created: at://${testDid}/app.bsky.feed.post/candidate-post`)
       && logs.includes(`Deleted like: at://${testDid}/blue.rito.feed.like/like-lifecycle`)
       && logs.includes(`Deleted resolver: blue.rito.e2e -> ${testDid}`)

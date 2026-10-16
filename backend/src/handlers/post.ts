@@ -6,7 +6,6 @@ import { prisma } from '../db.js';
 import { client as oauthClient } from '../lib/HandleOauthClientNode.js';
 import logger from '../logger.js';
 import type {
-  CommitDeleteEvent,
   CommitPutEvent,
   DidDocument,
   DomainCheckResult,
@@ -131,18 +130,5 @@ export async function upsertPost(event: CommitPutEvent<unknown>): Promise<void> 
     logger.info(`Post to bookmark created: ${aturi}, link: ${urlString}`);
   } catch (error) {
     logger.error(`Error in upsertPost for ${aturi}: ${error}`);
-  }
-}
-
-export async function deletePost(event: CommitDeleteEvent): Promise<void> {
-  const aturi = `at://${event.did}/${event.commit.collection}/${event.commit.rkey}`;
-  try {
-    await prisma.postUri.deleteMany({ where: { postUri: aturi } });
-    const deletedPosts = await prisma.post.deleteMany({ where: { uri: aturi } });
-    if (deletedPosts.count > 0) {
-      logger.info(`Deleted post: ${aturi} (${deletedPosts.count} records)`);
-    }
-  } catch (error) {
-    logger.error(`Error in deletePost for ${aturi}: ${error}`);
   }
 }

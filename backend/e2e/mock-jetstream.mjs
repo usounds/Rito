@@ -172,6 +172,14 @@ server.on('connection', (socket) => {
     operation: 'delete',
     rkey: 'seeded-post',
   });
+  socket.send(JSON.stringify({
+    $type: 'message',
+    payload: {
+      $type: 'network.bsky.jetstream.subscribeEvents#info',
+      name: 'InfoAdvisory',
+      message: 'E2E info advisory coverage',
+    },
+  }));
 
   const likeRecord = {
     $type: 'blue.rito.feed.like',

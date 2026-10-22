@@ -54,7 +54,7 @@
     "@types/ws": "^8.18.2",
     "@vitest/coverage-v8": "^5.0.5",
     "pino-pretty": "^13.2.0",
-    "prisma": "^8.0.0-rc.23",
+    "prisma": "^7.10.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",

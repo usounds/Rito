@@ -844,7 +844,7 @@ export default function RegistBookmarkPage() {
                 console.log('debug', { referrer, origin })
 
                 const returnTo = searchParams.get("returnTo");
-                const registerPath = `${process.env.NEXT_PUBLIC_URL}/${locale}/bookmark/register`;
+                const registerPath = `${origin}/${locale}/bookmark/register`;
 
                 if (returnTo) {
                     // returnTo が指定されている場合は優先的に戻る

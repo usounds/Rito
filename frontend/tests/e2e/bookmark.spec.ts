@@ -8,10 +8,9 @@ test.describe('Bookmark Operations', () => {
     
     await setupApiStubs(page);
     await mockLogin(page, 'did:plc:testuser', 'rito.blue');
-    await page.goto('/ja');
   });
 
-  test('should handle successful bookmark registration', async ({ page }) => {
+  test('should handle successful bookmark registration', async ({ page, isMobile }) => {
     await page.goto('/ja/bookmark/register');
 
     // 1. URLを入力
@@ -21,7 +20,12 @@ test.describe('Bookmark Operations', () => {
     // 2. URL欄に隣接した「ページ情報を取得」をクリック
     const getOgpButton = page.getByRole('button', { name: 'ページ情報を取得' });
     await expect(getOgpButton).toBeVisible();
-    await getOgpButton.click();
+    await getOgpButton.scrollIntoViewIfNeeded();
+    if (isMobile) {
+      await getOgpButton.tap();
+    } else {
+      await getOgpButton.click();
+    }
 
     // 取得完了状態と既存タイトル欄への反映を確認
     await expect(page.getByText('ページ情報を取得しました')).toBeVisible();
@@ -42,7 +46,12 @@ test.describe('Bookmark Operations', () => {
 
     // ボタンのローディングが解除され、有効になることを確認
     await expect(submitButton).toBeEnabled({ timeout: 20000 });
-    await submitButton.click();
+    await submitButton.scrollIntoViewIfNeeded();
+    if (isMobile) {
+      await submitButton.tap();
+    } else {
+      await submitButton.click();
+    }
 
     // 5. 登録完了後にマイブックマークへ遷移することを確認
     await expect(page).toHaveURL(/.*\/my\/bookmark.*/, { timeout: 20000 });
@@ -70,6 +79,8 @@ test.describe('Bookmark Operations', () => {
   });
 
   test('should show my bookmarks page', async ({ page, isMobile }) => {
+    await page.goto('/ja');
+
     // モバイルの場合はバーガーメニューを開く
     if (isMobile) {
       await page.locator('.mantine-Burger-root').click();
@@ -114,11 +125,17 @@ test.describe('Bookmark Operations', () => {
       await menuButton.click();
     }
     await page.getByRole('menuitem', { name: '削除', exact: true }).click();
-    await expect(page.getByRole('dialog').getByText('ブックマークの削除')).toBeVisible();
+    const dialog = page.getByRole('dialog');
+    await expect(dialog.getByText('ブックマークの削除')).toBeVisible();
 
     // モーダルを閉じて「シェア」を確認
-    await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+    const closeButton = dialog.getByRole('button', { name: '閉じる' });
+    if (isMobile) {
+      await closeButton.tap();
+    } else {
+      await closeButton.click();
+    }
+    await expect(dialog).not.toBeVisible();
 
     if (isMobile) {
       await menuButton.tap();

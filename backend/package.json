@@ -31,33 +31,33 @@
   "type": "module",
   "packageManager": "pnpm@12.3.4",
   "dependencies": {
-    "@atcute/bluesky": "^4.0.24",
+    "@atcute/bluesky": "^4.0.26",
     "@atcute/client": "^5.1.2",
     "@atcute/lexicons": "^2.1.1",
     "@atproto/api": "^0.28.1",
     "@atproto/jwk-jose": "^0.2.4",
-    "@atproto/oauth-client-node": "^0.5.10",
+    "@atproto/oauth-client-node": "^0.5.13",
     "@bsky/jetstream": "^1.0.0",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
-    "dotenv": "^18.0.8",
-    "openai": "^7.39.0",
+    "dotenv": "^18.0.9",
+    "openai": "^7.50.0",
     "p-limit": "^7.3.3",
     "p-queue": "^10.0.0",
     "pg": "^8.23.1",
     "pino": "^10.4.0",
-    "ws": "^8.22.0"
+    "ws": "^8.22.1"
   },
   "devDependencies": {
-    "@types/node": "^26.6.5",
+    "@types/node": "^26.6.6",
     "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.2",
-    "@vitest/coverage-v8": "^5.0.5",
+    "@vitest/coverage-v8": "^5.1.0",
     "pino-pretty": "^13.2.0",
     "prisma": "^7.10.1",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
-    "vitest": "^5.0.5"
+    "vitest": "^5.1.0"
   }
 }

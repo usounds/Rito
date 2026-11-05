@@ -10,8 +10,7 @@ jobs:
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     steps:
-      - uses: gwennlbh/to-tangled@v0.4
+      - uses: gwennlbh/to-tangled@v0.6
         with:
           repo: rito.blue/rito
           ssh-key: ${{ secrets.TANGLED_KEY }}
-

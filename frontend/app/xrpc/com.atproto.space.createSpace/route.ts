@@ -1,8 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from "next/server";
+import { proxySpaceXrpc } from "@/logic/privateBookmark/serverSpaceProxy";
 
-export async function POST() {
-  return NextResponse.json(
-    { error: 'NotFound' },
-    { status: 404, headers: { 'Cache-Control': 'private, no-store' } },
-  );
+export async function POST(req: NextRequest) {
+  return proxySpaceXrpc(req, {
+    method: "com.atproto.space.createSpace",
+    type: "procedure",
+  });
 }

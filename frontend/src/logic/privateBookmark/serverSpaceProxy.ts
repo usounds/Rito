@@ -45,14 +45,14 @@ function validatePrivateBookmarkQuery(
 ): string | null {
   const expectedSpace = getExpectedSpaceUri(did);
 
-  if (method === "com.atproto.space.getSpace" || method === "com.atproto.simplespace.getSpace") {
+  if (method === "com.atproto.space.getSpace") {
     if (Object.keys(params).some((key) => key !== "space") || params.space !== expectedSpace) {
       return "Invalid private bookmark space";
     }
     return null;
   }
 
-  if (method === "com.atproto.simplespace.listMembers") {
+  if (method === "com.atproto.memberspace.listMembers") {
     if (!hasOnlyKeys(params, ["space", "limit", "cursor"]) || params.space !== expectedSpace) {
       return "Invalid private bookmark space";
     }
@@ -100,28 +100,24 @@ function validatePrivateBookmarkProcedure(
 ): string | null {
   if (!isRecord(input)) return "Invalid request body";
 
-  if (method === "com.atproto.simplespace.createSpace") {
-    if (!hasOnlyKeys(input, ["spaceType", "skey", "readPolicy", "writePolicy", "appAccess"])) {
+  if (method === "com.atproto.space.createSpace") {
+    if (!hasOnlyKeys(input, ["spaceType", "skey", "policy"])) {
       return "Unexpected private bookmark space setting";
     }
     if (input.spaceType !== SPACE_TYPE || input.skey !== SPACE_KEY) {
       return "Invalid private bookmark space setting";
     }
     if (
-      ![input.readPolicy, input.writePolicy].every((policy) =>
-        isRecord(policy) && hasOnlyKeys(policy, ["$type"]) &&
-        getString(policy.$type) === "com.atproto.simplespace.defs#memberListPolicy"
-      ) ||
-      !isRecord(input.appAccess) ||
-      !hasOnlyKeys(input.appAccess, ["$type"]) ||
-      getString(input.appAccess.$type) !== "com.atproto.simplespace.defs#open"
+      !isRecord(input.policy) ||
+      !hasOnlyKeys(input.policy, ["$type"]) ||
+      getString(input.policy.$type) !== "com.atproto.personalspace.policy"
     ) {
       return "Invalid private bookmark access policy";
     }
     return null;
   }
 
-  if (method === "com.atproto.simplespace.deleteSpace") {
+  if (method === "com.atproto.space.deleteSpace") {
     if (!hasOnlyKeys(input, ["space"])) {
       return "Unexpected private bookmark space field";
     }

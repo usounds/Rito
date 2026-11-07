@@ -3,7 +3,7 @@ import { proxySpaceXrpc } from "@/logic/privateBookmark/serverSpaceProxy";
 
 export async function POST(req: NextRequest) {
   return proxySpaceXrpc(req, {
-    method: "com.atproto.simplespace.deleteSpace",
+    method: "com.atproto.space.deleteSpace",
     type: "procedure",
   });
 }

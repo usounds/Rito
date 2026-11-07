@@ -3,7 +3,7 @@ import { proxySpaceXrpc } from "@/logic/privateBookmark/serverSpaceProxy";
 
 export async function GET(req: NextRequest) {
   return proxySpaceXrpc(req, {
-    method: "com.atproto.simplespace.listMembers",
+    method: "com.atproto.memberspace.listMembers",
     type: "query",
   });
 }

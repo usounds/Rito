@@ -24,39 +24,45 @@ export async function checkSpaceCapability(did: string): Promise<SpaceCapability
       if (!res.ok) {
         const error = data.error;
         let status: SpaceCapabilityResult['status'] = 'error';
-        if (error === 'SpaceNotFound' || error === 'SpaceDeleted') status = 'needs_space';
+        if (error === 'RepoTakendown' || error === 'RepoDeactivated' || error === 'AccountTakedown' || error === 'AccountDeactivated') status = 'error';
+        else if (error === 'SpaceNotFound' || error === 'SpaceDeleted') status = 'needs_space';
         else if (res.status === 401 || res.status === 403 || error === 'ScopeMissingError' || error === 'AuthRequired' || error === 'ExpiredToken') status = 'needs_auth';
         else if (res.status === 404 || res.status === 501 || error === 'MethodNotImplemented' || error === 'MethodNotFound' || error === 'XRPCNotSupported' || error === 'PdsNotSupported') status = 'unsupported';
         return { failure: { status, spaceUri, message: data.message || `PDS returned ${error || res.status}` }, data };
       }
       return { failure: null, data };
     };
-    const space = await check(`/xrpc/com.atproto.simplespace.getSpace?space=${encodeURIComponent(spaceUri)}`);
+    const space = await check(`/xrpc/com.atproto.space.getSpace?space=${encodeURIComponent(spaceUri)}`);
     if (space.failure) return space.failure;
-    if (space.data.uri !== spaceUri ||
-        space.data.readPolicy?.$type !== 'com.atproto.simplespace.defs#memberListPolicy' ||
-        space.data.writePolicy?.$type !== 'com.atproto.simplespace.defs#memberListPolicy' ||
-        space.data.appAccess?.$type !== 'com.atproto.simplespace.defs#open') {
+    const policy = space.data.policy;
+    const personal = policy?.$type === 'com.atproto.personalspace.policy';
+    const migrated = policy?.$type === 'com.atproto.memberspace.policy' &&
+      [policy.publicRead, policy.publicWrite, policy.publishPolicy, policy.publishMembers]
+        .every((flag) => flag === undefined || flag === false) &&
+      policy.allowedApps === undefined;
+    if (space.data.uri !== spaceUri || (!personal && !migrated)) {
       return { status: 'error', spaceUri, message: 'Private bookmark access policy could not be verified' };
     }
-    // Inspect every member page before enabling the self-only UI.
-    let cursor: string | undefined;
-    const seen = new Set<string>();
-    do {
-      const params = new URLSearchParams({ space: spaceUri, limit: '100' });
-      if (cursor) params.set('cursor', cursor);
-      const page = await check(`/xrpc/com.atproto.simplespace.listMembers?${params}`);
-      if (page.failure) return page.failure;
-      if (!Array.isArray(page.data.members) || page.data.members.some((member: { did?: string; read?: boolean; write?: boolean }) =>
-        member.did !== did || typeof member.read !== 'boolean' || typeof member.write !== 'boolean')) {
-        return { status: 'error', spaceUri, message: 'Private bookmark members could not be verified' };
-      }
-      cursor = page.data.cursor;
-      if (cursor && (typeof cursor !== 'string' || seen.has(cursor))) {
-        return { status: 'error', spaceUri, message: 'Invalid member pagination' };
-      }
-      if (cursor) seen.add(cursor);
-    } while (cursor);
+    if (migrated) {
+      // Inspect every member page before enabling the self-only UI.
+      let cursor: string | undefined;
+      const seen = new Set<string>();
+      do {
+        const params = new URLSearchParams({ space: spaceUri, limit: '100' });
+        if (cursor) params.set('cursor', cursor);
+        const page = await check(`/xrpc/com.atproto.memberspace.listMembers?${params}`);
+        if (page.failure) return page.failure;
+        if (!Array.isArray(page.data.members) || page.data.members.some((member: { did?: string; read?: boolean; write?: boolean }) =>
+          member.did !== did || typeof member.read !== 'boolean' || typeof member.write !== 'boolean')) {
+          return { status: 'error', spaceUri, message: 'Private bookmark members could not be verified' };
+        }
+        cursor = page.data.cursor;
+        if (cursor && (typeof cursor !== 'string' || seen.has(cursor))) {
+          return { status: 'error', spaceUri, message: 'Invalid member pagination' };
+        }
+        if (cursor) seen.add(cursor);
+      } while (cursor);
+    }
     const records = await check(`/xrpc/com.atproto.space.listRecords?${new URLSearchParams({ space: spaceUri, repo: did, collection: COLLECTION, limit: '1' })}`);
     if (records.failure) return records.failure;
     return { status: 'ready', spaceUri };
@@ -110,7 +116,7 @@ async function getCsrfToken(): Promise<string> {
 export async function initializeSpace(did: string): Promise<{ success: boolean; error?: string }> {
   try {
     const csrfToken = await getCsrfToken();
-    const res = await fetch('/xrpc/com.atproto.simplespace.createSpace', {
+    const res = await fetch('/xrpc/com.atproto.space.createSpace', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -120,15 +126,7 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
       body: JSON.stringify({
         spaceType: SPACE_TYPE,
         skey: SPACE_KEY,
-        readPolicy: {
-          $type: 'com.atproto.simplespace.defs#memberListPolicy',
-        },
-        writePolicy: {
-          $type: 'com.atproto.simplespace.defs#memberListPolicy',
-        },
-        appAccess: {
-          $type: 'com.atproto.simplespace.defs#open',
-        },
+        policy: { $type: 'com.atproto.personalspace.policy' },
       }),
     });
 
@@ -155,7 +153,7 @@ export async function initializeSpace(did: string): Promise<{ success: boolean; 
 export async function deletePrivateBookmarkSpace(did: string): Promise<{ success: boolean; error?: string }> {
   try {
     const csrfToken = await getCsrfToken();
-    const res = await fetch('/xrpc/com.atproto.simplespace.deleteSpace', {
+    const res = await fetch('/xrpc/com.atproto.space.deleteSpace', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

@@ -22,9 +22,9 @@ import { GET as getSpaceGET } from '@app/xrpc/com.atproto.space.getSpace/route';
 import { POST as createRecordPOST } from '@app/xrpc/com.atproto.space.createRecord/route';
 import { GET as listRecordsGET } from '@app/xrpc/com.atproto.space.listRecords/route';
 import { POST as deleteRecordPOST } from '@app/xrpc/com.atproto.space.deleteRecord/route';
-import { POST as createSpacePOST } from '@app/xrpc/com.atproto.simplespace.createSpace/route';
-import { GET as listMembersGET } from '@app/xrpc/com.atproto.simplespace.listMembers/route';
-import { POST as deleteSpacePOST } from '@app/xrpc/com.atproto.simplespace.deleteSpace/route';
+import { POST as createSpacePOST } from '@app/xrpc/com.atproto.space.createSpace/route';
+import { GET as listMembersGET } from '@app/xrpc/com.atproto.memberspace.listMembers/route';
+import { POST as deleteSpacePOST } from '@app/xrpc/com.atproto.space.deleteSpace/route';
 
 describe('xRPC: Space Proxy Routes', () => {
   beforeEach(() => {
@@ -249,28 +249,28 @@ describe('xRPC: Space Proxy Routes', () => {
     });
   });
 
-  describe('com.atproto.simplespace.createSpace', () => {
-    const policy = { $type: 'com.atproto.simplespace.defs#memberListPolicy' };
-    const validBody = { spaceType: 'blue.rito.space.bookmark', skey: 'self', readPolicy: policy, writePolicy: policy, appAccess: { $type: 'com.atproto.simplespace.defs#open' } };
+  describe('com.atproto.space.createSpace', () => {
+    const policy = { $type: 'com.atproto.personalspace.policy' };
+    const validBody = { spaceType: 'blue.rito.space.bookmark', skey: 'self', policy };
     it.each([
       [validBody, 200],
       [{ ...validBody, type: validBody.spaceType }, 400],
-      [{ ...validBody, readPolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }, 400],
-      [{ ...validBody, writePolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }, 400],
-    ])('validates the split policy request %#', async (body, status) => {
+      [{ ...validBody, policy: { $type: 'com.atproto.memberspace.policy', publicRead: true } }, 400],
+      [{ ...validBody, policy: { ...policy, publicWrite: true } }, 400],
+    ])('validates the personalspace policy request %#', async (body, status) => {
       mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ uri: 'space' })));
-      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.createSpace', {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createSpace', {
         method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': 'csrf' }, body: JSON.stringify(body),
       });
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
       req.cookies.set('CSRF_TOKEN', 'csrf');
       expect((await createSpacePOST(req)).status).toBe(status);
-      if (status === 200) expect(mockFetch).toHaveBeenCalledWith('/xrpc/com.atproto.simplespace.createSpace', expect.objectContaining({ body: JSON.stringify(body) }));
+      if (status === 200) expect(mockFetch).toHaveBeenCalledWith('/xrpc/com.atproto.space.createSpace', expect.objectContaining({ body: JSON.stringify(body) }));
       else expect(mockFetch).not.toHaveBeenCalled();
     });
 
     it('rejects additional access-policy fields', async () => {
-      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.createSpace', {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.createSpace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -304,7 +304,7 @@ describe('xRPC: Space Proxy Routes', () => {
     it.each(['valid', 'other'])('restricts member inspection to the owner space: %s', async (owner) => {
       mockFetch.mockResolvedValueOnce(new Response(JSON.stringify({ members: [] })));
       const params = new URLSearchParams({ space: `at://did:plc:${owner}/space/blue.rito.space.bookmark/self`, cursor: 'next', limit: '100' });
-      const req = new NextRequest(`http://localhost/xrpc/com.atproto.simplespace.listMembers?${params}`);
+      const req = new NextRequest(`http://localhost/xrpc/com.atproto.memberspace.listMembers?${params}`);
       req.cookies.set('USER_DID', 'did:plc:valid.sig');
       const res = await listMembersGET(req);
       expect(res.status).toBe(owner === 'valid' ? 200 : 400);
@@ -319,7 +319,7 @@ describe('xRPC: Space Proxy Routes', () => {
     });
   });
 
-  describe('com.atproto.simplespace.deleteSpace', () => {
+  describe('com.atproto.space.deleteSpace', () => {
     it('proxies deletion of the signed-in users private bookmark space', async () => {
       mockFetch.mockResolvedValueOnce(
         new Response(JSON.stringify({}), {
@@ -328,7 +328,7 @@ describe('xRPC: Space Proxy Routes', () => {
         })
       );
 
-      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.deleteSpace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -346,7 +346,7 @@ describe('xRPC: Space Proxy Routes', () => {
 
       expect(res.status).toBe(200);
       expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringContaining('/xrpc/com.atproto.simplespace.deleteSpace'),
+        expect.stringContaining('/xrpc/com.atproto.space.deleteSpace'),
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify({
@@ -357,7 +357,7 @@ describe('xRPC: Space Proxy Routes', () => {
     });
 
     it('rejects deletion of another users space', async () => {
-      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.deleteSpace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -378,7 +378,7 @@ describe('xRPC: Space Proxy Routes', () => {
     });
 
     it('rejects unexpected deletion fields', async () => {
-      const req = new NextRequest('http://localhost/xrpc/com.atproto.simplespace.deleteSpace', {
+      const req = new NextRequest('http://localhost/xrpc/com.atproto.space.deleteSpace', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

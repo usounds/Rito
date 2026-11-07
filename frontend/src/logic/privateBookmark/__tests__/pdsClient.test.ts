@@ -23,7 +23,7 @@ describe('deletePrivateBookmarkSpace', () => {
     expect(result).toEqual({ success: true });
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
-      '/xrpc/com.atproto.simplespace.deleteSpace',
+      '/xrpc/com.atproto.space.deleteSpace',
       expect.objectContaining({
         method: 'POST',
         headers: expect.objectContaining({ 'X-CSRF-Token': 'csrf-token' }),
@@ -68,8 +68,8 @@ describe('deletePrivateBookmarkSpace', () => {
 describe('spaces alpha compatibility', () => {
   const did = 'did:plc:testuser';
   const uri = `at://${did}/space/blue.rito.space.bookmark/self`;
-  const policy = { $type: 'com.atproto.simplespace.defs#memberListPolicy' };
-  const configuration = { uri, readPolicy: policy, writePolicy: policy, appAccess: { $type: 'com.atproto.simplespace.defs#open' } };
+  const policy = { $type: 'com.atproto.memberspace.policy' };
+  const configuration = { uri, policy };
   const respond = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status });
   beforeEach(() => {
     fetchMock.mockReset();
@@ -77,16 +77,15 @@ describe('spaces alpha compatibility', () => {
   });
   afterAll(() => vi.unstubAllGlobals());
 
-  it('creates with split policies and verifies access before reporting success', async () => {
+  it('creates a personalspace and verifies access before reporting success', async () => {
     fetchMock.mockResolvedValueOnce(respond({ csrfToken: 'csrf' }))
       .mockResolvedValueOnce(respond({ uri }))
-      .mockResolvedValueOnce(respond(configuration))
-      .mockResolvedValueOnce(respond({ members: [{ did, read: true, write: true }] }))
+      .mockResolvedValueOnce(respond({ uri, policy: { $type: 'com.atproto.personalspace.policy' } }))
       .mockResolvedValueOnce(respond({ records: [] }));
     expect((await initializeSpace(did)).success).toBe(true);
     expect(JSON.parse(fetchMock.mock.calls[1][1].body)).toEqual({
       spaceType: 'blue.rito.space.bookmark', skey: 'self',
-      readPolicy: policy, writePolicy: policy, appAccess: configuration.appAccess,
+      policy: { $type: 'com.atproto.personalspace.policy' },
     });
   });
 
@@ -97,13 +96,49 @@ describe('spaces alpha compatibility', () => {
     [403, 'ScopeMissingError', 'needs_auth'],
     [502, 'UpstreamError', 'error'],
     [503, 'Unavailable', 'error'],
+    [400, 'RepoTakendown', 'error'],
+    [400, 'RepoDeactivated', 'error'],
+    [401, 'AccountDeactivated', 'error'],
   ])('classifies %s %s as %s', async (httpStatus, error, status) => {
     fetchMock.mockResolvedValueOnce(respond({ error }, httpStatus));
     expect((await checkSpaceCapability(did)).status).toBe(status);
   });
 
+  it('keeps a migrated memberspace usable after inspecting all member pages', async () => {
+    fetchMock.mockResolvedValueOnce(respond({ uri, policy: {
+      ...policy, publicRead: false, publicWrite: false, publishPolicy: false, publishMembers: false,
+    } }))
+      .mockResolvedValueOnce(respond({ members: [{ did, read: true, write: true }], cursor: 'next' }))
+      .mockResolvedValueOnce(respond({ members: [] }))
+      .mockResolvedValueOnce(respond({ records: [] }));
+    expect((await checkSpaceCapability(did)).status).toBe('ready');
+    expect(fetchMock.mock.calls[1][0]).toContain('com.atproto.memberspace.listMembers');
+    expect(fetchMock.mock.calls[2][0]).toContain('cursor=next');
+  });
+
+  it('uses personalspace without requesting members', async () => {
+    fetchMock.mockResolvedValueOnce(respond({ uri, policy: { $type: 'com.atproto.personalspace.policy' } }))
+      .mockResolvedValueOnce(respond({ records: [] }));
+    expect((await checkSpaceCapability(did)).status).toBe('ready');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0][0]).toContain('com.atproto.space.getSpace');
+    expect(fetchMock.mock.calls[1][0]).toContain('com.atproto.space.listRecords');
+  });
+
+  it.each([
+    { ...policy, publicWrite: true },
+    { ...policy, publishPolicy: true },
+    { ...policy, publishMembers: true },
+    { ...policy, allowedApps: [] },
+    { $type: 'com.atproto.managedspace.policy', managingApp: did },
+  ])('rejects an unsafe or unverified policy: %j', async (policy) => {
+    fetchMock.mockResolvedValueOnce(respond({ uri, policy }));
+    expect((await checkSpaceCapability(did)).status).toBe('error');
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
   it('rejects public read access', async () => {
-    fetchMock.mockResolvedValueOnce(respond({ ...configuration, readPolicy: { $type: 'com.atproto.simplespace.defs#publicPolicy' } }));
+    fetchMock.mockResolvedValueOnce(respond({ ...configuration, policy: { ...policy, publicRead: true } }));
     expect((await checkSpaceCapability(did)).status).toBe('error');
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
@@ -119,7 +154,7 @@ describe('spaces alpha compatibility', () => {
   it('verifies an already existing space instead of trusting the conflict', async () => {
     fetchMock.mockResolvedValueOnce(respond({ csrfToken: 'csrf' }))
       .mockResolvedValueOnce(respond({ error: 'SpaceAlreadyExists' }, 400))
-      .mockResolvedValueOnce(respond({ ...configuration, writePolicy: {} }));
+      .mockResolvedValueOnce(respond({ ...configuration, policy: {} }));
     expect((await initializeSpace(did)).success).toBe(false);
   });
 

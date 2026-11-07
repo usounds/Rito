@@ -137,7 +137,7 @@ test.describe('Private Bookmark (Space) E2E', () => {
     await expect(dialog.getByText('この操作は元に戻せません。')).toBeVisible();
     await expect(dialog.getByText('保存済みのプライベートブックマークは利用できなくなります。', { exact: false })).toBeVisible();
 
-    const deleteRequestPromise = page.waitForRequest('**/xrpc/com.atproto.simplespace.deleteSpace');
+    const deleteRequestPromise = page.waitForRequest('**/xrpc/com.atproto.space.deleteSpace');
     await dialog.getByRole('button', { name: 'Spaceを削除して退会', exact: true }).click();
     const deleteRequest = await deleteRequestPromise;
 

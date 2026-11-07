@@ -197,21 +197,19 @@ export async function mockLogin(page: Page, did: string, handle: string) {
   });
 
   // Space Capability & Space Check
-  await page.route(/\/xrpc\/com\.atproto\.(simplespace|space)\.getSpace/, async (route) => {
+  await page.route('**/xrpc/com.atproto.space.getSpace?**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
       body: JSON.stringify({
         uri: `at://${did}/space/blue.rito.space.bookmark/self`,
-        readPolicy: { $type: 'com.atproto.simplespace.defs#memberListPolicy' },
-        writePolicy: { $type: 'com.atproto.simplespace.defs#memberListPolicy' },
-        appAccess: { $type: 'com.atproto.simplespace.defs#open' },
+        policy: { $type: 'com.atproto.personalspace.policy' },
       }),
     });
   });
 
   // Owner-only member permissions in the current Spaces alpha format.
-  await page.route('**/xrpc/com.atproto.simplespace.listMembers?**', async (route) => {
+  await page.route('**/xrpc/com.atproto.memberspace.listMembers?**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -312,7 +310,7 @@ export async function mockLogin(page: Page, did: string, handle: string) {
   });
 
   // Delete Private Bookmark Space
-  await page.route('**/xrpc/com.atproto.simplespace.deleteSpace', async (route) => {
+  await page.route('**/xrpc/com.atproto.space.deleteSpace', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
